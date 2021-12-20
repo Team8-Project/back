@@ -4,7 +4,6 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-src/main/resources/application.properties
 
 ### STS ###
 .apt_generated
@@ -36,8 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-spring.datasource.url=jdbc:mysql://ohou-db.c6yo4jnv5iey.ap-northeast-2.rds.amazonaws.com:3306/ohouDB
-spring.datasource.username=admin
-spring.datasource.password=hanghae99
-spring.jpa.hibernate.ddl-auto=update
