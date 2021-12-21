@@ -2,6 +2,7 @@ package com.teamproj.backend.model;
 
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.util.Timestamped;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,9 +25,29 @@ public class User extends Timestamped {
     @Column(nullable = false)
     private String password;
 
+    @Column(unique = true)
+    private Long kakaoId;
+
     public User(SignUpRequestDto signUpRequestDto, String encodedPassword) {
         this.username = signUpRequestDto.getUsername();
         this.nickname = signUpRequestDto.getNickname();
         this.password = encodedPassword;
+    }
+
+
+//    @Builder
+//    public User(String username, String password, String nickname){
+//        this.username = username;
+//        this.password = password;
+//        this.nickname = nickname;
+//        this.kakaoId = null;
+//    }
+
+    @Builder
+    public User(String username, String password, String nickname, Long kakaoId) {
+        this.username = username;
+        this.password = password;
+        this.nickname = nickname;
+        this.kakaoId = kakaoId;
     }
 }
