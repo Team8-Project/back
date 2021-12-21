@@ -28,6 +28,14 @@ public class User extends Timestamped {
     @Column(unique = true)
     private Long kakaoId;
 
+    public void setKakaoId(Long kakaoId) {
+        this.kakaoId = kakaoId;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public User(SignUpRequestDto signUpRequestDto, String encodedPassword) {
         this.username = signUpRequestDto.getUsername();
         this.nickname = signUpRequestDto.getNickname();

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <meta charset="UTF-8">
+    <title>로그인 페이지</title>
+</head>
+<body>
+<div id="login-form">
+    <div id="login-title">Log into Select Shop</div>
+    <div>
+        <div class="login-id-label">아이디</div>
+        <input type="text" name="username" id="username" class="login-input-box">
+
+        <div class="login-id-label">비밀번호</div>
+        <input type="password" name="password" id="password" class="login-input-box">
+
+        <button id="login-id-submit" onclick="onLogin()">로그인</button>
+        <button id="kakaologin" onclick="location.href='https://kauth.kakao.com/oauth/authorize?client_id=316b336d315dff9b64eaa117a37ee25b&redirect_uri=http://localhost:8080/api/user/kakao/callback&response_type=code'">카카오로그인</button>
+
+        <button id="postBtn" onclick="post()">글쓰기</button>
+
+        <button id="btn" onclick="comment()">댓글 작성</button>
+
+        <button id="tn" onclick="islogin()">접속확인</button>
+    </div>
+    <div id="login-failed" style="display:none" class="alert alert-danger" role="alert">로그인에 실패하였습니다.</div>
+</div>
+</body>
+<script>
+    const href = location.href;
+    const queryString = href.substring(href.indexOf("?")+1)
+    if (queryString === 'error') {
+        const errorDiv = document.getElementById('login-failed');
+        errorDiv.style.display = 'block';
+    }
+
+    function onKakaoLogin(){
+        $.ajax({
+            type: "GET",
+            url: `https://kauth.kakao.com/oauth/authorize?client_id=316b336d315dff9b64eaa117a37ee25b&redirect_uri=http://localhost:8080/api/user/kakao/callback&response_type=code`,
+            contentType: "application/json",
+            success: function (response, textStatus, request) {
+                console.log(response);
+                console.log(request);
+                console.log(textStatus);
+                const jwtToken = request.getResponseHeader("Authorization");
+                console.log(jwtToken);
+
+
+                if (jwtToken) {
+                    $.cookie("token", jwtToken);
+                    $.ajaxSetup({
+                        headers:{
+                            'Authorization': $.cookie('token')
+                        }
+                    });
+                }
+                console.log("---jwtToken--");
+                console.log($.cookie('token'));
+                console.log("---request---");
+                console.log(request);
+            }
+        })
+    }
+
+    function onLogin() {
+        $.ajax({
+            type: "POST",
+            url: `/user/login`,
+            contentType: "application/json",
+            data: JSON.stringify({
+                username: $('#username').val(),
+                password: $('#password').val()
+            }),
+            success: function (response, textStatus, request) {
+                console.log(response);
+                console.log(request);
+                console.log(textStatus);
+                const jwtToken = request.getResponseHeader("Authorization");
+                console.log(jwtToken);
+
+
+                if (jwtToken) {
+                    $.cookie("token", jwtToken);
+                    $.ajaxSetup({
+                        headers:{
+                            'Authorization': $.cookie('token')
+                        }
+                    });
+                }
+                console.log("---jwtToken--");
+                console.log($.cookie('token'));
+                console.log("---request---");
+                console.log(request);
+            }
+        })
+    }
+
+    function post(){
+        console.log($.cookie("token"));
+        $.ajax({
+            type: "POST",
+            url: `/api/posts`,
+            contentType: "application/json",
+            data: JSON.stringify({
+                title: "고민이 있어요",
+                content: "딸기가 먹고싶어요"
+            }),
+            success: function (response, textStatus, request) {
+                console.log("성공!");
+            },
+            error: function(){
+                console.log("실패..");
+            }
+        })
+    }
+
+    function islogin(){
+        console.log("islogin 실행...");
+        $.ajax({
+            type: "GET",
+            url: `/api/islogin`,
+            contentType: "application/json",
+            success: function (response, textStatus, request) {
+                console.log("성공!");
+                alert(response);
+                console.log(response);
+                console.log(request);
+            },
+            error: function(response, textStatus, request){
+                console.log("실패..");
+                console.log(response);
+                console.log(request);
+            }
+        })
+    }
+
+    function comment(){
+        console.log("comment proc .....");
+        console.log("my token : " + $.cookie("token"));
+        console.log("------------------");
+        $.ajax({
+            type: "POST",
+            url: `/api/comments/32`,
+            contentType: "application/json",
+            data: JSON.stringify({
+                comment: "댓글입니다."
+            }),
+            success: function (response, textStatus, request) {
+                console.log("성공!");
+            },
+            error: function(){
+                console.log("실패..");
+            }
+        })
+    }
+</script>
+</html>

@@ -3,6 +3,9 @@ package com.teamproj.backend.security.jwt;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.teamproj.backend.security.UserDetailsImpl;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 import java.util.Date;
 
@@ -20,7 +23,7 @@ public final class JwtTokenUtils {
 
     public static final String CLAIM_EXPIRED_DATE = "EXPIRED_DATE";
     public static final String CLAIM_USER_NAME = "USER_NAME";
-    public static final String JWT_SECRET = "jwt_secret_!@#$%";
+    public static final String JWT_SECRET = "teamproj8!@$!^%$@#";
 
     public static String generateJwtToken(UserDetailsImpl userDetails) {
         String token = null;
