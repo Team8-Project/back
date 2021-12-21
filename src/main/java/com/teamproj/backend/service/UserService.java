@@ -7,7 +7,6 @@ import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +33,7 @@ public class UserService {
     private void signUpValidCheck(SignUpRequestDto signUpRequestDto) {
         Optional<User> found = userRepository.findByUsername(signUpRequestDto.getUsername());
         if(found.isPresent()){
-            throw new IllegalArgumentException("이미 존재하는 ID입니다.");
+            throw new IllegalArgumentException("이미 존재하는 ID 입니다.");
         }
         found = userRepository.findByNickname(signUpRequestDto.getNickname());
         if(found.isPresent()){
@@ -52,6 +51,7 @@ public class UserService {
 
         return UserInfoResponseDto.builder()
                 .username(userDetails.getUsername())
+                .nickname(userDetails.getUser().getNickname())
                 .build();
     }
 }
