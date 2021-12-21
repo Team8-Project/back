@@ -25,7 +25,7 @@
         <button id="login-id-submit" onclick="onLogin()">로그인</button>
         <button id="kakaologin" onclick="location.href='https://kauth.kakao.com/oauth/authorize?client_id=316b336d315dff9b64eaa117a37ee25b&redirect_uri=http://localhost:8080/api/user/kakao/callback&response_type=code'">카카오로그인</button>
 
-        <button id="postBtn" onclick="post()">글쓰기</button>
+        <button id="postBtn" onclick="post()">회원가입</button>
 
         <button id="btn" onclick="comment()">댓글 작성</button>
 
@@ -105,17 +105,21 @@
     }
 
     function post(){
-        console.log($.cookie("token"));
+
+        let data = {
+            username: "test",
+            nickname: "닉네임",
+            password: "1234",
+            passwordCheck: "1234"
+        }
         $.ajax({
             type: "POST",
-            url: `/api/posts`,
+            url: `http://52.78.155.185/api/signup`,
             contentType: "application/json",
-            data: JSON.stringify({
-                title: "고민이 있어요",
-                content: "딸기가 먹고싶어요"
-            }),
+            data: JSON.stringify(data),
             success: function (response, textStatus, request) {
                 console.log("성공!");
+                console.log(response);
             },
             error: function(){
                 console.log("실패..");
