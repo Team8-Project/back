@@ -18,7 +18,6 @@ public class UserService {
     
     public SignUpResponseDto signUp(SignUpRequestDto signUpRequestDto){
         signUpValidCheck(signUpRequestDto);
-
         String encodedPassword = passwordEncoder.encode(signUpRequestDto.getPassword());
 
         userRepository.save(new User(signUpRequestDto, encodedPassword));
@@ -38,7 +37,7 @@ public class UserService {
         if(found.isPresent()){
             throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
         }
-        if(!signUpRequestDto.getPassword().equals(signUpRequestDto.getPassword_check())){
+        if(!signUpRequestDto.getPassword().equals(signUpRequestDto.getPasswordCheck())){
             throw new IllegalArgumentException("비밀번호 확인이 일치하지 않습니다.");
         }
     }
