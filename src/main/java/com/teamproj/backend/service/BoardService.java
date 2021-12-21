@@ -3,8 +3,11 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.board.BoardResponseDto;
+import com.teamproj.backend.dto.board.BoardUploadRequestDto;
+import com.teamproj.backend.dto.board.BoardUploadResponseDto;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
+import com.teamproj.backend.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -47,3 +50,44 @@ public class BoardService {
 
         return boardResponseDtoList;
     }
+
+
+    public BoardUploadResponseDto uploadBoard(
+            UserDetailsImpl userDetails,
+            BoardUploadRequestDto boardUploadRequestDto,
+            String category
+    ) {
+
+        if(boardUploadRequestDto.getTitle().isEmpty()) {
+            throw new IllegalArgumentException("제목은 필수 입력 값입니다");
+        }
+        if(boardUploadRequestDto.getContent().isEmpty()) {
+            throw new IllegalArgumentException("내용은 필수 입력 값입니다");
+        }
+
+        BoardCategory boardCategory = boardCategoryRepository.findById(category).orElseThrow(
+                    () -> new NullPointerException("해당 카테고리가 없습니다.")
+                );
+
+
+        boardCategory = new BoardCategory(category, null);
+
+        Board board = Board.builder()
+                        .title(boardUploadRequestDto.getTitle())
+                        .content(boardUploadRequestDto.getContent())
+                        .boardCategory(boardCategory)
+                        .user(userDetails.getUser())
+                        .build();
+        boardRepository.save(board);
+
+        BoardUploadResponseDto boardUploadResponseDto = BoardUploadResponseDto.builder()
+                .boardId(board.getPostId())
+                .title(board.getTitle())
+                .content(board.getContent())
+                .subject(board.getBoardSubject().getSubject())
+                .build();
+
+
+        return boardUploadResponseDto;
+    }
+}
