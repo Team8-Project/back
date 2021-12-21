@@ -13,10 +13,10 @@ import java.util.List;
 public class BoardController {
     private final BoardService boardService;
 
-    @GetMapping("/api/boards/subject")
-    public List<BoardSubjectResponseDto> getBoardSubject(String categoryName){
-
-    }
+//    @GetMapping("/api/boards/subject")
+//    public List<BoardSubjectResponseDto> getBoardSubject(String categoryName){
+//
+//    }
 
     @GetMapping("/api/boards")
     public List<BoardResponseDto> getBoard(){
