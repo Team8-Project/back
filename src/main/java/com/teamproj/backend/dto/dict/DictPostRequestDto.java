@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.user.userInfo;
+package com.teamproj.backend.dto.dict;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfoResponseDto {
-    private String username;
-    private String nickname;
+public class DictPostRequestDto {
+    private String dictName;
+    private String content;
 }
