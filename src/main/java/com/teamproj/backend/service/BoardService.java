@@ -85,6 +85,7 @@ public class BoardService {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .subject(board.getBoardSubject().getSubject())
+                .createdAt(board.getCreatedAt().toLocalDate())
                 .build();
 
 

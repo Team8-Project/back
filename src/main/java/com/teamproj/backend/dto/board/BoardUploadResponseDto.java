@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Getter
 @Builder
 @AllArgsConstructor
@@ -14,4 +16,5 @@ public class BoardUploadResponseDto {
     private String title;
     private String content;
     private String subject;
+    private LocalDate createdAt;
 }
