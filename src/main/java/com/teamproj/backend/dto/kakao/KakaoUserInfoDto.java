@@ -3,10 +3,10 @@ package com.teamproj.backend.dto.kakao;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@Getter
 @AllArgsConstructor
+@Getter
 public class KakaoUserInfoDto {
-    private Long id;
-    private String nickname;
-    private String email;
+    Long id;
+    String email;
+    String nickname;
 }
