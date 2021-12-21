@@ -3,8 +3,11 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
+import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
 import com.teamproj.backend.model.User;
+import com.teamproj.backend.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,5 +43,15 @@ public class UserService {
         if(!signUpRequestDto.getPassword().equals(signUpRequestDto.getPasswordCheck())){
             throw new IllegalArgumentException("비밀번호 확인이 일치하지 않습니다.");
         }
+    }
+
+    public UserInfoResponseDto getUserInfo(UserDetailsImpl userDetails) {
+        if(userDetails == null){
+            throw new NullPointerException("로그인하지 않은 사용자입니다.");
+        }
+
+        return UserInfoResponseDto.builder()
+                .username(userDetails.getUsername())
+                .build();
     }
 }

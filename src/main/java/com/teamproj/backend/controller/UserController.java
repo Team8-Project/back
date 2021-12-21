@@ -4,10 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.teamproj.backend.dto.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
+import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
+import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.KakaoUserService;
 import com.teamproj.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -26,5 +29,11 @@ public class UserController {
     @GetMapping("/api/user/kakao/callback")
     public ResponseEntity<KakaoUserResponseDto> kakaoLogin(@RequestParam String code) throws JsonProcessingException {
         return kakaoUserService.kakaoLogin(code);
+    }
+
+    @GetMapping("/api/userInfo")
+    public ResponseEntity<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails){
+        return ResponseEntity.ok()
+                .body(userService.getUserInfo(userDetails));
     }
 }
