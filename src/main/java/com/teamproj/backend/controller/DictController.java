@@ -1,8 +1,11 @@
 package com.teamproj.backend.controller;
 
 import com.teamproj.backend.dto.dict.*;
-import com.teamproj.backend.model.User;
+import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
+import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
+import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.DictHistoryService;
 import com.teamproj.backend.service.DictService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DictController {
     private final DictService dictService;
+    private final DictHistoryService dictHistoryService;
 
     @GetMapping("/api/dict")
     public ResponseEntity<List<DictResponseDto>> getDictList(@RequestHeader(value="Authorization", required = false) String token,
@@ -29,9 +33,13 @@ public class DictController {
     }
 
     @GetMapping("/api/dict/{dictId}")
-    public ResponseEntity<DictDetailResponseDto> getDictDetail(@PathVariable Long dictId){
+    public ResponseEntity<DictDetailResponseDto> getDictDetail(@RequestHeader(value="Authorization", required = false) String token,
+                                                               @PathVariable Long dictId){
+        if(token == null){
+            token = "";
+        }
         return ResponseEntity.ok()
-                .body(dictService.getDictDetail(dictId));
+                .body(dictService.getDictDetail(dictId, token));
     }
 
     @PostMapping("/api/dict")
@@ -54,5 +62,25 @@ public class DictController {
                                                         @PathVariable Long dictId){
         return ResponseEntity.ok()
                 .body(dictService.likeDict(userDetails, dictId));
+    }
+
+    @GetMapping("/api/dict/{dictId}/history")
+    public ResponseEntity<DictHistoryResponseDto> getDictHistory(@PathVariable Long dictId){
+        return ResponseEntity.ok()
+                .body(dictHistoryService.getDictHistory(dictId));
+    }
+
+    @GetMapping("/api/dict/history/{historyId}")
+    public ResponseEntity<DictHistoryDetailResponseDto> getDictHistoryDetail(@PathVariable Long historyId){
+        return ResponseEntity.ok()
+                .body(dictHistoryService.getDictHistoryDetail(historyId));
+    }
+
+    @GetMapping("/api/dict/revert/{historyId}")
+    public ResponseEntity<DictRevertResponseDto> revertDict(@PathVariable Long historyId){
+        return ResponseEntity.ok()
+                .body(DictRevertResponseDto.builder()
+                        .result("미구현 입니당... ^^;; 요청 url : " + historyId)
+                        .build());
     }
 }

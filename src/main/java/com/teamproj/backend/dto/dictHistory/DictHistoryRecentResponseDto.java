@@ -5,15 +5,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DictHistoryResponseDto {
-    private Long dictId;
-    private String title;
-    private String firstWriter;
-    private List<DictHistoryRecentResponseDto> history;
+public class DictHistoryRecentResponseDto {
+    private Long historyId;
+    private String writer;
+    private LocalDate createdAt;
 }
