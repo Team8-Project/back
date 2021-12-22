@@ -2,6 +2,7 @@ package com.teamproj.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.teamproj.backend.dto.kakao.KakaoUserResponseDto;
+import com.teamproj.backend.dto.user.signUp.SignUpCheckResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
@@ -35,5 +36,17 @@ public class UserController {
     public ResponseEntity<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails){
         return ResponseEntity.ok()
                 .body(userService.getUserInfo(userDetails));
+    }
+
+    @GetMapping("/api/signup/username")
+    public ResponseEntity<SignUpCheckResponseDto> usernameValidCheck(@RequestParam String username){
+        return ResponseEntity.ok()
+                .body(userService.usernameValidCheck(username));
+    }
+
+    @GetMapping("/api/signup/nickname")
+    public ResponseEntity<SignUpCheckResponseDto> nicknameValidCheck(@RequestParam String nickname){
+        return ResponseEntity.ok()
+                .body(userService.nicknameValidCheck(nickname));
     }
 }

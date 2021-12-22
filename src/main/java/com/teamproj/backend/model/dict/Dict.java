@@ -30,9 +30,12 @@ public class Dict extends Timestamped {
     @Column(nullable = false)
     private String content;
 
-    @OneToMany(mappedBy = "dict")
+    @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
     private final List<DictHistory> dictHistoryList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "dict")
-    private final List<DictImage> dictImage = new ArrayList<>();
+    @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
+    private final List<DictImage> dictImageList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
+    private final List<DictLike> dictLikeList = new ArrayList<>();
 }

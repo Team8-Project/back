@@ -1,6 +1,7 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
+import com.teamproj.backend.dto.user.signUp.SignUpCheckResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
@@ -52,6 +53,22 @@ public class UserService {
         return UserInfoResponseDto.builder()
                 .username(userDetails.getUsername())
                 .nickname(userDetails.getUser().getNickname())
+                .build();
+    }
+
+    public SignUpCheckResponseDto usernameValidCheck(String username) {
+        Optional<User> found = userRepository.findByUsername(username);
+        System.out.println("아이디 중복검사 결과 : " + !found.isPresent());
+        return SignUpCheckResponseDto.builder()
+                .result(!found.isPresent())
+                .build();
+    }
+
+    public SignUpCheckResponseDto nicknameValidCheck(String nickname) {
+        Optional<User> found = userRepository.findByNickname(nickname);
+        System.out.println("닉네임 중복검사 결과 : " + !found.isPresent());
+        return SignUpCheckResponseDto.builder()
+                .result(!found.isPresent())
                 .build();
     }
 }

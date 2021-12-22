@@ -9,10 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DictResponseDto {
-    private Long dictId;
-    private String title;
-    private String meaning;
-    private boolean isLike;
-    private int likeCount;
+public class DictLikeResponseDto {
+    private boolean result;
 }

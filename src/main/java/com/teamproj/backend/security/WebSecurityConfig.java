@@ -121,8 +121,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         skipPathList.add("POST,/api/user"); // 로그인
         skipPathList.add("GET,/api/user/**"); // 소셜로그인
         skipPathList.add("POST,/api/signup"); // 회원가입
+        skipPathList.add("GET,/api/signup/**"); // 중복체크
 
         skipPathList.add("GET,/");
+
+        // 사전 목록 API 허용
+        skipPathList.add("GET,/api/dict");
+        // 게시판 목록 API 허용
+        // TODO
 
         // Swagger 허용
         skipPathList.add("GET,/swagger-ui.html");
