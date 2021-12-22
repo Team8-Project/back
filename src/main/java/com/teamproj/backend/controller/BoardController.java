@@ -1,16 +1,16 @@
 package com.teamproj.backend.controller;
 
+import com.teamproj.backend.dto.board.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUploadResponseDto;
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,12 +30,33 @@ public class BoardController {
     }
 
     @PostMapping("/api/board")
-    public ResponseEntity<BoardUploadResponseDto> uploadBoard(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            BoardUploadRequestDto boardUploadRequestDto
-    ) {
+    public ResponseEntity<BoardUploadResponseDto> uploadBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                             @RequestBody BoardUploadRequestDto boardUploadRequestDto) {
         // To Do : 게시글 subject, Category 추가하는 기능 만들기  => 더미 데이터만 넣은 상태
         return ResponseEntity.ok()
                 .body(boardService.uploadBoard(userDetails, boardUploadRequestDto, "FREEBOARD"));
+    }
+
+    @GetMapping("/api/board/{postId}")
+    public ResponseEntity<BoardDetailResponseDto> getBoardDetail(@PathVariable Long postId) {
+        return ResponseEntity.ok()
+                .body(boardService.getBoardDetail(postId));
+    }
+
+    @PutMapping("/api/board/{postId}")
+    public ResponseEntity<String> updateBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                              @RequestBody BoardUploadRequestDto boardUploadRequestDto,
+                                              @PathVariable Long postId) {
+        return ResponseEntity.ok()
+                .body(boardService.updateBoard(postId, userDetails, boardUploadRequestDto));
+    }
+
+    @DeleteMapping("/api/board/{postId}")
+    public ResponseEntity<String> deleteBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                              @PathVariable Long postId) {
+
+        System.out.println(postId);
+        return ResponseEntity.ok()
+                .body(boardService.deleteBoard(userDetails, postId));
     }
 }
