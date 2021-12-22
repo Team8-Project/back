@@ -1,10 +1,12 @@
 package com.teamproj.backend.dto.board;
 
+import com.teamproj.backend.model.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Builder
@@ -18,5 +20,5 @@ public class BoardDetailResponseDto {
     private String subject;
     private int views;
     private int likeCnt;
-//    private List<commentRequestDto> commentList;
+    private List<Comment> commentList;
 }

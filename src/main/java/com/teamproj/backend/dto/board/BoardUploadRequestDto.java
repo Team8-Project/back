@@ -12,4 +12,5 @@ public class BoardUploadRequestDto {
     private String title;
     private String content;
     private String subject;
+    private String category;
 }

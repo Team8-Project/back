@@ -2,16 +2,20 @@ package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
+import com.teamproj.backend.Repository.board.BoardSubjectRepository;
 import com.teamproj.backend.dto.board.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUploadResponseDto;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
+import com.teamproj.backend.model.board.BoardSubject;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.util.ManuallyJwtLoginProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.Subject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +25,10 @@ import java.util.Optional;
 public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardCategoryRepository boardCategoryRepository;
+    private final BoardSubjectRepository boardSubjectRepository;
+
+    private final CommentService commentService;
+    private final ManuallyJwtLoginProcessor manuallyJwtLoginProcessor;
 
     public List<BoardResponseDto> getBoard(String category) {
         Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category.toUpperCase());
@@ -43,7 +51,7 @@ public class BoardService {
             boardResponseDtoList.add(BoardResponseDto.builder()
                     .postId(board.getPostId())
                     .nickname(board.getUser().getNickname())
-                    .subject(board.getBoardSubject().getSubject())
+                    .subject(board.getBoardSubject()==null?"":board.getBoardSubject().getSubject())
                     .content(board.getContent())
                     .createdAt(board.getCreatedAt().toLocalDate())
                     .build());
@@ -53,6 +61,7 @@ public class BoardService {
     }
 
 
+    //region 게시글 작성
     public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto,
                                               String category) {
 
@@ -63,44 +72,49 @@ public class BoardService {
             throw new IllegalArgumentException("내용은 필수 입력 값입니다");
         }
 
-        // To Do: 카테고리 추가되면 조회 후 해당 카테고리 Response
-//        BoardCategory boardCategory = boardCategoryRepository.findById(category).orElseThrow(
+//        BoardCategory boardCategory = boardCategoryRepository.findById(boardUploadRequestDto.getCategory()).orElseThrow(
 //                    () -> new NullPointerException("해당 카테고리가 없습니다.")
 //                );
 
-
-        BoardCategory boardCategory = new BoardCategory(category, null);
+//        BoardSubject subject = boardSubjectRepository.findBySubject(boardUploadRequestDto.getSubject())
+//                .orElseThrow(
+//                        () -> new NullPointerException("해당 글머리가 없습니다.")
+//                );
 
         // 테스트용 BoardCategory 저장 => 나중에 삭제 필요
+        BoardCategory boardCategory = new BoardCategory(category, null);
         boardCategoryRepository.save(boardCategory);
+
 
         Board board = Board.builder()
                         .title(boardUploadRequestDto.getTitle())
                         .content(boardUploadRequestDto.getContent())
                         .boardCategory(boardCategory)
+                        .boardSubject(null)
                         .user(userDetails.getUser())
                         .build();
         boardRepository.save(board);
 
-        BoardUploadResponseDto boardUploadResponseDto = BoardUploadResponseDto.builder()
+
+        return BoardUploadResponseDto.builder()
                 .boardId(board.getPostId())
                 .title(board.getTitle())
                 .content(board.getContent())
-//                .subject(board.getBoardSubject().getSubject())
+                .subject(board.getBoardSubject()==null?"":board.getBoardSubject().getSubject())
+                .category(board.getBoardCategory().getCategoryName())
                 .createdAt(board.getCreatedAt().toLocalDate())
                 .build();
-
-
-        return boardUploadResponseDto;
     }
+    //endregion
 
-    public BoardDetailResponseDto getBoardDetail(Long postId) {
+    //region 게시글 상세 조회
+    public BoardDetailResponseDto getBoardDetail(Long postId, String token) {
+        UserDetailsImpl userDetails = manuallyJwtLoginProcessor.forceLogin(token);
         Board board = boardRepository.findById(postId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
 
-        System.out.println(board.getTitle());
         boardRepository.updateView(postId);
 
         return BoardDetailResponseDto.builder()
@@ -109,13 +123,15 @@ public class BoardService {
                 .content(board.getContent())
                 .writer(board.getUser().getNickname())
                 .createdAt(board.getCreatedAt().toLocalDate())
-                .subject(board.getBoardSubject().getSubject())
+                .subject(board.getBoardSubject()==null?"":board.getBoardSubject().getSubject())
                 .views(board.getViews())
 //                .likeCnt(board.)
-//                .commentList()
+                .commentList(commentService.getCommentList(board))
                 .build();
     }
+    //endregion
 
+    //region 게시글 업데이트(수정)
     public String updateBoard(Long postId, UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto) {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(
@@ -125,13 +141,24 @@ public class BoardService {
             throw new IllegalArgumentException("게시글을 작성한 유저만 수정이 가능합니다.");
         }
 
+//        BoardSubject boardSubject = boardSubjectRepository.findBySubject(boardUploadRequestDto.getSubject())
+//                .orElseThrow(
+//                        () -> new NullPointerException("해당 글머리가 없습니다.")
+//                );
+
+
+        // To Do: 차 후 삭제할 코드
+        BoardSubject boardSubject = null;
+
         // To Do: 글머리도 수정 가능할 시 추가 작성 필요
-        board.update(boardUploadRequestDto);
+        board.update(boardUploadRequestDto, boardSubject);
 
         boardRepository.save(board);
         return "게시글 수정 완료";
     }
+    //endregion
 
+    //region 게시글 삭제
     public String deleteBoard(UserDetailsImpl userDetails, Long postId) {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(
@@ -144,4 +171,5 @@ public class BoardService {
         boardRepository.delete(board);
         return "게시글 삭제 완료";
     }
+    //endregion
 }

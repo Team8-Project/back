@@ -19,7 +19,7 @@ import java.util.List;
 public class BoardController {
     private final BoardService boardService;
 
-//    @GetMapping("/api/boards/subject")
+//    @GetMapping("/api/board")
 //    public List<BoardSubjectResponseDto> getBoardSubject(String categoryName){
 //
 //    }
@@ -38,9 +38,14 @@ public class BoardController {
     }
 
     @GetMapping("/api/board/{postId}")
-    public ResponseEntity<BoardDetailResponseDto> getBoardDetail(@PathVariable Long postId) {
+    public ResponseEntity<BoardDetailResponseDto> getBoardDetail(@RequestHeader(value="Authorization", required = false) String token,
+                                                                 @PathVariable Long postId) {
+        if(token == null){
+            token = "";
+        }
+        System.out.println("token" + token);
         return ResponseEntity.ok()
-                .body(boardService.getBoardDetail(postId));
+                .body(boardService.getBoardDetail(postId, token));
     }
 
     @PutMapping("/api/board/{postId}")
