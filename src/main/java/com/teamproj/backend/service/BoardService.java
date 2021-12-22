@@ -2,6 +2,7 @@ package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
+import com.teamproj.backend.dto.board.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUploadResponseDto;
@@ -52,11 +53,8 @@ public class BoardService {
     }
 
 
-    public BoardUploadResponseDto uploadBoard(
-            UserDetailsImpl userDetails,
-            BoardUploadRequestDto boardUploadRequestDto,
-            String category
-    ) {
+    public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto,
+                                              String category) {
 
         if(boardUploadRequestDto.getTitle().isEmpty()) {
             throw new IllegalArgumentException("제목은 필수 입력 값입니다");
@@ -65,12 +63,16 @@ public class BoardService {
             throw new IllegalArgumentException("내용은 필수 입력 값입니다");
         }
 
-        BoardCategory boardCategory = boardCategoryRepository.findById(category).orElseThrow(
-                    () -> new NullPointerException("해당 카테고리가 없습니다.")
-                );
+        // To Do: 카테고리 추가되면 조회 후 해당 카테고리 Response
+//        BoardCategory boardCategory = boardCategoryRepository.findById(category).orElseThrow(
+//                    () -> new NullPointerException("해당 카테고리가 없습니다.")
+//                );
 
 
-        boardCategory = new BoardCategory(category, null);
+        BoardCategory boardCategory = new BoardCategory(category, null);
+
+        // 테스트용 BoardCategory 저장 => 나중에 삭제 필요
+        boardCategoryRepository.save(boardCategory);
 
         Board board = Board.builder()
                         .title(boardUploadRequestDto.getTitle())
@@ -84,11 +86,62 @@ public class BoardService {
                 .boardId(board.getPostId())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .subject(board.getBoardSubject().getSubject())
+//                .subject(board.getBoardSubject().getSubject())
                 .createdAt(board.getCreatedAt().toLocalDate())
                 .build();
 
 
         return boardUploadResponseDto;
+    }
+
+    public BoardDetailResponseDto getBoardDetail(Long postId) {
+        Board board = boardRepository.findById(postId)
+                .orElseThrow(
+                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                );
+
+        System.out.println(board.getTitle());
+        boardRepository.updateView(postId);
+
+        return BoardDetailResponseDto.builder()
+                .boardId(board.getPostId())
+                .title(board.getTitle())
+                .content(board.getContent())
+                .writer(board.getUser().getNickname())
+                .createdAt(board.getCreatedAt().toLocalDate())
+                .subject(board.getBoardSubject().getSubject())
+                .views(board.getViews())
+//                .likeCnt(board.)
+//                .commentList()
+                .build();
+    }
+
+    public String updateBoard(Long postId, UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto) {
+        Board board = boardRepository.findById(postId)
+                .orElseThrow(
+                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                );
+        if(userDetails.getUser().getId() != board.getUser().getId()) {
+            throw new IllegalArgumentException("게시글을 작성한 유저만 수정이 가능합니다.");
+        }
+
+        // To Do: 글머리도 수정 가능할 시 추가 작성 필요
+        board.update(boardUploadRequestDto);
+
+        boardRepository.save(board);
+        return "게시글 수정 완료";
+    }
+
+    public String deleteBoard(UserDetailsImpl userDetails, Long postId) {
+        Board board = boardRepository.findById(postId)
+                .orElseThrow(
+                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                );
+        if(userDetails.getUser().getId() != board.getUser().getId()) {
+            throw new IllegalArgumentException("게시글을 작성한 유저만 삭제가 가능합니다.");
+        }
+
+        boardRepository.delete(board);
+        return "게시글 삭제 완료";
     }
 }
