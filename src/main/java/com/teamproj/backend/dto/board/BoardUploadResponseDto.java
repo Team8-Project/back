@@ -16,5 +16,6 @@ public class BoardUploadResponseDto {
     private String title;
     private String content;
     private String subject;
+    private String category;
     private LocalDate createdAt;
 }

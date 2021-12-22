@@ -42,8 +42,9 @@ public class Board extends Timestamped {
     @JoinColumn(nullable = false)
     private BoardCategory boardCategory;
 
-    public void update(BoardUploadRequestDto boardUploadRequestDto) {
+    public void update(BoardUploadRequestDto boardUploadRequestDto, BoardSubject boardSubject) {
         this.title = boardUploadRequestDto.getTitle();
         this.content = boardUploadRequestDto.getContent();
+        this.boardSubject = boardSubject;
     }
 }
