@@ -1,16 +1,18 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.CommentRepository;
-import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,8 +22,28 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final CommentRepository commentRepository;
 
-    public List<Comment> getCommentList(Board board){
-        return commentRepository.findAllByBoardOrderByCreatedAt(board);
+    public List<CommentResponseDto> getCommentList(Long postId, int page, int size) {
+        Optional<Board> board = boardRepository.findById(postId);
+        if (!board.isPresent()) {
+            throw new NullPointerException("유효하지 않은 게시글입니다.");
+        }
+        Page<Comment> commentPage = commentRepository.findAllByBoardOrderByCreatedAt(board.get(), PageRequest.of(page, size));
+        return commentListToCommentResponseDto(commentPage.toList());
+    }
+
+    private List<CommentResponseDto> commentListToCommentResponseDto(List<Comment> commentList) {
+        List<CommentResponseDto> commentResponseDtoList = new ArrayList<>();
+        for (Comment comment : commentList) {
+            commentResponseDtoList.add(CommentResponseDto.builder()
+                    .commentId(comment.getCommentId())
+                    .commentWriterId(comment.getUser().getUsername())
+                    .commentWriter(comment.getUser().getNickname())
+                    .commentContent(comment.getContent())
+                    .profileImageUrl("")
+                    .createdAt(comment.getCreatedAt().toLocalDate())
+                    .build());
+        }
+        return commentResponseDtoList;
     }
 
     public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long postId, CommentPostRequestDto commentPostRequestDto) {

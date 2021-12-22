@@ -8,10 +8,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 public class CommentController {
     private final CommentService commentService;
+
+    @GetMapping("/api/board/{postId}/comment")
+    public ResponseEntity<List<CommentResponseDto>> getComments(@PathVariable Long postId,
+                                                                @RequestParam int page,
+                                                                @RequestParam int size){
+        return ResponseEntity.ok()
+                .body(commentService.getCommentList(postId, page, size));
+    }
 
     @PostMapping("/api/board/{postId}/comment")
     public ResponseEntity<CommentPostResponseDto> postComment(@AuthenticationPrincipal UserDetailsImpl userDetails,
