@@ -21,7 +21,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
 
     public List<Comment> getCommentList(Board board){
-        return commentRepository.findAllByBoard(board);
+        return commentRepository.findAllByBoardOrderByCreatedAt(board);
     }
 
     public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long postId, CommentPostRequestDto commentPostRequestDto) {
