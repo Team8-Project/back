@@ -1,13 +1,11 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
+import com.teamproj.backend.Repository.board.BoardLikeRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.Repository.board.BoardSubjectRepository;
 import com.teamproj.backend.dto.board.*;
-import com.teamproj.backend.model.board.Board;
-import com.teamproj.backend.model.board.BoardCategory;
-import com.teamproj.backend.model.board.BoardSubject;
-import com.teamproj.backend.model.board.QBoardCategory;
+import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.ManuallyJwtLoginProcessor;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +21,7 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardCategoryRepository boardCategoryRepository;
     private final BoardSubjectRepository boardSubjectRepository;
+    private final BoardLikeRepository boardLikeRepository;
 
     private final CommentService commentService;
     private final ManuallyJwtLoginProcessor manuallyJwtLoginProcessor;
@@ -47,10 +46,12 @@ public class BoardService {
         for (Board board : boardList) {
             boardResponseDtoList.add(BoardResponseDto.builder()
                     .postId(board.getPostId())
+                    .title(board.getTitle())
                     .nickname(board.getUser().getNickname())
+                    .createdAt(board.getCreatedAt().toLocalDate())
                     .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
                     .content(board.getContent())
-                    .createdAt(board.getCreatedAt().toLocalDate())
+                    .views(board.getViews())
                     .build());
         }
 
@@ -115,6 +116,8 @@ public class BoardService {
 
         boardRepository.updateView(postId);
 
+        List<BoardLike> boardLike = boardLikeRepository.findAllByBoard(board);
+
         return BoardDetailResponseDto.builder()
                 .boardId(board.getPostId())
                 .title(board.getTitle())
@@ -123,7 +126,7 @@ public class BoardService {
                 .createdAt(board.getCreatedAt().toLocalDate())
                 .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
                 .views(board.getViews())
-//                .likeCnt(board.)
+                .likeCnt(boardLike.size())
                 .commentList(commentService.getCommentList(board.getPostId(), 0, 10))
                 .build();
     }
