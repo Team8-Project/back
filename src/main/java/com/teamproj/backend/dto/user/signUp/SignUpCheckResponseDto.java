@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.dict;
+package com.teamproj.backend.dto.user.signUp;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DictPostRequestDto {
-    private String title;
-    private String content;
+public class SignUpCheckResponseDto {
+    private boolean result;
 }

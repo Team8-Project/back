@@ -1,12 +1,16 @@
 package com.teamproj.backend.model;
 
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
+import com.teamproj.backend.model.board.Board;
+import com.teamproj.backend.model.dict.DictLike;
 import com.teamproj.backend.util.Timestamped;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -27,6 +31,12 @@ public class User extends Timestamped {
 
     @Column(unique = true)
     private Long kakaoId;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private final List<Board> boardList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private final List<DictLike> dictLikeList = new ArrayList<>();
 
     public void setKakaoId(Long kakaoId) {
         this.kakaoId = kakaoId;
