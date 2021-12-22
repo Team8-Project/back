@@ -22,7 +22,11 @@ public class Dict extends Timestamped {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-    private User user;
+    private User firstAuthor;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private User recentModifier;
 
     @Column(nullable = false, unique = true)
     private String dictName;

@@ -70,14 +70,20 @@ public class DictService {
     }
 
     // 사전 상세 정보 가져오기
-    // 우선순위 낮은 작업
-    public DictDetailResponseDto getDictDetail(Long dictId) {
-        Dict dict = nullCheck(dictId, NULL_DICT_MSG);
+    public DictDetailResponseDto getDictDetail(Long dictId, String token) {
+        UserDetailsImpl userDetails = manuallyJwtLoginProcessor.forceLogin(token);
+        Dict dict = getDictSafe(dictId, NULL_DICT_MSG);
 
-        // 사전에 들어갈 내용이 정해지면 작성됩니다.
-        DictDetailResponseDto dictDetailResponseDto = null;
-
-        return dictDetailResponseDto;
+        return DictDetailResponseDto.builder()
+                .dictId(dict.getDictId())
+                .title(dict.getDictName())
+                .meaning(dict.getContent())
+                .firstWriter(dict.getFirstAuthor().getNickname())
+                .recentWriter(dict.getRecentModifier().getNickname())
+                .isLike(isDictLike(dict, userDetails))
+                .createdAt(dict.getCreatedAt().toLocalDate())
+                .modifiedAt(dict.getModifiedAt().toLocalDate())
+                .build();
     }
 
     // 사전 작성하기
@@ -89,8 +95,8 @@ public class DictService {
         }
 
         Dict dict = Dict.builder()
-                // TODO
-                .user(userDetails.getUser())
+                .firstAuthor(userDetails.getUser())
+                .recentModifier(userDetails.getUser())
                 .content(dictPostRequestDto.getContent())
                 .dictName(dictPostRequestDto.getTitle())
                 .build();
@@ -107,11 +113,11 @@ public class DictService {
     public DictPutResponseDto putDict(UserDetailsImpl userDetails, Long dictId, DictPutRequestDto dictPutRequestDto) {
         loginCheck(userDetails);
 
-        Dict dict = nullCheck(dictId, NULL_DICT_MSG);
+        Dict dict = getDictSafe(dictId, NULL_DICT_MSG);
 
         DictHistory dictHistory = DictHistory.builder()
                 .prevContent(dict.getContent())
-                .user(dict.getUser())
+                .user(dict.getRecentModifier())
                 .dict(dict)
                 .build();
 
@@ -131,7 +137,7 @@ public class DictService {
     public DictLikeResponseDto likeDict(UserDetailsImpl userDetails, Long dictId) {
         loginCheck(userDetails);
 
-        Dict dict = nullCheck(dictId, NULL_DICT_MSG);
+        Dict dict = getDictSafe(dictId, NULL_DICT_MSG);
         boolean isLike = false;
         if(isDictLike(dict, userDetails)){
             Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(userDetails.getUser(), dict);
@@ -152,7 +158,7 @@ public class DictService {
                 .build();
     }
 
-    public Dict nullCheck(Long dictId, String msg) {
+    public Dict getDictSafe(Long dictId, String msg) {
         Optional<Dict> dict = dictRepository.findById(dictId);
         if (!dict.isPresent()) {
             throw new NullPointerException(msg);
