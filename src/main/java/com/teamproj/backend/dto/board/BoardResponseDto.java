@@ -12,8 +12,10 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class BoardResponseDto {
     private Long postId;
+    private String title;
     private String nickname;
     private String content;
     private String subject;
+    private int views;
     private LocalDate createdAt;
 }
