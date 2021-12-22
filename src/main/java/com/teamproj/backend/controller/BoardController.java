@@ -1,9 +1,6 @@
 package com.teamproj.backend.controller;
 
-import com.teamproj.backend.dto.board.BoardDetailResponseDto;
-import com.teamproj.backend.dto.board.BoardResponseDto;
-import com.teamproj.backend.dto.board.BoardUploadRequestDto;
-import com.teamproj.backend.dto.board.BoardUploadResponseDto;
+import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.BoardService;
@@ -19,12 +16,13 @@ import java.util.List;
 public class BoardController {
     private final BoardService boardService;
 
-//    @GetMapping("/api/board")
-//    public List<BoardSubjectResponseDto> getBoardSubject(String categoryName){
-//
-//    }
+    @GetMapping("/api/board/subject")
+    public ResponseEntity<List<BoardSubjectResponseDto>> getBoardSubject(String categoryName){
+        return ResponseEntity.ok()
+                .body(boardService.getBoardSubject("FREEBOARD"));
+    }
 
-    @GetMapping("/api/boards/")
+    @GetMapping("/api/board")
     public List<BoardResponseDto> getBoard(){
         return boardService.getBoard("FREEBOARD");
     }

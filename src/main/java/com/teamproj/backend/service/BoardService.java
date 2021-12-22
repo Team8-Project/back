@@ -3,19 +3,16 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.Repository.board.BoardSubjectRepository;
-import com.teamproj.backend.dto.board.BoardDetailResponseDto;
-import com.teamproj.backend.dto.board.BoardResponseDto;
-import com.teamproj.backend.dto.board.BoardUploadRequestDto;
-import com.teamproj.backend.dto.board.BoardUploadResponseDto;
+import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
 import com.teamproj.backend.model.board.BoardSubject;
+import com.teamproj.backend.model.board.QBoardCategory;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.ManuallyJwtLoginProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.Subject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +48,7 @@ public class BoardService {
             boardResponseDtoList.add(BoardResponseDto.builder()
                     .postId(board.getPostId())
                     .nickname(board.getUser().getNickname())
-                    .subject(board.getBoardSubject()==null?"":board.getBoardSubject().getSubject())
+                    .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
                     .content(board.getContent())
                     .createdAt(board.getCreatedAt().toLocalDate())
                     .build());
@@ -65,10 +62,10 @@ public class BoardService {
     public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto,
                                               String category) {
 
-        if(boardUploadRequestDto.getTitle().isEmpty()) {
+        if (boardUploadRequestDto.getTitle().isEmpty()) {
             throw new IllegalArgumentException("제목은 필수 입력 값입니다");
         }
-        if(boardUploadRequestDto.getContent().isEmpty()) {
+        if (boardUploadRequestDto.getContent().isEmpty()) {
             throw new IllegalArgumentException("내용은 필수 입력 값입니다");
         }
 
@@ -81,18 +78,19 @@ public class BoardService {
 //                        () -> new NullPointerException("해당 글머리가 없습니다.")
 //                );
 
-        // 테스트용 BoardCategory 저장 => 나중에 삭제 필요
-        BoardCategory boardCategory = new BoardCategory(category, null);
-        boardCategoryRepository.save(boardCategory);
 
+        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category);
+        if(!boardCategory.isPresent()){
+            throw new NullPointerException("유효하지 않은 카테고리입니다.");
+        }
 
         Board board = Board.builder()
-                        .title(boardUploadRequestDto.getTitle())
-                        .content(boardUploadRequestDto.getContent())
-                        .boardCategory(boardCategory)
-                        .boardSubject(null)
-                        .user(userDetails.getUser())
-                        .build();
+                .title(boardUploadRequestDto.getTitle())
+                .content(boardUploadRequestDto.getContent())
+                .boardCategory(boardCategory.get())
+                .boardSubject(null)
+                .user(userDetails.getUser())
+                .build();
         boardRepository.save(board);
 
 
@@ -100,7 +98,7 @@ public class BoardService {
                 .boardId(board.getPostId())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .subject(board.getBoardSubject()==null?"":board.getBoardSubject().getSubject())
+                .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
                 .category(board.getBoardCategory().getCategoryName())
                 .createdAt(board.getCreatedAt().toLocalDate())
                 .build();
@@ -123,10 +121,10 @@ public class BoardService {
                 .content(board.getContent())
                 .writer(board.getUser().getNickname())
                 .createdAt(board.getCreatedAt().toLocalDate())
-                .subject(board.getBoardSubject()==null?"":board.getBoardSubject().getSubject())
+                .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
                 .views(board.getViews())
 //                .likeCnt(board.)
-                .commentList(commentService.getCommentList(board))
+                .commentList(commentService.getCommentList(board.getPostId(), 0, 10))
                 .build();
     }
     //endregion
@@ -137,7 +135,7 @@ public class BoardService {
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
-        if(userDetails.getUser().getId() != board.getUser().getId()) {
+        if (userDetails.getUser().getId() != board.getUser().getId()) {
             throw new IllegalArgumentException("게시글을 작성한 유저만 수정이 가능합니다.");
         }
 
@@ -164,12 +162,32 @@ public class BoardService {
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
-        if(userDetails.getUser().getId() != board.getUser().getId()) {
+        if (userDetails.getUser().getId() != board.getUser().getId()) {
             throw new IllegalArgumentException("게시글을 작성한 유저만 삭제가 가능합니다.");
         }
 
         boardRepository.delete(board);
         return "게시글 삭제 완료";
+    }
+
+    public List<BoardSubjectResponseDto> getBoardSubject(String category) {
+        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category);
+        if (!boardCategory.isPresent()) {
+            throw new NullPointerException("존재하지 않는 카테고리입니다.");
+        }
+
+        return boardSubjectListToBoardSubjectResponseDto(boardCategory.get().getBoardSubjectList());
+    }
+
+    private List<BoardSubjectResponseDto> boardSubjectListToBoardSubjectResponseDto(List<BoardSubject> boardSubjectList) {
+        List<BoardSubjectResponseDto> boardSubjectResponseDtoList = new ArrayList<>();
+        for (BoardSubject boardSubject : boardSubjectList) {
+            boardSubjectResponseDtoList.add(BoardSubjectResponseDto.builder()
+                    .subjectId(boardSubject.getSubjectId())
+                    .content(boardSubject.getSubject())
+                    .build());
+        }
+        return boardSubjectResponseDtoList;
     }
     //endregion
 }
