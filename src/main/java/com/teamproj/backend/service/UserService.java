@@ -46,24 +46,24 @@ public class UserService {
         // username
         if (username.length() < 3 || username.length() > 16) {
             throw new IllegalArgumentException("아이디는 3자 이상 16자 이하만 입력 가능합니다.");
-        }else if(!username.matches("^(?=.*[a-z0-9])[a-z0-9]{3,16}$")){
+        } else if (!username.matches("^(?=.*[a-z0-9])[a-z0-9]{3,16}$")) {
             throw new IllegalArgumentException("아이디는 영문자 및 숫자만 입력 가능합니다.");
         }
         // nickname
         if (nickname.length() < 2 || nickname.length() > 16) {
             throw new IllegalArgumentException("닉네임은 2자 이상 16자 이하만 입력 가능합니다.");
-        }else if(!nickname.matches("^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,16}$")){
+        } else if (!nickname.matches("^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,16}$")) {
             throw new IllegalArgumentException("닉네임은 영어 대소문자 및 숫자, 한글만 입력 가능합니다.");
         }
         // password
         if (password.length() < 6 || password.length() > 16) {
             throw new IllegalArgumentException("비밀번호는 6자 이상 16자 이하만 입력 가능합니다.");
-        }else if(!password.matches("^(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9!@#$%^&*()._-]{6,16}$")){
+        } else if (!password.matches("^(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9!@#$%^&*()._-]{6,16}$")) {
             throw new IllegalArgumentException("비밀번호는 영문자 및 숫자의 조합으로 입력해야 합니다.");
         }
 
         // 중복검사
-        Optional<User> found = userRepository.findByUsername(signUpRequestDto.getUsername());
+        Optional<User> found = userRepository.findByUsername(username);
         if (found.isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 ID 입니다.");
         }
