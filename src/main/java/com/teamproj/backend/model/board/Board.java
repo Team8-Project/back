@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -41,6 +43,9 @@ public class Board extends Timestamped {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private BoardCategory boardCategory;
+
+    @OneToMany(mappedBy = "board")
+    List<BoardLike> Likes = new ArrayList<>();
 
     public void update(BoardUploadRequestDto boardUploadRequestDto, BoardSubject boardSubject) {
         this.title = boardUploadRequestDto.getTitle();
