@@ -21,5 +21,6 @@ public class BoardDetailResponseDto {
     private String subject;
     private int views;
     private int likeCnt;
+    private Boolean isLike;
     private List<CommentResponseDto> commentList;
 }

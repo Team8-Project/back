@@ -1,5 +1,6 @@
 package com.teamproj.backend.controller;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -61,5 +62,13 @@ public class BoardController {
         System.out.println(postId);
         return ResponseEntity.ok()
                 .body(boardService.deleteBoard(userDetails, postId));
+    }
+
+    @PostMapping("/api/board/{postId}/like")
+    public ResponseEntity<Boolean> boardLike(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                             @PathVariable Long postId) {
+
+        return ResponseEntity.ok()
+                .body(boardService.boardLike(userDetails, postId));
     }
 }

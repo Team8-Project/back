@@ -26,6 +26,7 @@ public class BoardService {
     private final CommentService commentService;
     private final ManuallyJwtLoginProcessor manuallyJwtLoginProcessor;
 
+    //region 게시글 전체조회
     public List<BoardResponseDto> getBoard(String category) {
         Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category.toUpperCase());
         if (!boardCategory.isPresent()) {
@@ -42,7 +43,6 @@ public class BoardService {
 
     private List<BoardResponseDto> boardListToBoardResponseDtoList(List<Board> boardList) {
         List<BoardResponseDto> boardResponseDtoList = new ArrayList<>();
-
         for (Board board : boardList) {
             boardResponseDtoList.add(BoardResponseDto.builder()
                     .postId(board.getPostId())
@@ -50,14 +50,14 @@ public class BoardService {
                     .nickname(board.getUser().getNickname())
                     .createdAt(board.getCreatedAt().toLocalDate())
                     .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
-                    .content(board.getContent())
+                    .likeCnt(board.getLikes().size())
                     .views(board.getViews())
                     .build());
         }
 
         return boardResponseDtoList;
     }
-
+    //endregion
 
     //region 게시글 작성
     public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto,
@@ -80,15 +80,20 @@ public class BoardService {
 //                );
 
 
-        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category);
-        if(!boardCategory.isPresent()){
-            throw new NullPointerException("유효하지 않은 카테고리입니다.");
-        }
+//        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category);
+//        if(!boardCategory.isPresent()){
+//            throw new NullPointerException("유효하지 않은 카테고리입니다.");
+//        }
+
+        BoardCategory boardCategory = new BoardCategory(category, null);
+        boardCategoryRepository.save(boardCategory);
+
 
         Board board = Board.builder()
                 .title(boardUploadRequestDto.getTitle())
                 .content(boardUploadRequestDto.getContent())
-                .boardCategory(boardCategory.get())
+//                .boardCategory(boardCategory.get())
+                .boardCategory(boardCategory)
                 .boardSubject(null)
                 .user(userDetails.getUser())
                 .build();
@@ -114,9 +119,17 @@ public class BoardService {
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
 
+        boolean isLike = false;
+        if(userDetails != null) {
+            Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(board, userDetails.getUser());
+            if(boardLike.isPresent()) {
+                isLike = true;
+            }
+        }
+
         boardRepository.updateView(postId);
 
-        List<BoardLike> boardLike = boardLikeRepository.findAllByBoard(board);
+        List<BoardLike> boardLikeList = boardLikeRepository.findAllByBoard(board);
 
         return BoardDetailResponseDto.builder()
                 .boardId(board.getPostId())
@@ -126,7 +139,8 @@ public class BoardService {
                 .createdAt(board.getCreatedAt().toLocalDate())
                 .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
                 .views(board.getViews())
-                .likeCnt(boardLike.size())
+                .likeCnt(boardLikeList.size())
+                .isLike(isLike)
                 .commentList(commentService.getCommentList(board.getPostId(), 0, 10))
                 .build();
     }
@@ -191,6 +205,30 @@ public class BoardService {
                     .build());
         }
         return boardSubjectResponseDtoList;
+    }
+    //endregion
+
+    //region 게시글 좋아요
+    public Boolean boardLike(UserDetailsImpl userDetails, Long postId) {
+        Board board = boardRepository.findById(postId)
+                .orElseThrow(
+                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                );
+
+        Optional<BoardLike> findBoardLike = boardLikeRepository.findByBoardAndUser(board, userDetails.getUser());
+        if (findBoardLike.isPresent()) {
+            boardLikeRepository.delete(findBoardLike.get());
+            return false;
+        }
+
+        BoardLike boardLike = BoardLike.builder()
+                .board(board)
+                .user(userDetails.getUser())
+                .build();
+
+        boardLikeRepository.save(boardLike);
+
+        return true;
     }
     //endregion
 }
