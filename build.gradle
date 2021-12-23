@@ -52,6 +52,16 @@ dependencies {
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
     implementation "com.querydsl:querydsl-apt:${queryDslVersion}"
     implementation "com.querydsl:querydsl-core:${queryDslVersion}"
+
+    // 테스트 코드를 위한 Lombok 라이브러리
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    // 스프링 부트 테스트를 위한 라이브러리
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.5.6'
+
+    // 스프링 시큐리티 테스트를 위한 라이브러리
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 test {

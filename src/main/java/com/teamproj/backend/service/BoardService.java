@@ -106,7 +106,7 @@ public class BoardService {
                 .content(board.getContent())
                 .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
                 .category(board.getBoardCategory().getCategoryName())
-                .createdAt(board.getCreatedAt().toLocalDate())
+                .createdAt(board.getCreatedAt() == null ? null :  board.getCreatedAt().toLocalDate())
                 .build();
     }
     //endregion
