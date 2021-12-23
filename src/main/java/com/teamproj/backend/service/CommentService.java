@@ -37,14 +37,19 @@ public class CommentService {
         ValidChecker.loginCheck(userDetails);
 
         Board board = getSafeBoard(postId);
-        commentRepository.save(Comment.builder()
+        Comment comment = commentRepository.save(Comment.builder()
                 .board(board)
                 .content(commentPostRequestDto.getContent())
                 .user(userDetails.getUser())
                 .build());
 
         return CommentPostResponseDto.builder()
-                .result("작성 성공")
+                .commentId(comment.getCommentId())
+                .profileImageUrl("")
+                .commentWriterId(comment.getUser().getUsername())
+                .commentWriter(comment.getUser().getNickname())
+                .commentContent(comment.getContent())
+                .createdAt(comment.getCreatedAt().toLocalDate())
                 .build();
     }
 
