@@ -1,8 +1,6 @@
 package com.teamproj.backend.controller;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.teamproj.backend.dto.board.*;
-import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.BoardService;
 import lombok.RequiredArgsConstructor;

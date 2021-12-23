@@ -22,7 +22,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/api/signup")
-    public ResponseEntity<SignUpResponseDto> signup(@RequestBody SignUpRequestDto signUpRequestDto){
+    public ResponseEntity<SignUpResponseDto> signup(@RequestBody SignUpRequestDto signUpRequestDto) {
         return ResponseEntity.ok()
                 .body(userService.signUp(signUpRequestDto));
     }
@@ -33,19 +33,19 @@ public class UserController {
     }
 
     @GetMapping("/api/userInfo")
-    public ResponseEntity<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails){
+    public ResponseEntity<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok()
                 .body(userService.getUserInfo(userDetails));
     }
 
     @GetMapping("/api/signup/username")
-    public ResponseEntity<SignUpCheckResponseDto> usernameValidCheck(@RequestParam String username){
+    public ResponseEntity<SignUpCheckResponseDto> usernameValidCheck(@RequestParam String username) {
         return ResponseEntity.ok()
                 .body(userService.usernameValidCheck(username));
     }
 
     @GetMapping("/api/signup/nickname")
-    public ResponseEntity<SignUpCheckResponseDto> nicknameValidCheck(@RequestParam String nickname){
+    public ResponseEntity<SignUpCheckResponseDto> nicknameValidCheck(@RequestParam String nickname) {
         return ResponseEntity.ok()
                 .body(userService.nicknameValidCheck(nickname));
     }
