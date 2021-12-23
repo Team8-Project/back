@@ -77,7 +77,7 @@ public class KakaoUserService {
         body.add("code", code);
 
 
-// HTTP 요청 보내기
+        // HTTP 요청 보내기
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest =
                 new HttpEntity<>(body, headers);
         RestTemplate rt = new RestTemplate();
@@ -88,7 +88,7 @@ public class KakaoUserService {
                 String.class
         );
 
-// HTTP 응답 (JSON) -> 액세스 토큰 파싱
+        // HTTP 응답 (JSON) -> 액세스 토큰 파싱
         String responseBody = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);

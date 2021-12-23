@@ -27,6 +27,10 @@ public class DictHistory extends Timestamped {
     @JoinColumn(nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn
+    private DictHistory revertFrom;
+
     @Column(nullable = false)
     private String prevContent;
 }
