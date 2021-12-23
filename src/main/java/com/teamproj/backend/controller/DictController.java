@@ -29,7 +29,7 @@ public class DictController {
         }
         System.out.println("token : " + token);
         return ResponseEntity.ok()
-                .body(dictService.getDicts(page, size, token));
+                .body(dictService.getDictList(page, size, token));
     }
 
     @GetMapping("/api/dict/{dictId}")
@@ -79,8 +79,6 @@ public class DictController {
     @GetMapping("/api/dict/revert/{historyId}")
     public ResponseEntity<DictRevertResponseDto> revertDict(@PathVariable Long historyId){
         return ResponseEntity.ok()
-                .body(DictRevertResponseDto.builder()
-                        .result("미구현 입니당... ^^;; 요청 url : " + historyId)
-                        .build());
+                .body(dictHistoryService.revertDict(historyId));
     }
 }

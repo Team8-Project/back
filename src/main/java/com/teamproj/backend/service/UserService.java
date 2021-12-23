@@ -7,19 +7,25 @@ import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static com.teamproj.backend.exception.ExceptionMessage.*;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    
-    public SignUpResponseDto signUp(SignUpRequestDto signUpRequestDto){
+
+    // 회원가입 기능
+    public SignUpResponseDto signUp(SignUpRequestDto signUpRequestDto) {
+        // 아이디는 모두 소문자로 저장.
+        signUpRequestDto.setUsername(signUpRequestDto.getUsername().toLowerCase());
         signUpValidCheck(signUpRequestDto);
         String encodedPassword = passwordEncoder.encode(signUpRequestDto.getPassword());
 
@@ -31,24 +37,8 @@ public class UserService {
                 .build();
     }
 
-    private void signUpValidCheck(SignUpRequestDto signUpRequestDto) {
-        Optional<User> found = userRepository.findByUsername(signUpRequestDto.getUsername());
-        if(found.isPresent()){
-            throw new IllegalArgumentException("이미 존재하는 ID 입니다.");
-        }
-        found = userRepository.findByNickname(signUpRequestDto.getNickname());
-        if(found.isPresent()){
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
-        }
-        if(!signUpRequestDto.getPassword().equals(signUpRequestDto.getPasswordCheck())){
-            throw new IllegalArgumentException("비밀번호 확인이 일치하지 않습니다.");
-        }
-    }
-
     public UserInfoResponseDto getUserInfo(UserDetailsImpl userDetails) {
-        if(userDetails == null){
-            throw new NullPointerException("로그인하지 않은 사용자입니다.");
-        }
+        ValidChecker.loginCheck(userDetails);
 
         return UserInfoResponseDto.builder()
                 .username(userDetails.getUsername())
@@ -71,4 +61,52 @@ public class UserService {
                 .result(!found.isPresent())
                 .build();
     }
+
+
+    // region 보조 기능
+    // Utils
+    // 회원가입 유효성 검사
+    private void signUpValidCheck(SignUpRequestDto signUpRequestDto) {
+        String username = signUpRequestDto.getUsername();
+        String nickname = signUpRequestDto.getNickname();
+        String password = signUpRequestDto.getPassword();
+
+        /*
+            아이디 : 3자 이상, 16자 이하, 대소문자, 숫자
+            닉네임 : 2자 이상, 16자 이하, 대소문자 숫자 한글
+            비밀번호 : 6자 이상 16자 이하, 대소문자 숫자 조합
+         */
+        // username
+        if (username.length() < 3 || username.length() > 16) {
+            throw new IllegalArgumentException(ILLEGAL_USERNAME_LENGTH);
+        } else if (!username.matches("^(?=.*[a-z0-9])[a-z0-9]{3,16}$")) {
+            throw new IllegalArgumentException(ILLEGAL_USERNAME_FORMAT);
+        }
+        // nickname
+        if (nickname.length() < 2 || nickname.length() > 16) {
+            throw new IllegalArgumentException(ILLEGAL_NICKNAME_LENGTH);
+        } else if (!nickname.matches("^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,16}$")) {
+            throw new IllegalArgumentException(ILLEGAL_NICKNAME_FORMAT);
+        }
+        // password
+        if (password.length() < 6 || password.length() > 16) {
+            throw new IllegalArgumentException(ILLEGAL_PASSWORD_LENGTH);
+        } else if (!password.matches("^(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9!@#$%^&*()._-]{6,16}$")) {
+            throw new IllegalArgumentException(ILLEGAL_PASSWORD_FORMAT);
+        }
+
+        // 중복검사
+        Optional<User> found = userRepository.findByUsername(username);
+        if (found.isPresent()) {
+            throw new IllegalArgumentException(EXIST_USERNAME);
+        }
+        found = userRepository.findByNickname(signUpRequestDto.getNickname());
+        if (found.isPresent()) {
+            throw new IllegalArgumentException(EXIST_NICKNAME);
+        }
+        if (!signUpRequestDto.getPassword().equals(signUpRequestDto.getPasswordCheck())) {
+            throw new IllegalArgumentException(ILLEGAL_MATCHING_PASSWORD_PASSWORD_CHECK);
+        }
+    }
+    // endregion
 }

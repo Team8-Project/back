@@ -6,6 +6,7 @@ import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.teamproj.backend.exception.ExceptionMessage.*;
+
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -23,40 +26,19 @@ public class CommentService {
     private final CommentRepository commentRepository;
 
     public List<CommentResponseDto> getCommentList(Long postId, int page, int size) {
-        Optional<Board> board = boardRepository.findById(postId);
-        if (!board.isPresent()) {
-            throw new NullPointerException("유효하지 않은 게시글입니다.");
-        }
-        Page<Comment> commentPage = commentRepository.findAllByBoardOrderByCreatedAt(board.get(), PageRequest.of(page, size));
-        return commentListToCommentResponseDto(commentPage.toList());
-    }
+        Board board = getSafeBoard(postId);
+        Page<Comment> commentPage = commentRepository.findAllByBoardOrderByCreatedAt(board, PageRequest.of(page, size));
 
-    private List<CommentResponseDto> commentListToCommentResponseDto(List<Comment> commentList) {
-        List<CommentResponseDto> commentResponseDtoList = new ArrayList<>();
-        for (Comment comment : commentList) {
-            commentResponseDtoList.add(CommentResponseDto.builder()
-                    .commentId(comment.getCommentId())
-                    .commentWriterId(comment.getUser().getUsername())
-                    .commentWriter(comment.getUser().getNickname())
-                    .commentContent(comment.getContent())
-                    .profileImageUrl("")
-                    .createdAt(comment.getCreatedAt().toLocalDate())
-                    .build());
-        }
-        return commentResponseDtoList;
+        return commentListToCommentResponseDtoList(commentPage.toList());
     }
 
     public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long postId, CommentPostRequestDto commentPostRequestDto) {
         // 로그인 여부 확인
-        loginCheck(userDetails);
+        ValidChecker.loginCheck(userDetails);
 
-        Optional<Board> board = boardRepository.findById(postId);
-        if (!board.isPresent()) {
-            throw new NullPointerException("존재하지 않는 게시글입니다.'");
-        }
-
+        Board board = getSafeBoard(postId);
         commentRepository.save(Comment.builder()
-                .board(board.get())
+                .board(board)
                 .content(commentPostRequestDto.getContent())
                 .user(userDetails.getUser())
                 .build());
@@ -69,7 +51,7 @@ public class CommentService {
     @Transactional
     public CommentPutResponseDto putComment(UserDetailsImpl userDetails, Long commentId, CommentPutRequestDto commentPutRequestDto) {
         // 로그인 여부 확인
-        loginCheck(userDetails);
+        ValidChecker.loginCheck(userDetails);
 
         Comment comment = commentIsMineCheck(userDetails, commentId);
         comment.update(commentPutRequestDto.getContent());
@@ -82,10 +64,9 @@ public class CommentService {
 
     public CommentDeleteResponseDto deleteComment(UserDetailsImpl userDetails, Long commentId) {
         // 로그인 여부 확인
-        loginCheck(userDetails);
+        ValidChecker.loginCheck(userDetails);
         // 자신이 작성한 댓글인지 확인
         commentIsMineCheck(userDetails, commentId);
-
         commentRepository.deleteById(commentId);
 
         return CommentDeleteResponseDto.builder()
@@ -93,23 +74,57 @@ public class CommentService {
                 .build();
     }
 
-    // 보조 기능 구간
+
+    // region 보조 기능
+    // Utils
+    // 자신의 댓글인지 체크하는 기능
     private Comment commentIsMineCheck(UserDetailsImpl userDetails, Long commentId) {
-        Optional<Comment> comment = commentRepository.findById(commentId);
-        if (!comment.isPresent()) {
-            throw new NullPointerException("존재하지 않는 댓글입니다.");
+        Comment comment = getSafeComment(commentId);
+
+        if (!userDetails.getUser().getId().equals(comment.getUser().getId())) {
+            throw new IllegalArgumentException(NOT_MY_COMMENT);
         }
 
-        if (!userDetails.getUser().getId().equals(comment.get().getUser().getId())) {
-            throw new IllegalArgumentException("자신이 작성한 댓글만 변경할 수 있습니다.");
+        return comment;
+    }
+
+    // Get SafeEntity
+    // Board
+    private Board getSafeBoard(Long postId) {
+        Optional<Board> board = boardRepository.findById(postId);
+        if (!board.isPresent()) {
+            throw new NullPointerException(NOT_EXIST_BOARD);
+        }
+        return board.get();
+    }
+
+    // Comment
+    private Comment getSafeComment(Long commentId) {
+        Optional<Comment> comment = commentRepository.findById(commentId);
+        if (!comment.isPresent()) {
+            throw new NullPointerException(NOT_EXIST_COMMENT);
         }
 
         return comment.get();
     }
 
-    public void loginCheck(UserDetailsImpl userDetails) {
-        if (userDetails == null) {
-            throw new NullPointerException("로그인하지 않은 사용자입니다.");
+    // Entity to Dto
+    // CommentList to CommentResponseDtoList
+    private List<CommentResponseDto> commentListToCommentResponseDtoList(List<Comment> commentList) {
+        List<CommentResponseDto> commentResponseDtoList = new ArrayList<>();
+
+        for (Comment comment : commentList) {
+            commentResponseDtoList.add(CommentResponseDto.builder()
+                    .commentId(comment.getCommentId())
+                    .commentWriterId(comment.getUser().getUsername())
+                    .commentWriter(comment.getUser().getNickname())
+                    .commentContent(comment.getContent())
+                    .profileImageUrl("")
+                    .createdAt(comment.getCreatedAt().toLocalDate())
+                    .build());
         }
+
+        return commentResponseDtoList;
     }
+    // endregion
 }

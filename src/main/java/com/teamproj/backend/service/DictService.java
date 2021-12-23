@@ -4,11 +4,13 @@ import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dict.*;
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.dict.DictHistory;
 import com.teamproj.backend.model.dict.DictLike;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.ManuallyJwtLoginProcessor;
+import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,60 +21,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.teamproj.backend.exception.ExceptionMessage.*;
+
 @Service
 @RequiredArgsConstructor
 public class DictService {
-    private final String NULL_DICT_MSG = "존재하지 않는 사전입니다.";
+
     private final DictRepository dictRepository;
     private final DictHistoryRepository dictHistoryRepository;
     private final DictLikeRepository dictLikeRepository;
     private final ManuallyJwtLoginProcessor manuallyJwtLoginProcessor;
 
     // 사전 목록 가져오기
-    public List<DictResponseDto> getDicts(int page, int size, String token) {
+    public List<DictResponseDto> getDictList(int page, int size, String token) {
         UserDetailsImpl userDetails = manuallyJwtLoginProcessor.forceLogin(token);
-
-        Page<Dict> dict = dictRepository.findAll(PageRequest.of(page, size));
-        if (dict.hasContent()) {
-            return dictListToDictResponseDtoList(dict.getContent(), userDetails);
-        } else {
-            return new ArrayList<>();
-        }
-    }
-
-    // DictDtoList to DictResponseDtoList
-    private List<DictResponseDto> dictListToDictResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
-        List<DictResponseDto> dictResponseDtoList = new ArrayList<>();
-
-        for (Dict dict : dictList) {
-            dictResponseDtoList.add(DictResponseDto.builder()
-                    .dictId(dict.getDictId())
-                    .title(dict.getDictName())
-                    .meaning(dict.getContent())
-                    .isLike(isDictLike(dict, userDetails))
-                    .likeCount(dict.getDictLikeList().size())
-                    .build());
-        }
-
-        return dictResponseDtoList;
-    }
-
-    private boolean isDictLike(Dict dict, UserDetailsImpl userDetails) {
-        // 1. 로그인하지 않았으면 무조건 false.
-        // 2. dictLikeList가 비어있으면 무조건 false.
-        // 3. 사용자의 dictLike 목록에 해당 dict가 포함되어있지 않으면 false.
-        // 4. 포함되어있을시 true.
-        if (userDetails == null) {
-            return false;
-        }
-        Optional<DictLike> found = dictLikeRepository.findByUserAndDict(userDetails.getUser(), dict);
-        return found.isPresent();
+        List<Dict> dictList = getSafeDictPage(page, size);
+        return dictListToDictResponseDtoList(dictList, userDetails);
     }
 
     // 사전 상세 정보 가져오기
     public DictDetailResponseDto getDictDetail(Long dictId, String token) {
         UserDetailsImpl userDetails = manuallyJwtLoginProcessor.forceLogin(token);
-        Dict dict = getDictSafe(dictId, NULL_DICT_MSG);
+        Dict dict = getSafeDict(dictId);
 
         return DictDetailResponseDto.builder()
                 .dictId(dict.getDictId())
@@ -88,10 +58,10 @@ public class DictService {
 
     // 사전 작성하기
     public DictPostResponseDto postDict(UserDetailsImpl userDetails, DictPostRequestDto dictPostRequestDto) {
-        loginCheck(userDetails);
+        ValidChecker.loginCheck(userDetails);
 
         if (dictRepository.existsByDictName(dictPostRequestDto.getTitle())) {
-            throw new IllegalArgumentException("이미 존재하는 글입니다.");
+            throw new IllegalArgumentException(EXIST_DICT);
         }
 
         Dict dict = Dict.builder()
@@ -111,9 +81,9 @@ public class DictService {
     // 사전 수정하기 및 수정 내역에 저장
     @Transactional
     public DictPutResponseDto putDict(UserDetailsImpl userDetails, Long dictId, DictPutRequestDto dictPutRequestDto) {
-        loginCheck(userDetails);
+        ValidChecker.loginCheck(userDetails);
 
-        Dict dict = getDictSafe(dictId, NULL_DICT_MSG);
+        Dict dict = getSafeDict(dictId);
 
         DictHistory dictHistory = DictHistory.builder()
                 .prevContent(dict.getContent())
@@ -126,26 +96,21 @@ public class DictService {
 
         dict.setContent(dictPutRequestDto.getContent());
 
-        // 변화 내용 사전에 저장
-        dictRepository.save(dict);
-
         return DictPutResponseDto.builder()
                 .result("수정 성공")
                 .build();
     }
 
+    // 사전 좋아요 / 좋아요 취소
     public DictLikeResponseDto likeDict(UserDetailsImpl userDetails, Long dictId) {
-        loginCheck(userDetails);
+        ValidChecker.loginCheck(userDetails);
 
-        Dict dict = getDictSafe(dictId, NULL_DICT_MSG);
+        Dict dict = getSafeDict(dictId);
         boolean isLike = false;
-        if(isDictLike(dict, userDetails)){
-            Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(userDetails.getUser(), dict);
-            if(!dictLike.isPresent()){
-                throw new NullPointerException("존재하지 않는 좋아요..?");
-            }
-            dictLikeRepository.deleteById(dictLike.get().getDictLikeId());
-        }else{
+        if (isDictLike(dict, userDetails)) {
+            DictLike dictLike = getSafeDictLike(userDetails.getUser(), dict);
+            dictLikeRepository.deleteById(dictLike.getDictLikeId());
+        } else {
             DictLike dictLike = DictLike.builder()
                     .dict(dict)
                     .user(userDetails.getUser())
@@ -158,20 +123,69 @@ public class DictService {
                 .build();
     }
 
-    public Dict getDictSafe(Long dictId, String msg) {
+
+    // region 보조 기능
+    // Utils
+    // 사전 좋아요 표시했는지 확인
+    private boolean isDictLike(Dict dict, UserDetailsImpl userDetails) {
+        // 1. 로그인하지 않았으면 무조건 false.
+        // 2. dictLikeList 가 비어있으면 무조건 false.
+        // 3. 사용자의 dictLike 목록에 해당 dict 가 포함되어있지 않으면 false.
+        // 4. 포함되어있을시 true.
+        if (userDetails == null) {
+            return false;
+        }
+        Optional<DictLike> found = dictLikeRepository.findByUserAndDict(userDetails.getUser(), dict);
+        return found.isPresent();
+    }
+
+    // Get SafeEntity
+    // Dict
+    public Dict getSafeDict(Long dictId) {
         Optional<Dict> dict = dictRepository.findById(dictId);
         if (!dict.isPresent()) {
-            throw new NullPointerException(msg);
+            throw new NullPointerException(NOT_EXIST_DICT);
         }
 
         return dict.get();
     }
 
-    public void loginCheck(UserDetailsImpl userDetails) {
-        if (userDetails == null) {
-            throw new NullPointerException("로그인하지 않은 사용자입니다.");
+    // DictPage
+    private List<Dict> getSafeDictPage(int page, int size) {
+        Page<Dict> dictPage = dictRepository.findAll(PageRequest.of(page, size));
+        if (dictPage.hasContent()) {
+            return dictPage.toList();
         }
+
+        return new ArrayList<>();
     }
 
+    // DictLike
+    private DictLike getSafeDictLike(User user, Dict dict) {
+        Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(user, dict);
+        if (!dictLike.isPresent()) {
+            throw new NullPointerException(NOT_EXIST_DICT_LIKE);
+        }
 
+        return dictLike.get();
+    }
+
+    // Entity To Dto
+    // DictDtoList to DictResponseDtoList
+    private List<DictResponseDto> dictListToDictResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
+        List<DictResponseDto> dictResponseDtoList = new ArrayList<>();
+
+        for (Dict dict : dictList) {
+            dictResponseDtoList.add(DictResponseDto.builder()
+                    .dictId(dict.getDictId())
+                    .title(dict.getDictName())
+                    .meaning(dict.getContent())
+                    .isLike(isDictLike(dict, userDetails))
+                    .likeCount(dict.getDictLikeList().size())
+                    .build());
+        }
+
+        return dictResponseDtoList;
+    }
+    // endregion
 }
