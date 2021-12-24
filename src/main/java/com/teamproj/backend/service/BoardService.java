@@ -5,9 +5,12 @@ import com.teamproj.backend.Repository.board.BoardLikeRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.Repository.board.BoardSubjectRepository;
 import com.teamproj.backend.dto.board.*;
-import com.teamproj.backend.model.board.*;
+import com.teamproj.backend.model.board.Board;
+import com.teamproj.backend.model.board.BoardCategory;
+import com.teamproj.backend.model.board.BoardLike;
+import com.teamproj.backend.model.board.BoardSubject;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.util.ManuallyJwtLoginProcessor;
+import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +27,7 @@ public class BoardService {
     private final BoardLikeRepository boardLikeRepository;
 
     private final CommentService commentService;
-    private final ManuallyJwtLoginProcessor manuallyJwtLoginProcessor;
+    private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
     //region 게시글 전체조회
     public List<BoardResponseDto> getBoard(String category) {
@@ -34,11 +37,8 @@ public class BoardService {
         }
 
         Optional<List<Board>> boardList = boardRepository.findAllByBoardCategory(boardCategory.get());
-        if (!boardList.isPresent()) {
-            return new ArrayList<>();
-        }
+        return boardList.map(this::boardListToBoardResponseDtoList).orElseGet(ArrayList::new);
 
-        return boardListToBoardResponseDtoList(boardList.get());
     }
 
     private List<BoardResponseDto> boardListToBoardResponseDtoList(List<Board> boardList) {
@@ -96,7 +96,7 @@ public class BoardService {
 //                .boardCategory(boardCategory.get())
                 .boardCategory(boardCategory)
                 .boardSubject(null)
-                .user(userDetails.getUser())
+                .user(jwtAuthenticateProcessor.getUser(userDetails))
                 .build();
         boardRepository.save(board);
 
@@ -114,7 +114,7 @@ public class BoardService {
 
     //region 게시글 상세 조회
     public BoardDetailResponseDto getBoardDetail(Long postId, String token) {
-        UserDetailsImpl userDetails = manuallyJwtLoginProcessor.forceLogin(token);
+        UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         Board board = boardRepository.findById(postId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
@@ -122,7 +122,7 @@ public class BoardService {
 
         boolean isLike = false;
         if(userDetails != null) {
-            Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(board, userDetails.getUser());
+            Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(board, jwtAuthenticateProcessor.getUser(userDetails));
             if(boardLike.isPresent()) {
                 isLike = true;
             }
@@ -153,7 +153,7 @@ public class BoardService {
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
-        if (userDetails.getUser().getId() != board.getUser().getId()) {
+        if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
             throw new IllegalArgumentException("게시글을 작성한 유저만 수정이 가능합니다.");
         }
 
@@ -180,7 +180,7 @@ public class BoardService {
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
-        if (userDetails.getUser().getId() != board.getUser().getId()) {
+        if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
             throw new IllegalArgumentException("게시글을 작성한 유저만 삭제가 가능합니다.");
         }
 
@@ -218,7 +218,7 @@ public class BoardService {
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
 
-        Optional<BoardLike> findBoardLike = boardLikeRepository.findByBoardAndUser(board, userDetails.getUser());
+        Optional<BoardLike> findBoardLike = boardLikeRepository.findByBoardAndUser(board, jwtAuthenticateProcessor.getUser(userDetails));
         if (findBoardLike.isPresent()) {
             boardLikeRepository.delete(findBoardLike.get());
             return false;
@@ -226,7 +226,7 @@ public class BoardService {
 
         BoardLike boardLike = BoardLike.builder()
                 .board(board)
-                .user(userDetails.getUser())
+                .user(jwtAuthenticateProcessor.getUser(userDetails))
                 .build();
 
         boardLikeRepository.save(boardLike);
