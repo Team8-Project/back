@@ -5,10 +5,17 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommentPostResponseDto {
-    private String result;
+    private Long commentId;
+    private String profileImageUrl;
+    private String commentWriterId;
+    private String commentWriter;
+    private String commentContent;
+    private LocalDate createdAt;
 }

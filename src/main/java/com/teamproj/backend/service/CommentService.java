@@ -4,8 +4,10 @@ import com.teamproj.backend.Repository.CommentRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.model.Comment;
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,13 +19,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.teamproj.backend.exception.ExceptionMessage.*;
+import static com.teamproj.backend.exception.ExceptionMessages.*;
 
 @Service
 @RequiredArgsConstructor
 public class CommentService {
     private final BoardRepository boardRepository;
     private final CommentRepository commentRepository;
+    private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
     public List<CommentResponseDto> getCommentList(Long postId, int page, int size) {
         Board board = getSafeBoard(postId);
@@ -37,14 +40,19 @@ public class CommentService {
         ValidChecker.loginCheck(userDetails);
 
         Board board = getSafeBoard(postId);
-        commentRepository.save(Comment.builder()
+        Comment comment = commentRepository.save(Comment.builder()
                 .board(board)
                 .content(commentPostRequestDto.getContent())
-                .user(userDetails.getUser())
+                .user(jwtAuthenticateProcessor.getUser(userDetails))
                 .build());
 
         return CommentPostResponseDto.builder()
-                .result("작성 성공")
+                .commentId(comment.getCommentId())
+                .profileImageUrl("")
+                .commentWriterId(comment.getUser().getUsername())
+                .commentWriter(comment.getUser().getNickname())
+                .commentContent(comment.getContent())
+                .createdAt(comment.getCreatedAt().toLocalDate())
                 .build();
     }
 
@@ -80,8 +88,7 @@ public class CommentService {
     // 자신의 댓글인지 체크하는 기능
     private Comment commentIsMineCheck(UserDetailsImpl userDetails, Long commentId) {
         Comment comment = getSafeComment(commentId);
-
-        if (!userDetails.getUser().getId().equals(comment.getUser().getId())) {
+        if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(comment.getUser().getId())) {
             throw new IllegalArgumentException(NOT_MY_COMMENT);
         }
 

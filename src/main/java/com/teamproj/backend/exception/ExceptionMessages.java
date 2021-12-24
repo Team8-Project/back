@@ -1,6 +1,6 @@
 package com.teamproj.backend.exception;
 
-public final class ExceptionMessage {
+public final class ExceptionMessages {
 
     // User
     public static final String ILLEGAL_USERNAME_LENGTH = "아이디는 3자 이상 16자 이하만 입력 가능합니다.";
@@ -15,6 +15,9 @@ public final class ExceptionMessage {
     public static final String EXIST_USERNAME = "이미 존재하는 ID 입니다.";
     public static final String EXIST_NICKNAME = "이미 존재하는 닉네임입니다.";
     public static final String ILLEGAL_MATCHING_PASSWORD_PASSWORD_CHECK = "비밀번호 확인이 일치하지 않습니다.";
+
+    public static final String NOT_LOGIN_USER = "로그인하지 않은 사용자입니다.";
+    public static final String NOT_EXIST_USER = "유효하지 않은 사용자입니다.";
 
     // Board
     public static final String NOT_EXIST_BOARD = "유효하지 않은 게시글입니다.";
