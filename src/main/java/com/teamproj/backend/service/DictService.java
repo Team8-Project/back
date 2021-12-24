@@ -9,7 +9,7 @@ import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.dict.DictHistory;
 import com.teamproj.backend.model.dict.DictLike;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.util.ManuallyJwtLoginProcessor;
+import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.teamproj.backend.exception.ExceptionMessage.*;
+import static com.teamproj.backend.exception.ExceptionMessages.*;
 
 @Service
 @RequiredArgsConstructor
@@ -30,18 +30,18 @@ public class DictService {
     private final DictRepository dictRepository;
     private final DictHistoryRepository dictHistoryRepository;
     private final DictLikeRepository dictLikeRepository;
-    private final ManuallyJwtLoginProcessor manuallyJwtLoginProcessor;
+    private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
     // 사전 목록 가져오기
     public List<DictResponseDto> getDictList(int page, int size, String token) {
-        UserDetailsImpl userDetails = manuallyJwtLoginProcessor.forceLogin(token);
+        UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         List<Dict> dictList = getSafeDictPage(page, size);
         return dictListToDictResponseDtoList(dictList, userDetails);
     }
 
     // 사전 상세 정보 가져오기
     public DictDetailResponseDto getDictDetail(Long dictId, String token) {
-        UserDetailsImpl userDetails = manuallyJwtLoginProcessor.forceLogin(token);
+        UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         Dict dict = getSafeDict(dictId);
 
         return DictDetailResponseDto.builder()
@@ -63,10 +63,11 @@ public class DictService {
         if (dictRepository.existsByDictName(dictPostRequestDto.getTitle())) {
             throw new IllegalArgumentException(EXIST_DICT);
         }
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
 
         Dict dict = Dict.builder()
-                .firstAuthor(userDetails.getUser())
-                .recentModifier(userDetails.getUser())
+                .firstAuthor(user)
+                .recentModifier(user)
                 .content(dictPostRequestDto.getContent())
                 .dictName(dictPostRequestDto.getTitle())
                 .build();
@@ -104,16 +105,16 @@ public class DictService {
     // 사전 좋아요 / 좋아요 취소
     public DictLikeResponseDto likeDict(UserDetailsImpl userDetails, Long dictId) {
         ValidChecker.loginCheck(userDetails);
-
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
         Dict dict = getSafeDict(dictId);
         boolean isLike = false;
         if (isDictLike(dict, userDetails)) {
-            DictLike dictLike = getSafeDictLike(userDetails.getUser(), dict);
+            DictLike dictLike = getSafeDictLike(user, dict);
             dictLikeRepository.deleteById(dictLike.getDictLikeId());
         } else {
             DictLike dictLike = DictLike.builder()
                     .dict(dict)
-                    .user(userDetails.getUser())
+                    .user(user)
                     .build();
             dictLikeRepository.save(dictLike);
             isLike = true;
@@ -135,7 +136,7 @@ public class DictService {
         if (userDetails == null) {
             return false;
         }
-        Optional<DictLike> found = dictLikeRepository.findByUserAndDict(userDetails.getUser(), dict);
+        Optional<DictLike> found = dictLikeRepository.findByUserAndDict(jwtAuthenticateProcessor.getUser(userDetails), dict);
         return found.isPresent();
     }
 

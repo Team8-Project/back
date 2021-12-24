@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Optional;
 
 import static com.teamproj.backend.security.jwt.JwtTokenUtils.*;
@@ -16,10 +17,9 @@ import static com.teamproj.backend.security.jwt.JwtTokenUtils.*;
 @Component
 public class JwtDecoder {
 
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public String decodeUsername(String token) {
+    public HashMap<String, String> decodeUser(String token) {
         DecodedJWT decodedJWT = isValidToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("유효한 토큰이 아닙니다."));
 
@@ -32,11 +32,14 @@ public class JwtDecoder {
             throw new IllegalArgumentException("유효한 토큰이 아닙니다.");
         }
 
-        String username = decodedJWT
-                .getClaim(CLAIM_USER_NAME)
-                .asString();
+        HashMap<String, String> userInfo = new HashMap<>();
 
-        return username;
+        userInfo.put(CLAIM_USER_NAME,
+                decodedJWT.getClaim(CLAIM_USER_NAME).asString());
+        userInfo.put(CLAIM_USER_PASSWORD,
+                decodedJWT.getClaim(CLAIM_USER_PASSWORD).asString());
+
+        return userInfo;
     }
 
     private Optional<DecodedJWT> isValidToken(String token) {

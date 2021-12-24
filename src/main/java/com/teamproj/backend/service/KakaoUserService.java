@@ -199,7 +199,10 @@ public class KakaoUserService {
 //        return headerDto;
 //    }
     private String forceLogin(User kakaoUser) {
-        UserDetailsImpl userDetails = new UserDetailsImpl(kakaoUser);
+        UserDetailsImpl userDetails = UserDetailsImpl.builder()
+                .username(kakaoUser.getUsername())
+                .password(kakaoUser.getPassword())
+                .build();
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

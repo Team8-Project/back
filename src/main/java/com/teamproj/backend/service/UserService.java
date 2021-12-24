@@ -7,6 +7,7 @@ import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,13 +15,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.teamproj.backend.exception.ExceptionMessage.*;
+import static com.teamproj.backend.exception.ExceptionMessages.*;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
     // 회원가입 기능
     public SignUpResponseDto signUp(SignUpRequestDto signUpRequestDto) {
@@ -42,7 +44,7 @@ public class UserService {
 
         return UserInfoResponseDto.builder()
                 .username(userDetails.getUsername())
-                .nickname(userDetails.getUser().getNickname())
+                .nickname(jwtAuthenticateProcessor.getUser(userDetails).getNickname())
                 .build();
     }
 
