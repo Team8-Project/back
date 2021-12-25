@@ -1,19 +1,16 @@
 package com.teamproj.backend.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.model.User;
-import com.teamproj.backend.model.dict.Dict;
-import com.teamproj.backend.model.dict.DictHistory;
-import com.teamproj.backend.model.dict.DictLike;
+import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -31,6 +28,7 @@ public class DictService {
     private final DictHistoryRepository dictHistoryRepository;
     private final DictLikeRepository dictLikeRepository;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
+    private final JPAQueryFactory queryFactory;
 
     // 사전 목록 가져오기
     public List<DictResponseDto> getDictList(int page, int size, String token) {
@@ -136,8 +134,14 @@ public class DictService {
         if (userDetails == null) {
             return false;
         }
-        Optional<DictLike> found = dictLikeRepository.findByUserAndDict(jwtAuthenticateProcessor.getUser(userDetails), dict);
-        return found.isPresent();
+
+        for (DictLike dictLike : dict.getDictLikeList()) {
+            if (dictLike.getUser().getUsername().equals(userDetails.getUsername())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Get SafeEntity
@@ -153,12 +157,15 @@ public class DictService {
 
     // DictPage
     private List<Dict> getSafeDictPage(int page, int size) {
-        Page<Dict> dictPage = dictRepository.findAll(PageRequest.of(page, size));
-        if (dictPage.hasContent()) {
-            return dictPage.toList();
-        }
+        QDict qDict = QDict.dict;
+        QDictLike qDictLike = QDictLike.dictLike;
 
-        return new ArrayList<>();
+        return queryFactory.selectFrom(qDict)
+                .leftJoin(qDict.dictLikeList, qDictLike)
+                .fetchJoin()
+                .offset(page)
+                .limit(size)
+                .fetch();
     }
 
     // DictLike
@@ -177,6 +184,7 @@ public class DictService {
         List<DictResponseDto> dictResponseDtoList = new ArrayList<>();
 
         for (Dict dict : dictList) {
+            long start_time = System.currentTimeMillis();
             dictResponseDtoList.add(DictResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
@@ -184,6 +192,8 @@ public class DictService {
                     .isLike(isDictLike(dict, userDetails))
                     .likeCount(dict.getDictLikeList().size())
                     .build());
+            long end_time = System.currentTimeMillis();
+            System.out.println("작업 수행 시간 : " + (end_time - start_time));
         }
 
         return dictResponseDtoList;

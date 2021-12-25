@@ -4,7 +4,6 @@ import com.teamproj.backend.Repository.CommentRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.model.Comment;
-import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;

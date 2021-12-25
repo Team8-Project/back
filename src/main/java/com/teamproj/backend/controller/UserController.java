@@ -1,15 +1,19 @@
 package com.teamproj.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpCheckResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
+import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyRequestDto;
+import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.KakaoUserService;
 import com.teamproj.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,9 +37,12 @@ public class UserController {
     }
 
     @GetMapping("/api/userInfo")
-    public ResponseEntity<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok()
-                .body(userService.getUserInfo(userDetails));
+    public ResponseDto<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseDto.<UserInfoResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("사용자 정보 요청 기능 수행")
+                .data(userService.getUserInfo(userDetails))
+                .build();
     }
 
     @GetMapping("/api/signup/username")
@@ -48,5 +55,15 @@ public class UserController {
     public ResponseEntity<SignUpCheckResponseDto> nicknameValidCheck(@RequestParam String nickname) {
         return ResponseEntity.ok()
                 .body(userService.nicknameValidCheck(nickname));
+    }
+
+    @PostMapping("/api/user/nickname")
+    public ResponseDto<UserNicknameModifyResponseDto> nicknameModify(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                                     @RequestBody UserNicknameModifyRequestDto userNicknameModifyRequestDto){
+        return ResponseDto.<UserNicknameModifyResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("닉네임 변경 요청")
+                .data(userService.nicknameModify(userDetails, userNicknameModifyRequestDto))
+                .build();
     }
 }
