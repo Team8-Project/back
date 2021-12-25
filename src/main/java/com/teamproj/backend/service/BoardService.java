@@ -70,14 +70,14 @@ public class BoardService {
             throw new IllegalArgumentException("내용은 필수 입력 값입니다");
         }
 
-        BoardCategory boardCategory = boardCategoryRepository.findById(boardUploadRequestDto.getCategory()).orElseThrow(
-                    () -> new NullPointerException("해당 카테고리가 없습니다.")
-                );
-
-        BoardSubject subject = boardSubjectRepository.findBySubject(boardUploadRequestDto.getSubject())
-                .orElseThrow(
-                        () -> new NullPointerException("해당 글머리가 없습니다.")
-                );
+//        BoardCategory boardCategory = boardCategoryRepository.findById(boardUploadRequestDto.getCategory()).orElseThrow(
+//                    () -> new NullPointerException("해당 카테고리가 없습니다.")
+//                );
+//
+//        BoardSubject subject = boardSubjectRepository.findBySubject(boardUploadRequestDto.getSubject())
+//                .orElseThrow(
+//                        () -> new NullPointerException("해당 글머리가 없습니다.")
+//                );
 
 
 //        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category);
@@ -86,8 +86,8 @@ public class BoardService {
 //        }
 
         // To Do: 아래 코드는 차 후 삭제할 예정
-//        BoardCategory boardCategory = new BoardCategory(category, null);
-//        boardCategoryRepository.save(boardCategory);
+        BoardCategory boardCategory = new BoardCategory(category, null);
+        boardCategoryRepository.save(boardCategory);
 
 
         Board board = Board.builder()
@@ -180,6 +180,8 @@ public class BoardService {
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
+
+        System.out.println(jwtAuthenticateProcessor.getUser(userDetails).getId());
         if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
             throw new IllegalArgumentException("게시글을 작성한 유저만 삭제가 가능합니다.");
         }
