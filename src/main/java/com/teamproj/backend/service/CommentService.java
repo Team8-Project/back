@@ -29,7 +29,7 @@ public class CommentService {
 
     public List<CommentResponseDto> getCommentList(Long postId, int page, int size) {
         Board board = getSafeBoard(postId);
-        Page<Comment> commentPage = commentRepository.findAllByBoardOrderByCreatedAt(board, PageRequest.of(page, size));
+        Page<Comment> commentPage = commentRepository.findAllByBoardAndEnabledOrderByCreatedAt(board, true, PageRequest.of(page, size));
 
         return commentListToCommentResponseDtoList(commentPage.toList());
     }
@@ -69,12 +69,16 @@ public class CommentService {
                 .build();
     }
 
+    @Transactional
     public CommentDeleteResponseDto deleteComment(UserDetailsImpl userDetails, Long commentId) {
         // 로그인 여부 확인
         ValidChecker.loginCheck(userDetails);
         // 자신이 작성한 댓글인지 확인
         commentIsMineCheck(userDetails, commentId);
-        commentRepository.deleteById(commentId);
+
+        // enabled를 false로 하여 삭제처리. 이후 쿼리에서 조회되지 않음!
+        Comment comment = getSafeComment(commentId);
+        comment.setEnabled(false);
 
         return CommentDeleteResponseDto.builder()
                 .result("삭제 성공")

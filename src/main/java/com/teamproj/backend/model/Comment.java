@@ -33,7 +33,13 @@ public class Comment extends Timestamped {
     @Column(nullable = false)
     private String content;
 
+    @Column(columnDefinition = "boolean default true")
+    private boolean enabled;
+
     public void update(String content){
         this.content = content;
+    }
+    public void setEnabled(boolean enabled){
+        this.enabled = enabled;
     }
 }

@@ -37,12 +37,11 @@ public class Board extends Timestamped {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn
-    private BoardSubject boardSubject;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private BoardCategory boardCategory;
+
+    @OneToMany(mappedBy = "board")
+    private final List<BoardHashTag> boardHashTagList = new ArrayList<>();
 
     @OneToMany(mappedBy = "board")
     private final List<BoardLike> Likes = new ArrayList<>();
