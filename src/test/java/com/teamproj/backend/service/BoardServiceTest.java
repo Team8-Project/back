@@ -2,6 +2,7 @@ package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
+import com.teamproj.backend.Repository.board.BoardLikeRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.Repository.board.BoardSubjectRepository;
 import com.teamproj.backend.dto.board.BoardUploadRequestDto;
@@ -11,6 +12,8 @@ import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
 import com.teamproj.backend.model.board.BoardSubject;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.security.UserDetailsServiceImpl;
+import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,15 +21,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,9 +49,16 @@ class BoardServiceTest {
     private BoardSubjectRepository boardSubjectRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private BoardLikeRepository boardLikeRepository;
+
 
     @Mock
+    private JwtAuthenticateProcessor jwtAuthenticateProcessor;
+
+    @Mock
+    private UserRepository userRepository;
+
+
     UserDetailsImpl userDetails;
 
     String boardTitle;
@@ -66,8 +77,10 @@ class BoardServiceTest {
                 .password("Q1234567")
                 .build();
 
-        userDetails = new UserDetailsImpl(user);
-
+        userDetails = UserDetailsImpl.builder()
+                .username("유저네임")
+                .password("q1w2E#")
+                .build();
     }
 
     //region 게시글 전체조회
@@ -234,31 +247,34 @@ class BoardServiceTest {
             }
 
             @Test
-            @BeforeTransaction
             @DisplayName("실패2 / 게시글을 작성한 유저만 삭제가 가능합니다.")
             void deleteBoard_fail2() {
-                User user1 = User.builder()
+
+                User user = User.builder()
                         .username("유저네임")
                         .nickname("닉네임")
                         .password("Q1234567")
                         .build();
 
-                when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-                UserDetailsImpl userDetails1 = new UserDetailsImpl(user1);
 
-//                doReturn(user1).when(user).();
+                when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
 
+                when(jwtAuthenticateProcessor.getUser(userDetails)).thenReturn(user);
 
                 Board board = Board.builder()
-                        .user(userDetails.getUser())
+                        .user(user)
                         .build();
 
                 when(boardRepository.findById(board.getPostId())).thenReturn(Optional.of(board));
 
 
-                Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                    boardService.deleteBoard(userDetails1, board.getPostId());
+//                System.out.println(jwtAuthenticateProcessor.getUser(userDetails).getId());
+
+                Exception exception = assertThrows(NullPointerException.class, () -> {
+                    boardService.deleteBoard(userDetails, board.getPostId());
                 });
+
+
 
                 assertEquals("게시글을 작성한 유저만 삭제가 가능합니다.", exception.getMessage());
             }
