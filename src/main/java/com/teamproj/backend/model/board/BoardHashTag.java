@@ -10,17 +10,14 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class BoardSubject {
+@AllArgsConstructor
+public class BoardHashTag {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long subjectId;
+    private Long hashTagId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-    private BoardCategory boardCategory;
-
-    @Column(nullable = false)
-    private String subject;
+    private Board board;
 }

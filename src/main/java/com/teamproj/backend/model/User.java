@@ -29,6 +29,9 @@ public class User extends Timestamped {
     @Column(nullable = false)
     private String password;
 
+    @Column
+    private String profileImage;
+
     @Column(unique = true)
     private Long kakaoId;
 
@@ -38,12 +41,19 @@ public class User extends Timestamped {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private final List<DictLike> dictLikeList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private final List<RecentSearch> recentSearchList = new ArrayList<>();
+
     public void setKakaoId(Long kakaoId) {
         this.kakaoId = kakaoId;
     }
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
     public User(SignUpRequestDto signUpRequestDto, String encodedPassword) {
