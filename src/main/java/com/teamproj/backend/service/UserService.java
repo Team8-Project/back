@@ -5,6 +5,8 @@ import com.teamproj.backend.dto.user.signUp.SignUpCheckResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
+import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyRequestDto;
+import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
@@ -64,6 +67,19 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
+    public UserNicknameModifyResponseDto nicknameModify(UserDetailsImpl userDetails,
+                                                        UserNicknameModifyRequestDto userNicknameModifyRequestDto) {
+        ValidChecker.loginCheck(userDetails);
+
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
+        user.setNickname(userNicknameModifyRequestDto.getNickname());
+
+        return UserNicknameModifyResponseDto.builder()
+                .result("변경 완료")
+                .build();
+    }
+
 
     // region 보조 기능
     // Utils
@@ -98,17 +114,17 @@ public class UserService {
         }
 
         // 중복검사
-        Optional<User> found = userRepository.findByUsername(username);
-        if (found.isPresent()) {
+        if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException(EXIST_USERNAME);
         }
-        found = userRepository.findByNickname(signUpRequestDto.getNickname());
-        if (found.isPresent()) {
+        if (userRepository.existsByNickname(nickname)) {
             throw new IllegalArgumentException(EXIST_NICKNAME);
         }
         if (!signUpRequestDto.getPassword().equals(signUpRequestDto.getPasswordCheck())) {
             throw new IllegalArgumentException(ILLEGAL_MATCHING_PASSWORD_PASSWORD_CHECK);
         }
     }
+
+
     // endregion
 }

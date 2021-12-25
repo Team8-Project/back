@@ -1,10 +1,8 @@
 package com.teamproj.backend.security.provider;
 
-import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtDecoder;
 import com.teamproj.backend.security.jwt.JwtPreProcessingToken;
-import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
