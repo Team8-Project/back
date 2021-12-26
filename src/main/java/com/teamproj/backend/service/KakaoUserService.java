@@ -33,7 +33,7 @@ public class KakaoUserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    @Value("${kakao.client-id}")
+//    @Value("${kakao.client-id}")
     private String clientId;
 
     public ResponseEntity<KakaoUserResponseDto> kakaoLogin(String code) throws JsonProcessingException {

@@ -15,12 +15,6 @@ import java.util.List;
 public class BoardController {
     private final BoardService boardService;
 
-    @GetMapping("/api/board/subject")
-    public ResponseEntity<List<BoardSubjectResponseDto>> getBoardSubject(String categoryName){
-        return ResponseEntity.ok()
-                .body(boardService.getBoardSubject("FREEBOARD"));
-    }
-
     @GetMapping("/api/board")
     public List<BoardResponseDto> getBoard(){
         return boardService.getBoard("FREEBOARD");

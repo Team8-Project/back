@@ -46,9 +46,8 @@ public class Board extends Timestamped {
     @OneToMany(mappedBy = "board")
     private final List<BoardLike> Likes = new ArrayList<>();
 
-    public void update(BoardUploadRequestDto boardUploadRequestDto, BoardSubject boardSubject) {
+    public void update(BoardUploadRequestDto boardUploadRequestDto) {
         this.title = boardUploadRequestDto.getTitle();
         this.content = boardUploadRequestDto.getContent();
-        this.boardSubject = boardSubject;
     }
 }
