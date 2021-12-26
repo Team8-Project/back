@@ -1,6 +1,6 @@
 package com.teamproj.backend.controller;
 
-import com.teamproj.backend.service.S3Uploader;
+import com.teamproj.backend.util.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
