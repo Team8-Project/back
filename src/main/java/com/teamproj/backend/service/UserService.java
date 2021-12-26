@@ -8,6 +8,7 @@ import com.teamproj.backend.dto.user.userInfo.*;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.S3Uploader;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
