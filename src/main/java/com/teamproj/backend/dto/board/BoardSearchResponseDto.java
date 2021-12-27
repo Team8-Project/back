@@ -9,11 +9,13 @@ import java.time.LocalDate;
 @Getter
 @Builder
 @AllArgsConstructor
-public class BoardUploadResponseDto {
+public class BoardSearchResponseDto {
     private Long boardId;
-    private String title;
-    private String content;
-    private String category;
     private String thumbNail;
+    private String title;
+    private String username;
+    private String writer;
     private LocalDate createdAt;
+    private int views;
+    private int likeCnt;
 }

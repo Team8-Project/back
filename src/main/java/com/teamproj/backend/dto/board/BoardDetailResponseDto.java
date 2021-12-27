@@ -1,7 +1,6 @@
 package com.teamproj.backend.dto.board;
 
 import com.teamproj.backend.dto.comment.CommentResponseDto;
-import com.teamproj.backend.model.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

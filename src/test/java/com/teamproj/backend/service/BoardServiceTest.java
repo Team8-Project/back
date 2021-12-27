@@ -15,9 +15,11 @@ import com.teamproj.backend.security.jwt.JwtTokenUtils;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -113,7 +115,7 @@ class BoardServiceTest {
     class uploadBoard {
         @Test
         @DisplayName("게시글 작성 / 성공")
-        void uploadBoard_sucess() {
+        void uploadBoard_sucess() throws IOException {
             // givien
             BoardCategory boardCategory = new BoardCategory("카테고리");
 
@@ -124,12 +126,16 @@ class BoardServiceTest {
             BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                     .title(boardTitle)
                     .content(boardContent)
-                    .category(boardCategory.getCategoryName())
                     .build();
 
+            MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                    "image1", "image1", "application/doc", "image".getBytes()
+            );
 
             // when
-            BoardUploadResponseDto boardUploadResponseDto = boardService.uploadBoard(userDetails, boardUploadRequestDto, "카테고리");
+            BoardUploadResponseDto boardUploadResponseDto = boardService.uploadBoard(
+                    userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile
+            );
             Optional<Board> board = boardRepository.findById(boardUploadResponseDto.getBoardId());
 
             // then
@@ -151,12 +157,15 @@ class BoardServiceTest {
                 BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                         .title(boardTitle)
                         .content(boardContent)
-                        .category(null)
                         .build();
+
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "image1", "image1", "application/doc", "image".getBytes()
+                );
 
                 // when
                 Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                    boardService.uploadBoard(userDetails, boardUploadRequestDto, "카테고리");
+                    boardService.uploadBoard(userDetails, boardUploadRequestDto, "카테고리", mockMultipartFile);
                 });
 
                 // then
@@ -172,12 +181,16 @@ class BoardServiceTest {
                 BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                         .title(boardTitle)
                         .content(boardContent)
-                        .category(null)
                         .build();
+
+
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "image1", "image1", "application/doc", "image".getBytes()
+                );
 
                 // when
                 Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                    boardService.uploadBoard(userDetails, boardUploadRequestDto, "카테고리");
+                    boardService.uploadBoard(userDetails, boardUploadRequestDto, "카테고리", mockMultipartFile);
                 });
 
                 // then
@@ -192,17 +205,47 @@ class BoardServiceTest {
                 BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                         .title(boardTitle)
                         .content(boardContent)
-                        .category(boardCategory.getCategoryName())
                         .build();
 
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "image1", "image1", "application/doc", "image".getBytes()
+                );
 
                 // when
                 Exception exception = assertThrows(NullPointerException.class, () -> {
-                    boardService.uploadBoard(userDetails, boardUploadRequestDto, "카테고리");
+                    boardService.uploadBoard(userDetails, boardUploadRequestDto, "카테고리", mockMultipartFile);
                 });
 
                 // then
                 assertEquals("해당 카테고리가 없습니다.", exception.getMessage());
+            }
+
+
+            @Test
+            @DisplayName("실패4 / 등록하려는 게시글에 이미지가 없습니다.")
+            void uploadBoard_fail4() throws IOException {
+                // givien
+                BoardCategory boardCategory = new BoardCategory("카테고리");
+
+                boardCategoryRepository.save(boardCategory);
+
+                BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
+                        .title(boardTitle)
+                        .content(boardContent)
+                        .build();
+
+                MockMultipartFile mockMultipartFile = null;
+
+                // when
+                Exception exception = assertThrows(NullPointerException.class, () -> {
+                    boardService.uploadBoard(
+                            userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile
+                            );
+                });
+
+
+                // then
+                assertEquals("등록하려는 게시글에 이미지가 없습니다.", exception.getMessage());
             }
         }
     }
@@ -226,6 +269,7 @@ class BoardServiceTest {
                     .content("내용")
                     .title("제목")
                     .boardCategory(boardCategory)
+                    .thumbNail("썸네일URL")
                     .build();
 
             Comment comment = Comment.builder()
@@ -259,7 +303,7 @@ class BoardServiceTest {
 
             // when
             Exception exception = assertThrows(NullPointerException.class, () -> {
-                boardService.getBoardDetail(1L, token);
+                boardService.getBoardDetail(0L, token);
             });
 
             // then
@@ -283,6 +327,7 @@ class BoardServiceTest {
                     .content(boardContent)
                     .boardCategory(boardCategory)
                     .user(user)
+                    .thumbNail("썸네일URL")
                     .build();
 
             boardCategoryRepository.save(boardCategory);
@@ -344,6 +389,7 @@ class BoardServiceTest {
                         .content(boardContent)
                         .user(user2)
                         .boardCategory(boardCategory)
+                        .thumbNail("썸네일URL")
                         .build();
 
                 boardRepository.save(board);
@@ -388,6 +434,7 @@ class BoardServiceTest {
                     .boardCategory(boardCategory)
                     .content("콘텐츠")
                     .title("타이틀")
+                    .thumbNail("썸네일URL")
                     .build();
 
             boardRepository.save(board);
@@ -411,7 +458,7 @@ class BoardServiceTest {
 
                 // when
                 Exception exception = assertThrows(NullPointerException.class, () -> {
-                    boardService.deleteBoard(userDetails, 1L);
+                    boardService.deleteBoard(userDetails, 0L);
                 });
 
                 // then
@@ -433,6 +480,7 @@ class BoardServiceTest {
                         .boardCategory(boardCategory)
                         .content("콘텐츠")
                         .title("타이틀")
+                        .thumbNail("썸네일URL")
                         .build();
 
                 boardRepository.save(board);
@@ -476,6 +524,7 @@ class BoardServiceTest {
             Board board = Board.builder()
                     .title(boardTitle)
                     .content(boardContent)
+                    .thumbNail("썸네일URL")
                     .boardCategory(boardCategory)
                     .user(user)
                     .build();
@@ -504,6 +553,99 @@ class BoardServiceTest {
             // then
             assertEquals("해당 게시글이 없습니다.", exception.getMessage());
         }
+    }
+    //endregion
+
+    //region 게시글 검색
+    @Nested
+    @DisplayName("게시글 검색")
+    class boardSearch {
+
+        @Test
+        @DisplayName("게시글 검색 / 성공")
+        void boardSearch_success() {
+            // given
+            BoardCategory boardCategory = new BoardCategory("카테고리");
+            Board board = Board.builder()
+                    .title("타이틀")
+                    .content("내용")
+                    .user(user)
+                    .boardCategory(boardCategory)
+                    .thumbNail("썸네일URL")
+                    .build();
+
+            boardCategoryRepository.save(boardCategory);
+            boardRepository.save(board);
+
+            String keyword = "타이틀";
+
+            // when
+            List<BoardSearchResponseDto> boardSearchResponseDtoList = boardService.boardSearch(keyword);
+
+            // then
+            assertEquals(board.getPostId(), boardSearchResponseDtoList.get(0).getBoardId());
+            assertEquals(board.getTitle(), boardSearchResponseDtoList.get(0).getTitle());
+            assertEquals(board.getUser().getUsername(), boardSearchResponseDtoList.get(0).getUsername());
+            assertEquals(board.getThumbNail(), boardSearchResponseDtoList.get(0).getThumbNail());
+            assertEquals(board.getUser().getNickname(), boardSearchResponseDtoList.get(0).getWriter());
+        }
+
+
+        @Nested
+        @DisplayName("게시글 검색 / 실패")
+        class boardSearch_fail {
+
+
+            @Test
+            @DisplayName("실패 / 검색어.isEmpty()")
+            void boardSearch_fail() {
+                // given
+                String searchWord = "";
+
+                // when
+                Exception exception = assertThrows(NullPointerException.class, () -> {
+                    boardService.boardSearch(searchWord);
+                });
+
+                // then
+                assertEquals("검색어를 입력해주세요.", exception.getMessage());
+                System.out.println(exception.getMessage());
+            }
+
+
+            @Test
+            @DisplayName("실패2 / 검색어 == null")
+            void boardSearch_fail2() {
+                // given
+                String searchWord = null;
+
+                // when
+                Exception exception = assertThrows(NullPointerException.class, () -> {
+                    boardService.boardSearch(searchWord);
+                });
+
+                // then
+                assertEquals("검색어를 입력해주세요.", exception.getMessage());
+            }
+
+
+            @Test
+            @DisplayName("실패3 / 검색에 해당되는 게시글이 없습니다.")
+            void boardSearch_fail3() {
+                // given
+                String keyword = "다른거";
+
+                // when
+                Exception exception = assertThrows(NullPointerException.class, () -> {
+                    boardService.boardSearch(keyword);
+                });
+
+                // then
+                assertEquals("검색에 해당되는 게시글이 없습니다.", exception.getMessage());
+            }
+
+        }
+
     }
     //endregion
 }

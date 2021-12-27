@@ -1,7 +1,6 @@
 package com.teamproj.backend.model.board;
 
 import com.teamproj.backend.dto.board.BoardUpdateRequestDto;
-import com.teamproj.backend.dto.board.BoardUploadRequestDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
 import lombok.AllArgsConstructor;
@@ -32,6 +31,9 @@ public class Board extends Timestamped {
 
     @ColumnDefault("0")
     private int views;
+
+    @Column(nullable = false)
+    private String thumbNail;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
