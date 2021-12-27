@@ -27,18 +27,18 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
-    public List<CommentResponseDto> getCommentList(Long postId, int page, int size) {
-        Board board = getSafeBoard(postId);
+    public List<CommentResponseDto> getCommentList(Long boardId, int page, int size) {
+        Board board = getSafeBoard(boardId);
         Page<Comment> commentPage = commentRepository.findAllByBoardAndEnabledOrderByCreatedAt(board, true, PageRequest.of(page, size));
 
         return commentListToCommentResponseDtoList(commentPage.toList());
     }
 
-    public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long postId, CommentPostRequestDto commentPostRequestDto) {
+    public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long boardId, CommentPostRequestDto commentPostRequestDto) {
         // 로그인 여부 확인
         ValidChecker.loginCheck(userDetails);
 
-        Board board = getSafeBoard(postId);
+        Board board = getSafeBoard(boardId);
         Comment comment = commentRepository.save(Comment.builder()
                 .board(board)
                 .content(commentPostRequestDto.getContent())
@@ -101,8 +101,8 @@ public class CommentService {
 
     // Get SafeEntity
     // Board
-    private Board getSafeBoard(Long postId) {
-        Optional<Board> board = boardRepository.findById(postId);
+    private Board getSafeBoard(Long boardId) {
+        Optional<Board> board = boardRepository.findById(boardId);
         if (!board.isPresent()) {
             throw new NullPointerException(NOT_EXIST_BOARD);
         }

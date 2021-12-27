@@ -21,7 +21,7 @@ import java.util.List;
 public class Board extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long postId;
+    private Long boardId;
 
     @Column(nullable = false)
     private String title;

@@ -52,7 +52,7 @@ public class BoardService {
         List<BoardResponseDto> boardResponseDtoList = new ArrayList<>();
         for (Board board : boardList) {
             boardResponseDtoList.add(BoardResponseDto.builder()
-                    .boardId(board.getPostId())
+                    .boardId(board.getBoardId())
                     .thumbNail(board.getThumbNail())
                     .title(board.getTitle())
                     .username(board.getUser().getUsername())
@@ -110,7 +110,7 @@ public class BoardService {
 
 
         return BoardUploadResponseDto.builder()
-                .boardId(board.getPostId())
+                .boardId(board.getBoardId())
                 .title(board.getTitle())
                 .content(board.getContent())
                 .category(board.getBoardCategory().getCategoryName())
@@ -121,9 +121,9 @@ public class BoardService {
     //endregion
 
     //region 게시글 상세 조회
-    public BoardDetailResponseDto getBoardDetail(Long postId, String token) {
+    public BoardDetailResponseDto getBoardDetail(Long boardId, String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        Board board = boardRepository.findById(postId)
+        Board board = boardRepository.findById(boardId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
@@ -136,12 +136,12 @@ public class BoardService {
             }
         }
 
-        boardRepository.updateView(postId);
+        boardRepository.updateView(boardId);
 
         List<BoardLike> boardLikeList = boardLikeRepository.findAllByBoard(board);
 
         return BoardDetailResponseDto.builder()
-                .boardId(board.getPostId())
+                .boardId(board.getBoardId())
                 .title(board.getTitle())
                 .content(board.getContent())
                 .writer(board.getUser().getNickname())
@@ -149,14 +149,14 @@ public class BoardService {
                 .views(board.getViews())
                 .likeCnt(boardLikeList.size())
                 .isLike(isLike)
-                .commentList(commentService.getCommentList(board.getPostId(), 0, 10))
+                .commentList(commentService.getCommentList(board.getBoardId(), 0, 10))
                 .build();
     }
     //endregion
 
     //region 게시글 업데이트(수정)
-    public BoardUpdateResponseDto updateBoard(Long postId, UserDetailsImpl userDetails, BoardUpdateRequestDto boardUpdateRequestDto) {
-        Board board = boardRepository.findById(postId)
+    public BoardUpdateResponseDto updateBoard(Long boardId, UserDetailsImpl userDetails, BoardUpdateRequestDto boardUpdateRequestDto) {
+        Board board = boardRepository.findById(boardId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
@@ -176,8 +176,8 @@ public class BoardService {
     //endregion
 
     //region 게시글 삭제
-    public BoardDeleteResponseDto deleteBoard(UserDetailsImpl userDetails, Long postId) {
-        Board board = boardRepository.findById(postId)
+    public BoardDeleteResponseDto deleteBoard(UserDetailsImpl userDetails, Long boardId) {
+        Board board = boardRepository.findById(boardId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
@@ -196,8 +196,8 @@ public class BoardService {
     //endregion
 
     //region 게시글 좋아요
-    public BoardLikeResponseDto boardLike(UserDetailsImpl userDetails, Long postId) {
-        Board board = boardRepository.findById(postId)
+    public BoardLikeResponseDto boardLike(UserDetailsImpl userDetails, Long boardId) {
+        Board board = boardRepository.findById(boardId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
                 );
@@ -244,7 +244,7 @@ public class BoardService {
         for(Board board : boardList) {
             boardSearchResponseDtoList.add(
                     BoardSearchResponseDto.builder()
-                            .boardId(board.getPostId())
+                            .boardId(board.getBoardId())
                             .thumbNail(board.getThumbNail())
                             .title(board.getTitle())
                             .username(board.getUser().getUsername())
