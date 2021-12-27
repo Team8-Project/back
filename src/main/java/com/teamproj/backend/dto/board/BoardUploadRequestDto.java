@@ -11,5 +11,4 @@ import lombok.Getter;
 public class BoardUploadRequestDto {
     private String title;
     private String content;
-    private String category;
 }

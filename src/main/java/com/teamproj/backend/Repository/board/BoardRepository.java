@@ -11,10 +11,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    Optional<List<Board>> findAllByBoardCategory(BoardCategory boardCategory);
+    Optional<List<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled);
+    Optional<List<Board>> findByTitleContaining(String keyword);
 
     @Modifying
     @Transactional
     @Query("update Board b set b.views = b.views + 1 where b.postId = :id")
     int updateView(Long id);
+
 }

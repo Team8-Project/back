@@ -1,18 +1,24 @@
 package com.teamproj.backend.service;
 
+import com.teamproj.backend.Repository.RecentSearchRepository;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
+import com.teamproj.backend.Repository.board.BoardImageRepository;
 import com.teamproj.backend.Repository.board.BoardLikeRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.board.*;
+import com.teamproj.backend.model.RecentSearch;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
-import com.teamproj.backend.dto.board.BoardDeleteResponseDto;
+import com.teamproj.backend.model.board.BoardImage;
 import com.teamproj.backend.model.board.BoardLike;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,32 +29,37 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardCategoryRepository boardCategoryRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final BoardImageRepository boardImageRepository;
+
     private final CommentService commentService;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
+    private final S3Uploader s3Uploader;
+
+    private final String imageDirName = "boardImages";
 
     //region 게시글 전체조회
-    public List<BoardResponseDto> getBoard(String category) {
-        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category.toUpperCase());
+    public List<BoardResponseDto> getBoard(String categoryName) {
+        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase());
         if (!boardCategory.isPresent()) {
             throw new NullPointerException("유효한 카테고리가 아닙니다.");
         }
 
-        Optional<List<Board>> boardList = boardRepository.findAllByBoardCategory(boardCategory.get());
+        Optional<List<Board>> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory.get(), true);
         return boardList.map(this::boardListToBoardResponseDtoList).orElseGet(ArrayList::new);
-
     }
 
     private List<BoardResponseDto> boardListToBoardResponseDtoList(List<Board> boardList) {
         List<BoardResponseDto> boardResponseDtoList = new ArrayList<>();
         for (Board board : boardList) {
             boardResponseDtoList.add(BoardResponseDto.builder()
-                    .postId(board.getPostId())
+                    .boardId(board.getPostId())
+                    .thumbNail(board.getThumbNail())
                     .title(board.getTitle())
-                    .nickname(board.getUser().getNickname())
+                    .username(board.getUser().getUsername())
+                    .writer(board.getUser().getNickname())
                     .createdAt(board.getCreatedAt().toLocalDate())
-//                    .subject(board.getBoardSubject() == null ? "" : board.getBoardSubject().getSubject())
-                    .likeCnt(board.getLikes().size())
                     .views(board.getViews())
+                    .likeCnt(board.getLikes().size())
                     .build());
         }
 
@@ -57,8 +68,10 @@ public class BoardService {
     //endregion
 
     //region 게시글 작성
-    public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto,
-                                              String category) {
+    public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails,
+                                              BoardUploadRequestDto boardUploadRequestDto,
+                                              String categoryName,
+                                              MultipartFile multipartFile) throws IOException {
 
         if (boardUploadRequestDto.getTitle().isEmpty()) {
             throw new IllegalArgumentException("제목은 필수 입력 값입니다");
@@ -67,30 +80,33 @@ public class BoardService {
             throw new IllegalArgumentException("내용은 필수 입력 값입니다");
         }
 
-        BoardCategory boardCategory = boardCategoryRepository.findById(boardUploadRequestDto.getCategory()).orElseThrow(
-                    () -> new NullPointerException("해당 카테고리가 없습니다.")
-                );
+       BoardCategory boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase())
+               .orElseThrow(
+                       () -> new NullPointerException("해당 카테고리가 없습니다.")
+               );
 
+        if(multipartFile == null || multipartFile.getSize() == 0) {
+            throw new NullPointerException("등록하려는 게시글에 이미지가 없습니다.");
+        }
 
-//        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(category);
-//        if(!boardCategory.isPresent()){
-//            throw new NullPointerException("유효하지 않은 카테고리입니다.");
-//        }
-
-        // To Do: 아래 코드는 차 후 삭제할 예정
-//        BoardCategory boardCategory = new BoardCategory(category, null);
-//        boardCategoryRepository.save(boardCategory);
-
+        String imageUrl = s3Uploader.upload(multipartFile, imageDirName);
 
         Board board = Board.builder()
                 .title(boardUploadRequestDto.getTitle())
                 .content(boardUploadRequestDto.getContent())
-//                .boardCategory(boardCategory.get())
                 .boardCategory(boardCategory)
-//                .boardSubject(null)
                 .user(jwtAuthenticateProcessor.getUser(userDetails))
+                .thumbNail(imageUrl)
                 .build();
         boardRepository.save(board);
+
+
+        BoardImage boardImage = BoardImage.builder()
+                .board(board)
+                .imageUrl(imageUrl)
+                .build();
+
+        boardImageRepository.save(boardImage);
 
 
         return BoardUploadResponseDto.builder()
@@ -98,6 +114,7 @@ public class BoardService {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .category(board.getBoardCategory().getCategoryName())
+                .thumbNail(board.getThumbNail())
                 .createdAt(board.getCreatedAt() == null ? null :  board.getCreatedAt().toLocalDate())
                 .build();
     }
@@ -204,6 +221,42 @@ public class BoardService {
         return BoardLikeResponseDto.builder()
                 .result(true)
                 .build();
+    }
+    //endregion
+
+    //region 게시글 검색
+    public List<BoardSearchResponseDto> boardSearch(String q) {
+        if(q == null || q.isEmpty()) {
+            throw new NullPointerException("검색어를 입력해주세요.");
+        }
+
+        List<Board> boardList = boardRepository.findByTitleContaining(q)
+                .orElseThrow(
+                        () -> new NullPointerException("검색하려는 게시글이 없습니다.")
+                );
+
+        if(boardList.size() == 0) {
+            throw new NullPointerException("검색에 해당되는 게시글이 없습니다.");
+        }
+
+
+        List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
+        for(Board board : boardList) {
+            boardSearchResponseDtoList.add(
+                    BoardSearchResponseDto.builder()
+                            .boardId(board.getPostId())
+                            .thumbNail(board.getThumbNail())
+                            .title(board.getTitle())
+                            .username(board.getUser().getUsername())
+                            .writer(board.getUser().getNickname())
+                            .createdAt(board.getCreatedAt().toLocalDate())
+                            .views(board.getViews())
+                            .likeCnt(board.getLikes().size())
+                            .build()
+            );
+        }
+
+        return boardSearchResponseDtoList;
     }
     //endregion
 }
