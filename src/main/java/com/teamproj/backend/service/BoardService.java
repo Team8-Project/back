@@ -3,12 +3,10 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardLikeRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
-import com.teamproj.backend.dto.board.BoardDetailResponseDto;
-import com.teamproj.backend.dto.board.BoardResponseDto;
-import com.teamproj.backend.dto.board.BoardUploadRequestDto;
-import com.teamproj.backend.dto.board.BoardUploadResponseDto;
+import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
+import com.teamproj.backend.dto.board.BoardDeleteResponseDto;
 import com.teamproj.backend.model.board.BoardLike;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
@@ -140,7 +138,7 @@ public class BoardService {
     //endregion
 
     //region 게시글 업데이트(수정)
-    public String updateBoard(Long postId, UserDetailsImpl userDetails, BoardUploadRequestDto boardUploadRequestDto) {
+    public BoardUpdateResponseDto updateBoard(Long postId, UserDetailsImpl userDetails, BoardUpdateRequestDto boardUpdateRequestDto) {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
@@ -149,17 +147,19 @@ public class BoardService {
             throw new IllegalArgumentException("게시글을 작성한 유저만 수정이 가능합니다.");
         }
 
-
-        // To Do: 글머리도 수정 가능할 시 추가 작성 필요
-        board.update(boardUploadRequestDto);
+        board.update(boardUpdateRequestDto);
 
         boardRepository.save(board);
-        return "게시글 수정 완료";
+
+
+        return BoardUpdateResponseDto.builder()
+                .result("게시글 수정 완료")
+                .build();
     }
     //endregion
 
     //region 게시글 삭제
-    public String deleteBoard(UserDetailsImpl userDetails, Long postId) {
+    public BoardDeleteResponseDto deleteBoard(UserDetailsImpl userDetails, Long postId) {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
@@ -169,13 +169,17 @@ public class BoardService {
             throw new IllegalArgumentException("게시글을 작성한 유저만 삭제가 가능합니다.");
         }
 
-        boardRepository.delete(board);
-        return "게시글 삭제 완료";
+        board.setEnabled(false);
+        boardRepository.save(board);
+
+        return BoardDeleteResponseDto.builder()
+                .result("게시글 삭제 완료")
+                .build();
     }
     //endregion
 
     //region 게시글 좋아요
-    public Boolean boardLike(UserDetailsImpl userDetails, Long postId) {
+    public BoardLikeResponseDto boardLike(UserDetailsImpl userDetails, Long postId) {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(
                         () -> new NullPointerException("해당 게시글이 없습니다.")
@@ -184,7 +188,10 @@ public class BoardService {
         Optional<BoardLike> findBoardLike = boardLikeRepository.findByBoardAndUser(board, jwtAuthenticateProcessor.getUser(userDetails));
         if (findBoardLike.isPresent()) {
             boardLikeRepository.delete(findBoardLike.get());
-            return false;
+
+            return BoardLikeResponseDto.builder()
+                    .result(false)
+                    .build();
         }
 
         BoardLike boardLike = BoardLike.builder()
@@ -194,7 +201,9 @@ public class BoardService {
 
         boardLikeRepository.save(boardLike);
 
-        return true;
+        return BoardLikeResponseDto.builder()
+                .result(true)
+                .build();
     }
     //endregion
 }

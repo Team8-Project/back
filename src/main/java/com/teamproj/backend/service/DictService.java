@@ -156,9 +156,9 @@ public class DictService {
         return recent;
     }
 
-    public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
-        
-    }
+//    public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
+//
+//    }
 
     // region 보조 기능
     // Utils

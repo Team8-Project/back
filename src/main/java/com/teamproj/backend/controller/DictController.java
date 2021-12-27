@@ -117,15 +117,15 @@ public class DictController {
                 .build();
     }
 
-    @GetMapping("/api/dict/search")
-    public ResponseDto<List<DictSearchResultResponseDto>> getSearchResult(@RequestHeader(value="Authorization", required = false) String token,
-                                                                          @RequestParam String q,
-                                                                          @RequestParam int page,
-                                                                          @RequestParam int size){
-        return ResponseDto.<List<DictSearchResultResponseDto>>builder()
-                .status(HttpStatus.OK.toString())
-                .message("사전 검색어 : " + q)
-                .data(dictService.getSearchResult(token, q, page, size))
-                .build();
-    }
+//    @GetMapping("/api/dict/search")
+//    public ResponseDto<List<DictSearchResultResponseDto>> getSearchResult(@RequestHeader(value="Authorization", required = false) String token,
+//                                                                          @RequestParam String q,
+//                                                                          @RequestParam int page,
+//                                                                          @RequestParam int size){
+//        return ResponseDto.<List<DictSearchResultResponseDto>>builder()
+//                .status(HttpStatus.OK.toString())
+//                .message("사전 검색어 : " + q)
+//                .data(dictService.getSearchResult(token, q, page, size))
+//                .build();
+//    }
 }
