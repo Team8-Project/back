@@ -17,25 +17,25 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
 
-    @GetMapping("/api/board/{postId}/comment")
-    public ResponseDto<List<CommentResponseDto>> getComments(@PathVariable Long postId,
+    @GetMapping("/api/board/{boardId}/comment")
+    public ResponseDto<List<CommentResponseDto>> getComments(@PathVariable Long boardId,
                                                              @RequestParam int page,
                                                              @RequestParam int size) {
         return ResponseDto.<List<CommentResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("댓글 조회 요청")
-                .data(commentService.getCommentList(postId, page, size))
+                .data(commentService.getCommentList(boardId, page, size))
                 .build();
     }
 
-    @PostMapping("/api/board/{postId}/comment")
+    @PostMapping("/api/board/{boardId}/comment")
     public ResponseDto<CommentPostResponseDto> postComment(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                           @PathVariable Long postId,
+                                                           @PathVariable Long boardId,
                                                            @RequestBody CommentPostRequestDto commentPostRequestDto) {
         return ResponseDto.<CommentPostResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("댓글 작성")
-                .data(commentService.postComment(userDetails, postId, commentPostRequestDto))
+                .data(commentService.postComment(userDetails, boardId, commentPostRequestDto))
                 .build();
     }
 
