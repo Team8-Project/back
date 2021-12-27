@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,7 +45,7 @@ class CommentServiceTest {
     String category;
 
     @BeforeEach
-    void setup() {
+    void setup() throws IOException {
         user = User.builder()
                 .username("유저네임")
                 .nickname("테스트닉네임")
@@ -74,15 +75,14 @@ class CommentServiceTest {
         BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                 .title(title)
                 .content(UUID.randomUUID().toString())
-                .category(category)
                 .build();
-        boardService.uploadBoard(userDetails, boardUploadRequestDto, category);
+        boardService.uploadBoard(userDetails, boardUploadRequestDto, category, null);
 
         // 게시글 조회
         List<BoardResponseDto> response = boardService.getBoard(category);
         for (BoardResponseDto boardResponseDto : response) {
             if (boardResponseDto.getTitle().equals(title)){
-                postId = boardResponseDto.getPostId();
+                postId = boardResponseDto.getBoardId();
             }
         }
     }

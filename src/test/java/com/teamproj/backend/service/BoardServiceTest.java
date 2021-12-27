@@ -139,7 +139,7 @@ class BoardServiceTest {
             Optional<Board> board = boardRepository.findById(boardUploadResponseDto.getBoardId());
 
             // then
-            assertEquals(board.get().getPostId(), boardUploadResponseDto.getBoardId());
+            assertEquals(board.get().getBoardId(), boardUploadResponseDto.getBoardId());
             assertEquals(boardTitle, boardUploadResponseDto.getTitle());
             assertEquals(boardContent, boardUploadResponseDto.getContent());
         }
@@ -285,10 +285,10 @@ class BoardServiceTest {
             String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
             // when
-            BoardDetailResponseDto boardDetailResponseDto = boardService.getBoardDetail(board.getPostId(), token);
+            BoardDetailResponseDto boardDetailResponseDto = boardService.getBoardDetail(board.getBoardId(), token);
 
             // then
-            assertEquals(board.getPostId(), boardDetailResponseDto.getBoardId());
+            assertEquals(board.getBoardId(), boardDetailResponseDto.getBoardId());
             assertEquals(board.getTitle(), boardDetailResponseDto.getTitle());
             assertEquals(board.getContent(), boardDetailResponseDto.getContent());
             assertEquals(board.getUser().getNickname(), boardDetailResponseDto.getWriter());
@@ -340,7 +340,7 @@ class BoardServiceTest {
                     .build();
 
             // when
-            BoardUpdateResponseDto result = boardService.updateBoard(board.getPostId(), userDetails, boardUpdateRequestDto);
+            BoardUpdateResponseDto result = boardService.updateBoard(board.getBoardId(), userDetails, boardUpdateRequestDto);
 
             // then
             assertEquals("게시글 수정 완료", result.getResult());
@@ -402,7 +402,7 @@ class BoardServiceTest {
 
                 // when
                 Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                    boardService.updateBoard(board.getPostId(), userDetails, boardUpdateRequestDto);
+                    boardService.updateBoard(board.getBoardId(), userDetails, boardUpdateRequestDto);
                 });
 
                 // then
@@ -441,7 +441,7 @@ class BoardServiceTest {
 
 
             // when
-            BoardDeleteResponseDto result = boardService.deleteBoard(userDetails, board.getPostId());
+            BoardDeleteResponseDto result = boardService.deleteBoard(userDetails, board.getBoardId());
 
 
             // then
@@ -499,7 +499,7 @@ class BoardServiceTest {
 
                 // when
                 Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                    boardService.deleteBoard(userDetails2, board.getPostId());
+                    boardService.deleteBoard(userDetails2, board.getBoardId());
                 });
 
                 // then
@@ -535,7 +535,7 @@ class BoardServiceTest {
             boardRepository.save(board);
 
             // when
-            BoardLikeResponseDto result = boardService.boardLike(userDetails, board.getPostId());
+            BoardLikeResponseDto result = boardService.boardLike(userDetails, board.getBoardId());
 
             // then
             assertEquals(true, result.getResult());
@@ -583,7 +583,7 @@ class BoardServiceTest {
             List<BoardSearchResponseDto> boardSearchResponseDtoList = boardService.boardSearch(keyword);
 
             // then
-            assertEquals(board.getPostId(), boardSearchResponseDtoList.get(0).getBoardId());
+            assertEquals(board.getBoardId(), boardSearchResponseDtoList.get(0).getBoardId());
             assertEquals(board.getTitle(), boardSearchResponseDtoList.get(0).getTitle());
             assertEquals(board.getUser().getUsername(), boardSearchResponseDtoList.get(0).getUsername());
             assertEquals(board.getThumbNail(), boardSearchResponseDtoList.get(0).getThumbNail());
