@@ -114,9 +114,15 @@ public class DictService {
 
     // 사전 좋아요 / 좋아요 취소
     public DictLikeResponseDto likeDict(UserDetailsImpl userDetails, Long dictId) {
+        // 로그인 체크
         ValidChecker.loginCheck(userDetails);
         User user = jwtAuthenticateProcessor.getUser(userDetails);
         Dict dict = getSafeDict(dictId);
+
+        /*
+            1. 좋아요 중일 시 : 좋아요 취소
+            2. 좋아요 중이 아닐 시 : 좋아요
+         */
         boolean isLike = false;
         if (isDictLike(dict, userDetails)) {
             DictLike dictLike = getSafeDictLike(user, dict);
@@ -176,14 +182,9 @@ public class DictService {
         if (userDetails == null) {
             return false;
         }
+        Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(jwtAuthenticateProcessor.getUser(userDetails), dict);
 
-        for (DictLike dictLike : dict.getDictLikeList()) {
-            if (dictLike.getUser().getUsername().equals(userDetails.getUsername())) {
-                return true;
-            }
-        }
-
-        return false;
+        return dictLike.isPresent();
     }
 
     // 사전 추천 검색어 출력
