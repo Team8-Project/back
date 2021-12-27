@@ -108,12 +108,12 @@ public class DictController {
                 .build();
     }
 
-    @GetMapping("/api/dict/searchInfo")
-    public ResponseDto<DictSearchInfoResponseDto> getSearchInfo(@AuthenticationPrincipal UserDetailsImpl userDetails){
-        return ResponseDto.<DictSearchInfoResponseDto>builder()
+    @GetMapping("/api/searchInfo/dict")
+    public ResponseDto<List<String>> getSearchInfo(){
+        return ResponseDto.<List<String>>builder()
                 .status(HttpStatus.OK.toString())
-                .message("최근 검색어 / 추천 검색어 요청")
-                .data(dictService.getSearchInfo(userDetails))
+                .message("추천 검색어 요청")
+                .data(dictService.getSearchInfo())
                 .build();
     }
 
