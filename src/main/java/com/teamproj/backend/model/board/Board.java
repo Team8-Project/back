@@ -1,5 +1,6 @@
 package com.teamproj.backend.model.board;
 
+import com.teamproj.backend.dto.board.BoardUpdateRequestDto;
 import com.teamproj.backend.dto.board.BoardUploadRequestDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
@@ -40,14 +41,21 @@ public class Board extends Timestamped {
     @JoinColumn(nullable = false)
     private BoardCategory boardCategory;
 
+    @Column(columnDefinition = "boolean default true")
+    private boolean enabled;
+
     @OneToMany(mappedBy = "board")
     private final List<BoardHashTag> boardHashTagList = new ArrayList<>();
 
     @OneToMany(mappedBy = "board")
     private final List<BoardLike> Likes = new ArrayList<>();
 
-    public void update(BoardUploadRequestDto boardUploadRequestDto) {
-        this.title = boardUploadRequestDto.getTitle();
-        this.content = boardUploadRequestDto.getContent();
+    public void update(BoardUpdateRequestDto boardUpdateRequestDto) {
+        this.title = boardUpdateRequestDto.getTitle();
+        this.content = boardUpdateRequestDto.getContent();
+    }
+
+    public void setEnabled(boolean enabled){
+        this.enabled = enabled;
     }
 }

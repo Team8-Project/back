@@ -1,10 +1,12 @@
 package com.teamproj.backend.controller;
 
+import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.board.*;
+import com.teamproj.backend.dto.board.BoardDeleteResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.BoardService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,51 +18,69 @@ public class BoardController {
     private final BoardService boardService;
 
     @GetMapping("/api/board")
-    public List<BoardResponseDto> getBoard(){
-        return boardService.getBoard("FREEBOARD");
+    public ResponseDto<List<BoardResponseDto>> getBoard(){
+        return ResponseDto.<List<BoardResponseDto>>builder()
+                .status(HttpStatus.OK.toString())
+                .message("게시글 목록 불러오기")
+                .data(boardService.getBoard("FREEBOARD"))
+                .build();
     }
 
     @PostMapping("/api/board")
-    public ResponseEntity<BoardUploadResponseDto> uploadBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
+    public ResponseDto<BoardUploadResponseDto> uploadBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                              @RequestBody BoardUploadRequestDto boardUploadRequestDto) {
-        // To Do : 게시글 subject, Category 추가하는 기능 만들기  => 더미 데이터만 넣은 상태
-        return ResponseEntity.ok()
-                .body(boardService.uploadBoard(userDetails, boardUploadRequestDto, "FREEBOARD"));
+        // To Do : 게시글 Category 추가하는 기능 만들기  => 더미 데이터만 넣은 상태
+        return ResponseDto.<BoardUploadResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("게시글 작성")
+                .data(boardService.uploadBoard(userDetails, boardUploadRequestDto, "FREEBOARD"))
+                .build();
     }
 
     @GetMapping("/api/board/{postId}")
-    public ResponseEntity<BoardDetailResponseDto> getBoardDetail(@RequestHeader(value="Authorization", required = false) String token,
+    public ResponseDto<BoardDetailResponseDto> getBoardDetail(@RequestHeader(value="Authorization", required = false) String token,
                                                                  @PathVariable Long postId) {
         if(token == null){
             token = "";
         }
-        System.out.println("token" + token);
-        return ResponseEntity.ok()
-                .body(boardService.getBoardDetail(postId, token));
+
+        return ResponseDto.<BoardDetailResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("게시글 상세보기")
+                .data(boardService.getBoardDetail(postId, token))
+                .build();
     }
 
     @PutMapping("/api/board/{postId}")
-    public ResponseEntity<String> updateBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                              @RequestBody BoardUploadRequestDto boardUploadRequestDto,
-                                              @PathVariable Long postId) {
-        return ResponseEntity.ok()
-                .body(boardService.updateBoard(postId, userDetails, boardUploadRequestDto));
+    public ResponseDto<BoardUpdateResponseDto> updateBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                           @RequestBody BoardUpdateRequestDto boardUpdateRequestDto,
+                                                           @PathVariable Long postId) {
+        return ResponseDto.<BoardUpdateResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("게시글 수정")
+                .data(boardService.updateBoard(postId, userDetails, boardUpdateRequestDto))
+                .build();
     }
 
     @DeleteMapping("/api/board/{postId}")
-    public ResponseEntity<String> deleteBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                              @PathVariable Long postId) {
+    public ResponseDto<BoardDeleteResponseDto> deleteBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                           @PathVariable Long postId) {
 
-        System.out.println(postId);
-        return ResponseEntity.ok()
-                .body(boardService.deleteBoard(userDetails, postId));
+        return ResponseDto.<BoardDeleteResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("게시글 삭제")
+                .data(boardService.deleteBoard(userDetails, postId))
+                .build();
     }
 
     @PostMapping("/api/board/{postId}/like")
-    public ResponseEntity<Boolean> boardLike(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                             @PathVariable Long postId) {
+    public ResponseDto<BoardLikeResponseDto> boardLike(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                          @PathVariable Long postId) {
 
-        return ResponseEntity.ok()
-                .body(boardService.boardLike(userDetails, postId));
+        return ResponseDto.<BoardLikeResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("게시글 좋아요")
+                .data(boardService.boardLike(userDetails, postId))
+                .build();
     }
 }

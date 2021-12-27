@@ -14,7 +14,6 @@ public class BoardResponseDto {
     private Long postId;
     private String title;
     private String nickname;
-    private String subject;
     private int views;
     private int likeCnt;
     private LocalDate createdAt;

@@ -18,7 +18,6 @@ public class BoardDetailResponseDto {
     private String content;
     private String writer;
     private LocalDate createdAt;
-    private String subject;
     private int views;
     private int likeCnt;
     private Boolean isLike;

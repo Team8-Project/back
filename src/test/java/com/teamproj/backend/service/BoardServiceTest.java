@@ -4,19 +4,17 @@ import com.teamproj.backend.Repository.CommentRepository;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
-import com.teamproj.backend.dto.board.BoardResponseDto;
-import com.teamproj.backend.dto.board.BoardUploadRequestDto;
-import com.teamproj.backend.dto.board.BoardUploadResponseDto;
+import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
+import com.teamproj.backend.dto.board.BoardDeleteResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,24 +34,10 @@ class BoardServiceTest {
     private BoardService boardService;
 
     @Autowired
-    private CommentService commentService;
-
-    @Autowired
     private BoardRepository boardRepository;
 
     @Autowired
     private BoardCategoryRepository boardCategoryRepository;
-
-//    @Autowired
-//    private BoardSubjectRepository boardSubjectRepository;
-
-//    @Autowired
-//    private BoardLikeRepository boardLikeRepository;
-
-
-//    @Autowired
-//    private JwtAuthenticateProcessor jwtAuthenticateProcessor;
-
 
     @Autowired
     private CommentRepository commentRepository;
@@ -167,7 +151,6 @@ class BoardServiceTest {
                 BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                         .title(boardTitle)
                         .content(boardContent)
-                        .subject(null)
                         .category(null)
                         .build();
 
@@ -189,7 +172,6 @@ class BoardServiceTest {
                 BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                         .title(boardTitle)
                         .content(boardContent)
-                        .subject(null)
                         .category(null)
                         .build();
 
@@ -210,7 +192,6 @@ class BoardServiceTest {
                 BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                         .title(boardTitle)
                         .content(boardContent)
-                        .subject(null)
                         .category(boardCategory.getCategoryName())
                         .build();
 
@@ -232,40 +213,42 @@ class BoardServiceTest {
     @DisplayName("게시글 상세 조회")
     class getBoardDetail {
 
-//        @Test
-//        @DisplayName("성공")
-//        void getBoardDetail_success() {
-//            // given
-//            BoardCategory boardCategory = new BoardCategory("카테고리");
-//            boardCategoryRepository.save(boardCategory);
-//
-//
-//            Board board = Board.builder()
-//                    .user(user)
-//                    .content("내용")
-//                    .title("제목")
-//                    .boardCategory(boardCategory)
-//                    .build();
-//
-//            Comment comment = Comment.builder()
-//                    .board(board)
-//                    .content("내용")
-//                    .user(user)
-//                    .build();
-//
-//            boardRepository.save(board);
-//            commentRepository.save(comment);
-//
-//
-//            String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
-//            boardService.getBoardDetail(board.getPostId(), token);
-//
-//            // when
-//
-//
-//            // then
-//
-//        }
+        @Test
+        @DisplayName("성공")
+        void getBoardDetail_success() {
+            // given
+            BoardCategory boardCategory = new BoardCategory("카테고리");
+            boardCategoryRepository.save(boardCategory);
+
+
+            Board board = Board.builder()
+                    .user(user)
+                    .content("내용")
+                    .title("제목")
+                    .boardCategory(boardCategory)
+                    .build();
+
+            Comment comment = Comment.builder()
+                    .board(board)
+                    .content("내용")
+                    .user(user)
+                    .build();
+
+            boardRepository.save(board);
+            commentRepository.save(comment);
+
+
+            String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
+
+            // when
+            BoardDetailResponseDto boardDetailResponseDto = boardService.getBoardDetail(board.getPostId(), token);
+
+            // then
+            assertEquals(board.getPostId(), boardDetailResponseDto.getBoardId());
+            assertEquals(board.getTitle(), boardDetailResponseDto.getTitle());
+            assertEquals(board.getContent(), boardDetailResponseDto.getContent());
+            assertEquals(board.getUser().getNickname(), boardDetailResponseDto.getWriter());
+        }
 
         @Test
         @DisplayName("실패")
@@ -283,6 +266,105 @@ class BoardServiceTest {
             assertEquals("해당 게시글이 없습니다.", exception.getMessage());
         }
     }
+    //endregion
+
+    //region 게시글 업데이트(수정)
+    @Nested
+    @DisplayName("게시글 업데이트(수정)")
+    class updateBoard {
+
+        @Test
+        @DisplayName("성공")
+        void updateBoard_success() {
+            // given
+            BoardCategory boardCategory = new BoardCategory("카테고리");
+            Board board = Board.builder()
+                    .title(boardTitle)
+                    .content(boardContent)
+                    .boardCategory(boardCategory)
+                    .user(user)
+                    .build();
+
+            boardCategoryRepository.save(boardCategory);
+            userRepository.save(user);
+            boardRepository.save(board);
+
+            BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
+                    .title(board.getTitle())
+                    .content(board.getContent())
+                    .build();
+
+            // when
+            BoardUpdateResponseDto result = boardService.updateBoard(board.getPostId(), userDetails, boardUpdateRequestDto);
+
+            // then
+            assertEquals("게시글 수정 완료", result.getResult());
+        }
+
+
+        @Nested
+        @DisplayName("실패")
+        class updateBoard_fail {
+
+            @Test
+            @DisplayName("실패 / 해당 게시글이 없습니다.")
+            void updateBoard_fail() {
+                // given
+                BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
+                        .title("수정된 제목")
+                        .content("수정된 내용")
+                        .build();
+
+                // when
+
+                Exception exception = assertThrows(NullPointerException.class, () -> {
+                    boardService.updateBoard(0L, userDetails, boardUpdateRequestDto);
+                });
+
+                // then
+                assertEquals("해당 게시글이 없습니다.", exception.getMessage());
+            }
+
+            @Test
+            @DisplayName("실패2 / 게시글을 작성한 유저만 수정이 가능합니다")
+            void updateBoard_fail2() {
+                // given
+                BoardCategory boardCategory = new BoardCategory("카테고리");
+                User user2 = User.builder()
+                        .username("유저네임2")
+                        .nickname("닉네임2")
+                        .password("qwer1234")
+                        .build();
+
+                boardCategoryRepository.save(boardCategory);
+                userRepository.save(user2);
+
+                Board board = Board.builder()
+                        .title(boardTitle)
+                        .content(boardContent)
+                        .user(user2)
+                        .boardCategory(boardCategory)
+                        .build();
+
+                boardRepository.save(board);
+                BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
+                        .title(board.getTitle())
+                        .content(board.getContent())
+                        .build();
+
+
+
+                // when
+                Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+                    boardService.updateBoard(board.getPostId(), userDetails, boardUpdateRequestDto);
+                });
+
+                // then
+                assertEquals("게시글을 작성한 유저만 수정이 가능합니다.", exception.getMessage());
+            }
+        }
+    }
+
     //endregion
 
     //region 게시글 삭제
@@ -312,11 +394,11 @@ class BoardServiceTest {
 
 
             // when
-            String message = boardService.deleteBoard(userDetails, board.getPostId());
+            BoardDeleteResponseDto result = boardService.deleteBoard(userDetails, board.getPostId());
 
 
             // then
-            assertEquals("게시글 삭제 완료", message);
+            assertEquals("게시글 삭제 완료", result.getResult());
         }
 
         @Nested
@@ -377,6 +459,51 @@ class BoardServiceTest {
             }
         }
 
+    }
+    //endregion
+
+    //region 게시글 좋아요
+    @Nested
+    @DisplayName("게시글 좋아요")
+    class boardLike {
+
+        @Test
+        @DisplayName("성공")
+        void boardLike_success() {
+            // given
+            BoardCategory boardCategory = new BoardCategory("카테고리");
+
+            Board board = Board.builder()
+                    .title(boardTitle)
+                    .content(boardContent)
+                    .boardCategory(boardCategory)
+                    .user(user)
+                    .build();
+
+
+            boardCategoryRepository.save(boardCategory);
+            userRepository.save(user);
+            boardRepository.save(board);
+
+            // when
+            BoardLikeResponseDto result = boardService.boardLike(userDetails, board.getPostId());
+
+            // then
+            assertEquals(true, result.getResult());
+        }
+
+        @Test
+        @DisplayName("실패 / 해당 게시글이 없습니다.")
+        void boardLike_fail() {
+
+            // when
+            Exception exception = assertThrows(NullPointerException.class, () -> {
+                boardService.boardLike(userDetails, 0L);
+            });
+
+            // then
+            assertEquals("해당 게시글이 없습니다.", exception.getMessage());
+        }
     }
     //endregion
 }

@@ -39,7 +39,7 @@ public class DictController {
 
     @GetMapping("/api/dict/{dictId}")
     public ResponseDto<DictDetailResponseDto> getDictDetail(@RequestHeader(value="Authorization", required = false) String token,
-                                                               @PathVariable Long dictId){
+                                                            @PathVariable Long dictId){
         if(token == null){
             token = "";
         }
@@ -52,7 +52,7 @@ public class DictController {
 
     @PostMapping("/api/dict")
     public ResponseDto<DictPostResponseDto> postDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                        @RequestBody DictPostRequestDto dictPostRequestDto){
+                                                     @RequestBody DictPostRequestDto dictPostRequestDto){
         return ResponseDto.<DictPostResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 작성")
@@ -62,8 +62,8 @@ public class DictController {
 
     @PutMapping("/api/dict/{dictId}")
     public ResponseDto<DictPutResponseDto> putDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                      @PathVariable Long dictId,
-                                                      @RequestBody DictPutRequestDto dictPutRequestDto){
+                                                   @PathVariable Long dictId,
+                                                   @RequestBody DictPutRequestDto dictPutRequestDto){
         return ResponseDto.<DictPutResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 수정")
@@ -73,7 +73,7 @@ public class DictController {
 
     @GetMapping("/api/dict/{dictId}/like")
     public ResponseDto<DictLikeResponseDto> likeDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                        @PathVariable Long dictId){
+                                                     @PathVariable Long dictId){
         return ResponseDto.<DictLikeResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 좋아요")
