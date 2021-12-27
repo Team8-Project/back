@@ -39,7 +39,7 @@ public class DictController {
 
     @GetMapping("/api/dict/{dictId}")
     public ResponseDto<DictDetailResponseDto> getDictDetail(@RequestHeader(value="Authorization", required = false) String token,
-                                                               @PathVariable Long dictId){
+                                                            @PathVariable Long dictId){
         if(token == null){
             token = "";
         }
@@ -52,7 +52,7 @@ public class DictController {
 
     @PostMapping("/api/dict")
     public ResponseDto<DictPostResponseDto> postDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                        @RequestBody DictPostRequestDto dictPostRequestDto){
+                                                     @RequestBody DictPostRequestDto dictPostRequestDto){
         return ResponseDto.<DictPostResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 작성")
@@ -62,8 +62,8 @@ public class DictController {
 
     @PutMapping("/api/dict/{dictId}")
     public ResponseDto<DictPutResponseDto> putDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                      @PathVariable Long dictId,
-                                                      @RequestBody DictPutRequestDto dictPutRequestDto){
+                                                   @PathVariable Long dictId,
+                                                   @RequestBody DictPutRequestDto dictPutRequestDto){
         return ResponseDto.<DictPutResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 수정")
@@ -73,7 +73,7 @@ public class DictController {
 
     @GetMapping("/api/dict/{dictId}/like")
     public ResponseDto<DictLikeResponseDto> likeDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                        @PathVariable Long dictId){
+                                                     @PathVariable Long dictId){
         return ResponseDto.<DictLikeResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 좋아요")
@@ -108,24 +108,24 @@ public class DictController {
                 .build();
     }
 
-    @GetMapping("/api/dict/searchInfo")
-    public ResponseDto<DictSearchInfoResponseDto> getSearchInfo(@AuthenticationPrincipal UserDetailsImpl userDetails){
-        return ResponseDto.<DictSearchInfoResponseDto>builder()
+    @GetMapping("/api/searchInfo/dict")
+    public ResponseDto<List<String>> getSearchInfo(){
+        return ResponseDto.<List<String>>builder()
                 .status(HttpStatus.OK.toString())
-                .message("최근 검색어 / 추천 검색어 요청")
-                .data(dictService.getSearchInfo(userDetails))
+                .message("추천 검색어 요청")
+                .data(dictService.getSearchInfo())
                 .build();
     }
 
-//    @GetMapping("/api/dict/search")
-//    public ResponseDto<List<DictSearchResultResponseDto>> getSearchResult(@RequestHeader(value="Authorization", required = false) String token,
-//                                                                          @RequestParam String q,
-//                                                                          @RequestParam int page,
-//                                                                          @RequestParam int size){
-//        return ResponseDto.<List<DictSearchResultResponseDto>>builder()
-//                .status(HttpStatus.OK.toString())
-//                .message("사전 검색어 : " + q)
-//                .data(dictService.getSearchResult(token, q, page, size))
-//                .build();
-//    }
+    @GetMapping("/api/dict/search")
+    public ResponseDto<List<DictSearchResultResponseDto>> getSearchResult(@RequestHeader(value="Authorization", required = false) String token,
+                                                                          @RequestParam String q,
+                                                                          @RequestParam int page,
+                                                                          @RequestParam int size){
+        return ResponseDto.<List<DictSearchResultResponseDto>>builder()
+                .status(HttpStatus.OK.toString())
+                .message("사전 검색어 : " + q)
+                .data(dictService.getSearchResult(token, q, page, size))
+                .build();
+    }
 }
