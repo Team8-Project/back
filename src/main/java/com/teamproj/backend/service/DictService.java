@@ -9,6 +9,7 @@ import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dict.*;
+import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.QueryTypeEnum;
 import com.teamproj.backend.model.RecentSearch;
 import com.teamproj.backend.model.User;
@@ -17,6 +18,9 @@ import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -130,34 +134,35 @@ public class DictService {
                 .build();
     }
 
-    public DictSearchInfoResponseDto getSearchInfo(UserDetailsImpl userDetails) {
-        ValidChecker.loginCheck(userDetails);
-
-        User user = jwtAuthenticateProcessor.getUser(userDetails);
-
-        List<String> recent = getRecentSearch(user);
-        List<String> recommend = getRecommendSearch(20);
-
-        return DictSearchInfoResponseDto.builder()
-                .recent(recent)
-                .recommend(recommend)
-                .build();
+    public List<String> getSearchInfo() {
+        /*
+            최근 검색어 기능은 프론트엔드에서 구현할 수 있는지 여부 검증되기 전까지
+            비활성화 상태로 유지합니다.
+        */
+        return getRecommendSearch(20);
     }
 
-    private List<String> getRecentSearch(User user) {
-        List<RecentSearch> recentSearchList = getSafeRecentSearchList(user, QueryTypeEnum.DICT);
+//        public DictSearchInfoResponseDto getSearchInfo(UserDetailsImpl userDetails) {
+//        ValidChecker.loginCheck(userDetails);
 
-        List<String> recent = new ArrayList<>();
+//        User user = jwtAuthenticateProcessor.getUser(userDetails);
 
-        for (RecentSearch recentSearch : recentSearchList) {
-            recent.add(recentSearch.getQuery());
-        }
+//        List<String> recent = getRecentSearch(user);
+//        List<String> recommend = getRecommendSearch(20);
 
-        return recent;
-    }
+//        return DictSearchInfoResponseDto.builder()
+//                .recent(recent)
+//                .recommend(recommend)
+//                .build();
+//    }
+
 
     public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
-        
+        UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
+
+        List<Dict> dictList = getSafeDictListBySearch(q, page, size);
+
+        return dictListToDictSearchResultResponseDto(dictList, userDetails);
     }
 
     // region 보조 기능
@@ -182,20 +187,53 @@ public class DictService {
     }
 
     // 사전 추천 검색어 출력
-    private List<String> getRecommendSearch(int size) {
+    public List<String> getRecommendSearch(int size) {
         // 1. 좋아요 테이블에서 각 좋아요 개수 불러와서 내림차순으로 정렬
         // 2. 그 중 20개정도 뽑아서 섞은다음 7개 찾아서 그걸로 탐색하고 정렬
         // 3. good!
         List<Tuple> tupleList = getSafeDictLikeCountTupleOrderByDescLimit(size);
         List<String> recommend = new ArrayList<>();
         for (Tuple tuple : tupleList) {
-            recommend.add(tuple.get(0, String.class));
-            System.out.println("name : " + tuple.get(0, String.class) + " / count : " + tuple.get(1, Long.class));
+            recommend.add(tuple.get(1, String.class));
         }
 
         Collections.shuffle(recommend);
-        return recommend.subList(0, 7);
+        int returnSize = Math.min(recommend.size(), 7);
+        return recommend.subList(0, returnSize);
     }
+
+    // 오늘의 밈 출력
+    public List<MainTodayMemeResponseDto> getTodayMeme(int size) {
+        // 1. 좋아요 테이블에서 각 좋아요 개수 불러와서 내림차순으로 정렬
+        // 2. 그 중 20개정도 뽑아서 섞은다음 7개 찾아서 그걸로 탐색하고 정렬
+        // 3. 받아와서 MainTodayMemeResponseDto에 스택
+        // 4. good!
+        List<Tuple> tupleList = getSafeDictLikeCountTupleOrderByDescLimit(size);
+        List<MainTodayMemeResponseDto> recommend = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            recommend.add(MainTodayMemeResponseDto.builder()
+                    .dictId(tuple.get(0, Long.class))
+                    .dictName(tuple.get(1, String.class))
+                    .build());
+        }
+
+        Collections.shuffle(recommend);
+        int returnSize = Math.min(recommend.size(), 7);
+        return recommend.subList(0, returnSize);
+    }
+
+    // 최근 검색어 출력
+//    private List<String> getRecentSearch(User user) {
+//        List<RecentSearch> recentSearchList = getSafeRecentSearchList(user, QueryTypeEnum.DICT);
+//
+//        List<String> recent = new ArrayList<>();
+//
+//        for (RecentSearch recentSearch : recentSearchList) {
+//            recent.add(recentSearch.getQuery());
+//        }
+//
+//        return recent;
+//    }
 
     // Get SafeEntity
     // Dict
@@ -233,13 +271,20 @@ public class DictService {
     private List<Tuple> getSafeDictLikeCountTupleOrderByDescLimit(int size) {
         QDictLike qDictLike = QDictLike.dictLike;
 
-        NumberPath<Long> count = Expressions.numberPath(Long.class, "count");
-        return queryFactory.select(qDictLike.dict, qDictLike.dict.count().as(count))
+        NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
+        return queryFactory.select(qDictLike.dict.dictId, qDictLike.dict.dictName, qDictLike.dict.count().as(count))
                 .from(qDictLike)
                 .groupBy(qDictLike.dict)
                 .orderBy(count.desc())
                 .limit(size)
                 .fetch();
+    }
+
+    // DictList 검색결과
+    private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
+        String queryString = "%" + q + "%";
+        Optional<Page<Dict>> searchResult = dictRepository.findAllByDictNameLikeOrContentLike(queryString, queryString, PageRequest.of(page, size));
+        return searchResult.map(Streamable::toList).orElseGet(ArrayList::new);
     }
 
     // Entity To Dto
@@ -260,6 +305,22 @@ public class DictService {
         return dictResponseDtoList;
     }
 
+    // DictDtoList to DictSearchResultResponseDtoList
+    private List<DictSearchResultResponseDto> dictListToDictSearchResultResponseDto(List<Dict> dictList, UserDetailsImpl userDetails) {
+        List<DictSearchResultResponseDto> dictSearchResultResponseDto = new ArrayList<>();
+
+        for (Dict dict : dictList) {
+            dictSearchResultResponseDto.add(DictSearchResultResponseDto.builder()
+                    .dictId(dict.getDictId())
+                    .title(dict.getDictName())
+                    .meaning(dict.getContent())
+                    .isLike(isDictLike(dict, userDetails))
+                    .likeCount(dict.getDictLikeList().size())
+                    .build());
+        }
+
+        return dictSearchResultResponseDto;
+    }
 
     // endregion
 }
