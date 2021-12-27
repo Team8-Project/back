@@ -76,7 +76,7 @@ public class CommentService {
         // 자신이 작성한 댓글인지 확인
         commentIsMineCheck(userDetails, commentId);
 
-        // enabled를 false로 하여 삭제처리. 이후 쿼리에서 조회되지 않음!
+        // enabled 를 false 로 하여 삭제처리. 이후 쿼리에서 조회되지 않음!
         Comment comment = getSafeComment(commentId);
         comment.setEnabled(false);
 
