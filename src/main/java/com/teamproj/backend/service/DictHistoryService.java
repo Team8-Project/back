@@ -8,6 +8,8 @@ import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
 import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.dict.DictHistory;
+import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_DICT;
+import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_DICT_HISTORY;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +55,9 @@ public class DictHistoryService {
     }
 
     @Transactional
-    public DictRevertResponseDto revertDict(Long historyId) {
+    public DictRevertResponseDto revertDict(Long historyId, UserDetailsImpl userDetails) {
+        ValidChecker.loginCheck(userDetails);
+
         DictHistory dictHistory = getSafeDictHistory(historyId);
         Dict dict = getSafeDict(dictHistory.getDict().getDictId());
 

@@ -43,6 +43,7 @@ public class CommentService {
                 .board(board)
                 .content(commentPostRequestDto.getContent())
                 .user(jwtAuthenticateProcessor.getUser(userDetails))
+                .enabled(true)
                 .build());
 
         return CommentPostResponseDto.builder()
