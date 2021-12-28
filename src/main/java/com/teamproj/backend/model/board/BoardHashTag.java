@@ -17,6 +17,9 @@ public class BoardHashTag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long hashTagId;
 
+    @Column(nullable = false)
+    private String hashTagName;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Board board;

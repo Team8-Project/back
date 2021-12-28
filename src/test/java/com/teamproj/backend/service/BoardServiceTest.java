@@ -5,13 +5,15 @@ import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.board.*;
+import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
-import com.teamproj.backend.dto.board.BoardDeleteResponseDto;
+import com.teamproj.backend.model.board.BoardHashTag;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
+import com.teamproj.backend.util.TimeTraceAop;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +22,7 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +50,11 @@ class BoardServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+
+    @Autowired
+    public TimeTraceAop timeTraceAop() {
+        return new TimeTraceAop();
+    }
 
     UserDetailsImpl userDetails;
 
@@ -118,14 +126,17 @@ class BoardServiceTest {
         void uploadBoard_sucess() throws IOException {
             // givien
             BoardCategory boardCategory = new BoardCategory("카테고리");
-
-
             boardCategoryRepository.save(boardCategory);
+
+            List<String> hashTags = new ArrayList<>();
+            hashTags.add("tag1");
+            hashTags.add("tag2");
 
 
             BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                     .title(boardTitle)
                     .content(boardContent)
+                    .hashTags(hashTags)
                     .build();
 
             MockMultipartFile mockMultipartFile = new MockMultipartFile(
@@ -169,7 +180,7 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("제목은 필수 입력 값입니다", exception.getMessage());
+                assertEquals(ExceptionMessages.TITLE_IS_EMPTY, exception.getMessage());
             }
 
             @Test
@@ -194,7 +205,7 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("내용은 필수 입력 값입니다", exception.getMessage());
+                assertEquals(ExceptionMessages.CONTENT_IS_EMPTY, exception.getMessage());
             }
 
             @Test
@@ -217,36 +228,8 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("해당 카테고리가 없습니다.", exception.getMessage());
+                assertEquals(ExceptionMessages.NOT_EXIST_CATEGORY, exception.getMessage());
             }
-
-
-//            @Test
-//            @DisplayName("실패4 / 등록하려는 게시글에 이미지가 없습니다.")
-//            void uploadBoard_fail4() throws IOException {
-//                // givien
-//                BoardCategory boardCategory = new BoardCategory("카테고리");
-//
-//                boardCategoryRepository.save(boardCategory);
-//
-//                BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
-//                        .title(boardTitle)
-//                        .content(boardContent)
-//                        .build();
-//
-//                MockMultipartFile mockMultipartFile = null;
-//
-//                // when
-//                Exception exception = assertThrows(NullPointerException.class, () -> {
-//                    boardService.uploadBoard(
-//                            userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile
-//                            );
-//                });
-//
-//
-//                // then
-//                assertEquals("등록하려는 게시글에 이미지가 없습니다.", exception.getMessage());
-//            }
         }
     }
     //endregion
@@ -295,7 +278,7 @@ class BoardServiceTest {
         }
 
         @Test
-        @DisplayName("실패")
+        @DisplayName("실패 / 유효하지 않은 게시글입니다.")
         void getBoardDetail_fail() {
             // given
             String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
@@ -307,7 +290,7 @@ class BoardServiceTest {
             });
 
             // then
-            assertEquals("해당 게시글이 없습니다.", exception.getMessage());
+            assertEquals(ExceptionMessages.NOT_EXIST_BOARD, exception.getMessage());
         }
     }
     //endregion
@@ -352,7 +335,7 @@ class BoardServiceTest {
         class updateBoard_fail {
 
             @Test
-            @DisplayName("실패 / 해당 게시글이 없습니다.")
+            @DisplayName("실패 / 유효하지 않은 게시글입니다.")
             void updateBoard_fail() {
                 // given
                 BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
@@ -367,11 +350,11 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("해당 게시글이 없습니다.", exception.getMessage());
+                assertEquals(ExceptionMessages.NOT_EXIST_BOARD, exception.getMessage());
             }
 
             @Test
-            @DisplayName("실패2 / 게시글을 작성한 유저만 수정이 가능합니다")
+            @DisplayName("실패2 / 권한이 없습니다.")
             void updateBoard_fail2() {
                 // given
                 BoardCategory boardCategory = new BoardCategory("카테고리");
@@ -406,7 +389,7 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("게시글을 작성한 유저만 수정이 가능합니다.", exception.getMessage());
+                assertEquals(ExceptionMessages.NOT_MY_BOARD, exception.getMessage());
             }
         }
     }
@@ -453,7 +436,7 @@ class BoardServiceTest {
         class deleteBoard_fail {
 
             @Test
-            @DisplayName("실패1 / 해당 게시글이 없습니다.")
+            @DisplayName("실패1 / 유효하지 않은 게시글입니다.")
             void deleteBoard_fail() {
 
                 // when
@@ -462,11 +445,11 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("해당 게시글이 없습니다.", exception.getMessage());
+                assertEquals(ExceptionMessages.NOT_EXIST_BOARD, exception.getMessage());
             }
 
             @Test
-            @DisplayName("실패2 / 게시글을 작성한 유저만 삭제가 가능합니다.")
+            @DisplayName("실패2 / 권한이 없습니다.")
             void deleteBoard_fail2() {
                 // given
 
@@ -503,7 +486,7 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("게시글을 작성한 유저만 삭제가 가능합니다.", exception.getMessage());
+                assertEquals(ExceptionMessages.NOT_MY_BOARD, exception.getMessage());
             }
         }
 
@@ -542,7 +525,7 @@ class BoardServiceTest {
         }
 
         @Test
-        @DisplayName("실패 / 해당 게시글이 없습니다.")
+        @DisplayName("실패 / 유효하지 않은 게시글입니다.")
         void boardLike_fail() {
 
             // when
@@ -551,7 +534,7 @@ class BoardServiceTest {
             });
 
             // then
-            assertEquals("해당 게시글이 없습니다.", exception.getMessage());
+            assertEquals(ExceptionMessages.NOT_EXIST_BOARD, exception.getMessage());
         }
     }
     //endregion
@@ -565,6 +548,10 @@ class BoardServiceTest {
         @DisplayName("게시글 검색 / 성공")
         void boardSearch_success() {
             // given
+            List<BoardHashTag> boardHashTagList = new ArrayList<>();
+            BoardHashTag boardHashTag = new BoardHashTag();
+            boardHashTagList.add(boardHashTag);
+
             BoardCategory boardCategory = new BoardCategory("카테고리");
             Board board = Board.builder()
                     .title("타이틀")
@@ -572,6 +559,7 @@ class BoardServiceTest {
                     .user(user)
                     .boardCategory(boardCategory)
                     .thumbNail("썸네일URL")
+                    .boardHashTagList(boardHashTagList)
                     .build();
 
             boardCategoryRepository.save(boardCategory);
@@ -608,7 +596,7 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("검색어를 입력해주세요.", exception.getMessage());
+                assertEquals(ExceptionMessages.SEARCH_IS_EMPTY, exception.getMessage());
                 System.out.println(exception.getMessage());
             }
 
@@ -625,12 +613,12 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("검색어를 입력해주세요.", exception.getMessage());
+                assertEquals(ExceptionMessages.SEARCH_IS_EMPTY, exception.getMessage());
             }
 
 
             @Test
-            @DisplayName("실패3 / 검색에 해당되는 게시글이 없습니다.")
+            @DisplayName("실패3 / 검색하려는 게시글이 없습니다.")
             void boardSearch_fail3() {
                 // given
                 String keyword = "다른거";
@@ -641,7 +629,7 @@ class BoardServiceTest {
                 });
 
                 // then
-                assertEquals("검색에 해당되는 게시글이 없습니다.", exception.getMessage());
+                assertEquals(ExceptionMessages.SEARCH_BOARD_IS_EMPTY, exception.getMessage());
             }
 
         }

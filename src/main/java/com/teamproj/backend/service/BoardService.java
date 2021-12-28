@@ -1,16 +1,9 @@
 package com.teamproj.backend.service;
 
-import com.teamproj.backend.Repository.RecentSearchRepository;
-import com.teamproj.backend.Repository.board.BoardCategoryRepository;
-import com.teamproj.backend.Repository.board.BoardImageRepository;
-import com.teamproj.backend.Repository.board.BoardLikeRepository;
-import com.teamproj.backend.Repository.board.BoardRepository;
+import com.teamproj.backend.Repository.board.*;
 import com.teamproj.backend.dto.board.*;
-import com.teamproj.backend.model.RecentSearch;
-import com.teamproj.backend.model.board.Board;
-import com.teamproj.backend.model.board.BoardCategory;
-import com.teamproj.backend.model.board.BoardImage;
-import com.teamproj.backend.model.board.BoardLike;
+import com.teamproj.backend.exception.ExceptionMessages;
+import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.S3Uploader;
@@ -22,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +24,7 @@ public class BoardService {
     private final BoardCategoryRepository boardCategoryRepository;
     private final BoardLikeRepository boardLikeRepository;
     private final BoardImageRepository boardImageRepository;
+    private final BoardHashTagRepository boardHashTagRepository;
 
     private final CommentService commentService;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
@@ -37,11 +32,12 @@ public class BoardService {
 
     private final String imageDirName = "boardImages";
 
+
     //region 게시글 전체조회
     public List<BoardResponseDto> getBoard(String categoryName) {
         Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase());
         if (!boardCategory.isPresent()) {
-            throw new NullPointerException("유효한 카테고리가 아닙니다.");
+            throw new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY);
         }
 
         Optional<List<Board>> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory.get(), true);
@@ -57,9 +53,14 @@ public class BoardService {
                     .title(board.getTitle())
                     .username(board.getUser().getUsername())
                     .writer(board.getUser().getNickname())
+                    .content(board.getContent())
                     .createdAt(board.getCreatedAt().toLocalDate())
                     .views(board.getViews())
                     .likeCnt(board.getLikes().size())
+                    .hashTags(board.getBoardHashTagList().stream().map(
+                            e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
+                    )
+
                     .build());
         }
 
@@ -74,37 +75,52 @@ public class BoardService {
                                               MultipartFile multipartFile) throws IOException {
 
         if (boardUploadRequestDto.getTitle().isEmpty()) {
-            throw new IllegalArgumentException("제목은 필수 입력 값입니다");
+            throw new IllegalArgumentException(ExceptionMessages.TITLE_IS_EMPTY);
         }
         if (boardUploadRequestDto.getContent().isEmpty()) {
-            throw new IllegalArgumentException("내용은 필수 입력 값입니다");
+            throw new IllegalArgumentException(ExceptionMessages.CONTENT_IS_EMPTY);
         }
 
        BoardCategory boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase())
                .orElseThrow(
-                       () -> new NullPointerException("해당 카테고리가 없습니다.")
+                       () -> new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY)
                );
 
-//        if(multipartFile == null || multipartFile.getSize() == 0) {
-//            throw new NullPointerException("등록하려는 게시글에 이미지가 없습니다.");
-//        }
 
-        String imageUrl = s3Uploader.upload(multipartFile, imageDirName);
+//        String imageUrl = s3Uploader.upload(multipartFile, imageDirName);
+
 
         Board board = Board.builder()
                 .title(boardUploadRequestDto.getTitle())
                 .content(boardUploadRequestDto.getContent())
                 .boardCategory(boardCategory)
                 .user(jwtAuthenticateProcessor.getUser(userDetails))
-                .thumbNail(imageUrl)
+                .thumbNail("https://img.insight.co.kr/static/2021/12/04/700/img_20211204160105_7381lxd4.webp")
                 .enabled(true)
                 .build();
         boardRepository.save(board);
 
+        // To Do : 해시태그 5개 까지만 받을 수 있도록 유효성 검사
+        List<BoardHashTag> boardHashTagList = new ArrayList<>();
+        if(boardUploadRequestDto.getHashTags() != null) {
+            for(String hashTag : boardUploadRequestDto.getHashTags()) {
+                BoardHashTag boardHashTag = BoardHashTag.builder()
+                        .hashTagName(hashTag)
+                        .board(board)
+                        .build();
+
+                boardHashTagList.add(boardHashTag);
+                boardHashTagRepository.save(boardHashTag);
+            }
+
+            board.setHashTagList(boardHashTagList);
+            boardRepository.save(board);
+        }
+
 
         BoardImage boardImage = BoardImage.builder()
                 .board(board)
-                .imageUrl(imageUrl)
+                .imageUrl("https://img.insight.co.kr/static/2021/12/04/700/img_20211204160105_7381lxd4.webp")
                 .build();
 
         boardImageRepository.save(boardImage);
@@ -117,6 +133,9 @@ public class BoardService {
                 .category(board.getBoardCategory().getCategoryName())
                 .thumbNail(board.getThumbNail())
                 .createdAt(board.getCreatedAt() == null ? null :  board.getCreatedAt().toLocalDate())
+                .hashTags(boardHashTagList == null ? null : boardHashTagList.stream().map(
+                        e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
+                )
                 .build();
     }
     //endregion
@@ -126,12 +145,15 @@ public class BoardService {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(
-                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
                 );
 
         boolean isLike = false;
         if(userDetails != null) {
-            Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(board, jwtAuthenticateProcessor.getUser(userDetails));
+            Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(
+                    board, jwtAuthenticateProcessor.getUser(userDetails)
+            );
+
             if(boardLike.isPresent()) {
                 isLike = true;
             }
@@ -156,13 +178,14 @@ public class BoardService {
     //endregion
 
     //region 게시글 업데이트(수정)
-    public BoardUpdateResponseDto updateBoard(Long boardId, UserDetailsImpl userDetails, BoardUpdateRequestDto boardUpdateRequestDto) {
+    public BoardUpdateResponseDto updateBoard(Long boardId, UserDetailsImpl userDetails,
+                                              BoardUpdateRequestDto boardUpdateRequestDto) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(
-                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
                 );
         if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
-            throw new IllegalArgumentException("게시글을 작성한 유저만 수정이 가능합니다.");
+            throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
         }
 
         board.update(boardUpdateRequestDto);
@@ -180,11 +203,11 @@ public class BoardService {
     public BoardDeleteResponseDto deleteBoard(UserDetailsImpl userDetails, Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(
-                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
                 );
 
         if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
-            throw new IllegalArgumentException("게시글을 작성한 유저만 삭제가 가능합니다.");
+            throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
         }
 
         board.setEnabled(false);
@@ -200,10 +223,13 @@ public class BoardService {
     public BoardLikeResponseDto boardLike(UserDetailsImpl userDetails, Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(
-                        () -> new NullPointerException("해당 게시글이 없습니다.")
+                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
                 );
 
-        Optional<BoardLike> findBoardLike = boardLikeRepository.findByBoardAndUser(board, jwtAuthenticateProcessor.getUser(userDetails));
+        Optional<BoardLike> findBoardLike = boardLikeRepository.findByBoardAndUser(
+                board, jwtAuthenticateProcessor.getUser(userDetails)
+        );
+
         if (findBoardLike.isPresent()) {
             boardLikeRepository.delete(findBoardLike.get());
 
@@ -228,21 +254,19 @@ public class BoardService {
     //region 게시글 검색
     public List<BoardSearchResponseDto> boardSearch(String q) {
         if(q == null || q.isEmpty()) {
-            throw new NullPointerException("검색어를 입력해주세요.");
+            throw new NullPointerException(ExceptionMessages.SEARCH_IS_EMPTY);
         }
 
-        List<Board> boardList = boardRepository.findByTitleContaining(q)
-                .orElseThrow(
-                        () -> new NullPointerException("검색하려는 게시글이 없습니다.")
-                );
+        Optional<List<Board>> boardList = boardRepository.findByTitleContaining(q);
 
-        if(boardList.size() == 0) {
-            throw new NullPointerException("검색에 해당되는 게시글이 없습니다.");
+
+        if(boardList.get().size() == 0) {
+            throw new NullPointerException(ExceptionMessages.SEARCH_BOARD_IS_EMPTY);
         }
 
 
         List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
-        for(Board board : boardList) {
+        for(Board board : boardList.get()) {
             boardSearchResponseDtoList.add(
                     BoardSearchResponseDto.builder()
                             .boardId(board.getBoardId())
@@ -250,9 +274,13 @@ public class BoardService {
                             .title(board.getTitle())
                             .username(board.getUser().getUsername())
                             .writer(board.getUser().getNickname())
+                            .content(board.getContent())
                             .createdAt(board.getCreatedAt().toLocalDate())
                             .views(board.getViews())
                             .likeCnt(board.getLikes().size())
+                            .hashTags(board.getBoardHashTagList() == null ? null : board.getBoardHashTagList().stream().map(
+                                    h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
+                            )
                             .build()
             );
         }

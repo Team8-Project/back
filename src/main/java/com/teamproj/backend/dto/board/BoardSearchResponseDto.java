@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Builder
@@ -15,7 +16,9 @@ public class BoardSearchResponseDto {
     private String title;
     private String username;
     private String writer;
+    private String content;
     private LocalDate createdAt;
     private int views;
     private int likeCnt;
+    private List<String> hashTags;
 }

@@ -31,8 +31,8 @@ public class BoardController {
     public ResponseDto<BoardUploadResponseDto> uploadBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                            @PathVariable String categoryName,
                                                            @RequestPart BoardUploadRequestDto boardUploadRequestDto,
-                                                           @RequestPart(required = false) MultipartFile multipartFile)
-                                                           throws IOException {
+                                                           @RequestPart(required = false) MultipartFile multipartFile
+                                                            ) throws IOException {
 
         return ResponseDto.<BoardUploadResponseDto>builder()
                 .status(HttpStatus.OK.toString())
