@@ -62,6 +62,7 @@ public class DictService {
                 .firstWriter(dict.getFirstAuthor().getNickname())
                 .recentWriter(dict.getRecentModifier().getNickname())
                 .isLike(isDictLike(dict, userDetails))
+                .likeCount(dict.getDictLikeList().size())
                 .createdAt(dict.getCreatedAt().toLocalDate())
                 .modifiedAt(dict.getModifiedAt().toLocalDate())
                 .build();
