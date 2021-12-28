@@ -222,9 +222,7 @@ public class DictService {
                     .build());
         }
 
-        Collections.shuffle(recommend);
-        int returnSize = Math.min(recommend.size(), 7);
-        return recommend.subList(0, returnSize);
+        return recommend;
     }
 
     // 최근 검색어 출력
