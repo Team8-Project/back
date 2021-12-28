@@ -221,32 +221,32 @@ class BoardServiceTest {
             }
 
 
-            @Test
-            @DisplayName("실패4 / 등록하려는 게시글에 이미지가 없습니다.")
-            void uploadBoard_fail4() throws IOException {
-                // givien
-                BoardCategory boardCategory = new BoardCategory("카테고리");
-
-                boardCategoryRepository.save(boardCategory);
-
-                BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
-                        .title(boardTitle)
-                        .content(boardContent)
-                        .build();
-
-                MockMultipartFile mockMultipartFile = null;
-
-                // when
-                Exception exception = assertThrows(NullPointerException.class, () -> {
-                    boardService.uploadBoard(
-                            userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile
-                            );
-                });
-
-
-                // then
-                assertEquals("등록하려는 게시글에 이미지가 없습니다.", exception.getMessage());
-            }
+//            @Test
+//            @DisplayName("실패4 / 등록하려는 게시글에 이미지가 없습니다.")
+//            void uploadBoard_fail4() throws IOException {
+//                // givien
+//                BoardCategory boardCategory = new BoardCategory("카테고리");
+//
+//                boardCategoryRepository.save(boardCategory);
+//
+//                BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
+//                        .title(boardTitle)
+//                        .content(boardContent)
+//                        .build();
+//
+//                MockMultipartFile mockMultipartFile = null;
+//
+//                // when
+//                Exception exception = assertThrows(NullPointerException.class, () -> {
+//                    boardService.uploadBoard(
+//                            userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile
+//                            );
+//                });
+//
+//
+//                // then
+//                assertEquals("등록하려는 게시글에 이미지가 없습니다.", exception.getMessage());
+//            }
         }
     }
     //endregion

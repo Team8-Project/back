@@ -18,7 +18,7 @@ import java.util.List;
 public class BoardController {
     private final BoardService boardService;
 
-    @GetMapping("/api/board/{categoryName}")
+    @GetMapping("/api/board/list/{categoryName}")
     public ResponseDto<List<BoardResponseDto>> getBoard(@PathVariable String categoryName){
         return ResponseDto.<List<BoardResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
