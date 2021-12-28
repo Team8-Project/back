@@ -14,4 +14,6 @@ public interface DictRepository extends JpaRepository<Dict, Long> {
     boolean existsByDictName(String dictName);
 
     Optional<Page<Dict>> findAllByDictNameLikeOrContentLike(String nameQuery, String contentQuery, Pageable pageable);
+
+    Dict findByDictName(String title);
 }

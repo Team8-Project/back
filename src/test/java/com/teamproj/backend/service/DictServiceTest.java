@@ -1,6 +1,7 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
+import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -27,21 +28,25 @@ class DictServiceTest {
     private UserRepository userRepository;
     @Autowired
     private DictService dictService;
+    @Autowired
+    private DictRepository dictRepository;
+
+    // BeforeEach Data
+    DictPostRequestDto dictPostRequestDto;
+    Long dictId;
+    String title;
+    String content;
+    String summary;
 
     UserDetailsImpl userDetails;
-
-    String dictName;
-    String content;
     User user;
 
     @BeforeEach
     void setup() {
-        dictName = "타이틀";
-        content = "내용";
-
+        // 사용자 초기데이터 주입
         user = User.builder()
                 .username("유저네임")
-                .nickname("닉네임")
+                .nickname("테스트닉네임")
                 .password("Q1234567")
                 .build();
 
@@ -50,6 +55,19 @@ class DictServiceTest {
                 .username("유저네임")
                 .password("Q1234567")
                 .build();
+
+        // 사전 초기데이터 주입
+        title = UUID.randomUUID().toString();
+        content = UUID.randomUUID().toString();
+        summary = UUID.randomUUID().toString();
+        dictPostRequestDto = DictPostRequestDto.builder()
+                .title(title)
+                .content(content)
+                .summary(summary)
+                .build();
+        dictService.postDict(userDetails, dictPostRequestDto);
+
+        dictId = dictRepository.findByDictName(title).getDictId();
     }
 
     @Nested
@@ -59,24 +77,12 @@ class DictServiceTest {
         @DisplayName("성공")
         void getDict_success() {
             // given
-            DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                    .title(UUID.randomUUID().toString())
-                    .content(UUID.randomUUID().toString())
-                    .build();
-            dictService.postDict(userDetails, dictPostRequestDto);
 
             // when
             List<DictResponseDto> response = dictService.getDictList(0, 5, "");
 
             // then
-            boolean result = false;
-            for (DictResponseDto dictResponseDto : response) {
-                if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                    result = true;
-                    break;
-                }
-            }
-            assertTrue(result);
+            assertTrue(response.size() > 0);
         }
     }
 
@@ -87,23 +93,18 @@ class DictServiceTest {
         @DisplayName("성공")
         void postDict_success() {
             // given
+            String title = UUID.randomUUID().toString();
             DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                    .title(UUID.randomUUID().toString())
+                    .title(title)
                     .content(UUID.randomUUID().toString())
+                    .summary(UUID.randomUUID().toString())
                     .build();
             dictService.postDict(userDetails, dictPostRequestDto);
 
             // when
-            List<DictResponseDto> response = dictService.getDictList(0, 5, "");
+            boolean result = dictRepository.existsByDictName(title);
 
             // then
-            boolean result = false;
-            for (DictResponseDto dictResponseDto : response) {
-                if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                    result = true;
-                    break;
-                }
-            }
             assertTrue(result);
         }
 
@@ -117,6 +118,7 @@ class DictServiceTest {
                 DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
                         .title(UUID.randomUUID().toString())
                         .content(UUID.randomUUID().toString())
+                        .summary(UUID.randomUUID().toString())
                         .build();
 
                 // when
@@ -134,6 +136,7 @@ class DictServiceTest {
                 // given
                 DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
                         .title(UUID.randomUUID().toString())
+                        .summary(UUID.randomUUID().toString())
                         .content(UUID.randomUUID().toString())
                         .build();
                 dictService.postDict(userDetails, dictPostRequestDto);
@@ -156,25 +159,9 @@ class DictServiceTest {
         @DisplayName("성공")
         void dict_modify_success() {
             // given
-            DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                    .title(UUID.randomUUID().toString())
-                    .content(UUID.randomUUID().toString())
-                    .build();
-            dictService.postDict(userDetails, dictPostRequestDto);
-
-            List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-            // id 찾기
-            Long dictId = null;
-            for (DictResponseDto dictResponseDto : response) {
-                if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                    dictId = dictResponseDto.getDictId();
-                    break;
-                }
-            }
-
             DictPutRequestDto dictPutRequestDto = DictPutRequestDto.builder()
                     .content("변경")
+                    .summary(UUID.randomUUID().toString())
                     .build();
 
             // when
@@ -192,25 +179,9 @@ class DictServiceTest {
             @DisplayName("로그인하지 않은 사용자의 수정 시도")
             void dictPut_fail_non_login_user() {
                 // given
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .content(UUID.randomUUID().toString())
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
-                List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-                // id 찾기
-                Long dictId = null;
-                for (DictResponseDto dictResponseDto : response) {
-                    if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                        dictId = dictResponseDto.getDictId();
-                        break;
-                    }
-                }
-
                 DictPutRequestDto dictPutRequestDto = DictPutRequestDto.builder()
                         .content("변경")
+                        .summary(UUID.randomUUID().toString())
                         .build();
 
                 // when
@@ -229,6 +200,7 @@ class DictServiceTest {
                 // given
                 DictPutRequestDto dictPutRequestDto = DictPutRequestDto.builder()
                         .content("변경")
+                        .summary(UUID.randomUUID().toString())
                         .build();
 
                 // when
@@ -252,22 +224,6 @@ class DictServiceTest {
             @DisplayName("좋아요")
             void dictLike_like_success() {
                 // given
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .content(UUID.randomUUID().toString())
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
-                List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-                // id 찾기
-                Long dictId = null;
-                for (DictResponseDto dictResponseDto : response) {
-                    if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                        dictId = dictResponseDto.getDictId();
-                        break;
-                    }
-                }
 
                 // when
                 DictLikeResponseDto dictLikeResponseDto = dictService.likeDict(userDetails, dictId);
@@ -280,26 +236,10 @@ class DictServiceTest {
             @DisplayName("좋아요 취소")
             void dictLike_like_cancel_success() {
                 // given
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .content(UUID.randomUUID().toString())
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
-                List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-                // id 찾기
-                Long dictId = null;
-                for (DictResponseDto dictResponseDto : response) {
-                    if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                        dictId = dictResponseDto.getDictId();
-                        break;
-                    }
-                }
-
-                // when
                 // 좋아요
                 dictService.likeDict(userDetails, dictId);
+
+                // when
                 // 좋아요 취소
                 DictLikeResponseDto dictLikeResponseDto = dictService.likeDict(userDetails, dictId);
 
@@ -315,27 +255,10 @@ class DictServiceTest {
             @DisplayName("로그인하지 않은 사용자의 좋아요 시도")
             void dictLike_fail_non_login_user() {
                 // given
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .content(UUID.randomUUID().toString())
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
-                List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-                // id 찾기
-                Long dictId = null;
-                for (DictResponseDto dictResponseDto : response) {
-                    if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                        dictId = dictResponseDto.getDictId();
-                        break;
-                    }
-                }
 
                 // when
-                Long finalDictId = dictId;
                 Exception exception = assertThrows(NullPointerException.class,
-                        () -> dictService.likeDict(null, finalDictId)
+                        () -> dictService.likeDict(null, dictId)
                 );
 
                 // then
@@ -368,23 +291,6 @@ class DictServiceTest {
             @DisplayName("회원")
             void getDictDetail_success_login() {
                 // given
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .content(UUID.randomUUID().toString())
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
-                List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-                // id 찾기
-                Long dictId = null;
-                for (DictResponseDto dictResponseDto : response) {
-                    if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                        dictId = dictResponseDto.getDictId();
-                        break;
-                    }
-                }
-
                 String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
                 // when
@@ -403,27 +309,12 @@ class DictServiceTest {
             @DisplayName("비회원")
             void getDictDetail_success_non_login() {
                 // given
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .content(UUID.randomUUID().toString())
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
-                List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-                // id 찾기
-                Long dictId = null;
-                for (DictResponseDto dictResponseDto : response) {
-                    if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                        dictId = dictResponseDto.getDictId();
-                        break;
-                    }
-                }
 
                 // when
-                DictDetailResponseDto dictDetailResponseDto = dictService.getDictDetail(dictId, "");
                 // 좋아요 처리
                 dictService.likeDict(userDetails, dictId);
+                DictDetailResponseDto dictDetailResponseDto = dictService.getDictDetail(dictId, "");
+
 
                 // then
                 assertEquals(dictPostRequestDto.getTitle(), dictDetailResponseDto.getTitle());
@@ -461,13 +352,6 @@ class DictServiceTest {
             @DisplayName("제목 일치")
             void getDictDetail_success_title_match() {
                 // given
-                String title = UUID.randomUUID().toString();
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(title)
-                        .content(UUID.randomUUID().toString())
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
                 String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
                 // when
@@ -484,6 +368,7 @@ class DictServiceTest {
                 String content = UUID.randomUUID().toString();
                 DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
                         .title(UUID.randomUUID().toString())
+                        .summary(UUID.randomUUID().toString())
                         .content(content)
                         .build();
                 dictService.postDict(userDetails, dictPostRequestDto);
@@ -501,34 +386,18 @@ class DictServiceTest {
 
     @Nested
     @DisplayName("추천 검색어")
-    class RecommendKeyword{
+    class RecommendKeyword {
         @Test
         @DisplayName("성공")
         void getRecommendKeyword() {
             // given
-            DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                    .title(UUID.randomUUID().toString())
-                    .content(UUID.randomUUID().toString())
-                    .build();
-            dictService.postDict(userDetails, dictPostRequestDto);
-
-            List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-            // id 찾기
-            Long dictId = null;
-            for (DictResponseDto dictResponseDto : response) {
-                if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                    dictId = dictResponseDto.getDictId();
-                    break;
-                }
-            }
             dictService.likeDict(userDetails, dictId);
 
             // when
             List<String> recommendList = dictService.getSearchInfo();
 
             // then
-            assertTrue(recommendList.size()>0);
+            assertTrue(recommendList.size() > 0);
         }
     }
 }

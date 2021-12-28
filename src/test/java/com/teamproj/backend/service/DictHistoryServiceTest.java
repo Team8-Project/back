@@ -1,6 +1,7 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
+import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dict.DictPostRequestDto;
 import com.teamproj.backend.dto.dict.DictPutRequestDto;
 import com.teamproj.backend.dto.dict.DictResponseDto;
@@ -20,7 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -36,24 +38,25 @@ class DictHistoryServiceTest {
     private DictService dictService;
     @Autowired
     private DictHistoryService dictHistoryService;
+    @Autowired
+    private DictRepository dictRepository;
 
-    UserDetailsImpl userDetails;
-
-    String dictName;
-    String content;
-    User user;
-
+    // BeforeEach Data
     DictPostRequestDto dictPostRequestDto;
     Long dictId;
+    String title;
+    String content;
+    String summary;
+
+    UserDetailsImpl userDetails;
+    User user;
 
     @BeforeEach
     void setup() {
-        dictName = "타이틀";
-        content = "내용";
-
+        // 사용자 초기데이터 주입
         user = User.builder()
                 .username("유저네임")
-                .nickname("닉네임")
+                .nickname("테스트닉네임")
                 .password("Q1234567")
                 .build();
 
@@ -63,24 +66,23 @@ class DictHistoryServiceTest {
                 .password("Q1234567")
                 .build();
 
-        // 게시글 작성
+        // 사전 초기데이터 주입
+        title = UUID.randomUUID().toString();
+        content = UUID.randomUUID().toString();
+        summary = UUID.randomUUID().toString();
         dictPostRequestDto = DictPostRequestDto.builder()
-                .title(UUID.randomUUID().toString())
-                .content(UUID.randomUUID().toString())
+                .title(title)
+                .content(content)
+                .summary(summary)
                 .build();
         dictService.postDict(userDetails, dictPostRequestDto);
 
-        // 게시글 수정
-        List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-        for (DictResponseDto dictResponseDto : response) {
-            if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                dictId = dictResponseDto.getDictId();
-                break;
-            }
-        }
+        dictId = dictRepository.findByDictName(title).getDictId();
 
+        // 사전 초기 역사 데이터 주입(데이터 수정)
         DictPutRequestDto dictPutRequestDto = DictPutRequestDto.builder()
                 .content("변경")
+                .summary("변경")
                 .build();
         dictService.putDict(userDetails, dictId, dictPutRequestDto);
     }
@@ -125,30 +127,6 @@ class DictHistoryServiceTest {
         @DisplayName("성공")
         void getDictHistoryDetail_success_login() {
             // given
-            String content = UUID.randomUUID().toString();
-            dictPostRequestDto = DictPostRequestDto.builder()
-                    .title(UUID.randomUUID().toString())
-                    .content(content)
-                    .build();
-            dictService.postDict(userDetails, dictPostRequestDto);
-
-            List<DictResponseDto> response = dictService.getDictList(0, 5, "");
-
-            // id 찾기
-            Long dictId = null;
-            for (DictResponseDto dictResponseDto : response) {
-                if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
-                    dictId = dictResponseDto.getDictId();
-                    break;
-                }
-            }
-
-            DictPutRequestDto dictPutRequestDto = DictPutRequestDto.builder()
-                    .content("변경")
-                    .build();
-
-            dictService.putDict(userDetails, dictId, dictPutRequestDto);
-
             DictHistoryResponseDto dictHistoryResponseDto = dictHistoryService.getDictHistory(dictId);
             DictHistoryRecentResponseDto dictHistoryRecentResponseDto = dictHistoryResponseDto.getHistory().get(0);
 
