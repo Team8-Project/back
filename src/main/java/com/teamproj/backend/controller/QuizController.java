@@ -5,6 +5,7 @@ import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
 import com.teamproj.backend.dto.quiz.QuizResponseDto;
 import com.teamproj.backend.service.QuizService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,6 @@ public class QuizController {
     @GetMapping("/api/quiz/{category}")
     public ResponseDto<List<QuizResponseDto>> getQuizList(@RequestParam int count,
                                                           @PathVariable String category){
-
         return ResponseDto.<List<QuizResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("퀴즈 불러오기")
