@@ -1,7 +1,7 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
-import com.teamproj.backend.dto.board.BoardResponseDto;
+import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.board.BoardUploadRequestDto;
 import com.teamproj.backend.dto.comment.CommentPostRequestDto;
 import com.teamproj.backend.dto.comment.CommentResponseDto;
@@ -14,7 +14,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
@@ -33,6 +32,8 @@ class CommentServiceTest {
     private BoardService boardService;
     @Autowired
     private CommentService commentService;
+    @Autowired
+    private BoardRepository boardRepository;
 
     UserDetailsImpl userDetails;
     UserDetailsImpl userDetails2;
@@ -40,7 +41,7 @@ class CommentServiceTest {
     User user;
     User user2;
 
-    Long postId;
+    Long boardId;
 
     String category;
 
@@ -79,12 +80,7 @@ class CommentServiceTest {
         boardService.uploadBoard(userDetails, boardUploadRequestDto, category, null);
 
         // 게시글 조회
-        List<BoardResponseDto> response = boardService.getBoard(category);
-        for (BoardResponseDto boardResponseDto : response) {
-            if (boardResponseDto.getTitle().equals(title)){
-                postId = boardResponseDto.getBoardId();
-            }
-        }
+        boardId = boardRepository.findByTitle(title).getBoardId();
     }
 
     @Nested
@@ -98,10 +94,10 @@ class CommentServiceTest {
             CommentPostRequestDto commentPostRequestDto = CommentPostRequestDto.builder()
                     .content(test)
                     .build();
-            commentService.postComment(userDetails, postId, commentPostRequestDto);
+            commentService.postComment(userDetails, boardId, commentPostRequestDto);
 
             // when
-            CommentResponseDto commentResponseDto = commentService.getCommentList(postId, 0, 1000).get(0);
+            CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
 
             // then
             assertEquals(user.getUsername(), commentResponseDto.getCommentWriterId());
@@ -137,10 +133,10 @@ class CommentServiceTest {
                     .build();
 
             // when
-            commentService.postComment(userDetails, postId, commentPostRequestDto);
+            commentService.postComment(userDetails, boardId, commentPostRequestDto);
 
             // then
-            CommentResponseDto commentResponseDto = commentService.getCommentList(postId, 0, 1000).get(0);
+            CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
             assertEquals(user.getUsername(), commentResponseDto.getCommentWriterId());
             assertEquals(user.getNickname(), commentResponseDto.getCommentWriter());
             assertEquals(test, commentResponseDto.getCommentContent());
@@ -148,7 +144,7 @@ class CommentServiceTest {
 
         @Nested
         @DisplayName("실패")
-        class PostComment_fail{
+        class PostComment_fail {
             @Test
             @DisplayName("존재하지 않는 게시글에 댓글 작성")
             void postComment_fail_comment_not_exist_board() {
@@ -178,7 +174,7 @@ class CommentServiceTest {
 
                 // when
                 Exception exception = assertThrows(NullPointerException.class,
-                        () -> commentService.postComment(null, postId, commentPostRequestDto)
+                        () -> commentService.postComment(null, boardId, commentPostRequestDto)
                 );
 
                 // then
@@ -198,20 +194,20 @@ class CommentServiceTest {
             CommentPostRequestDto commentPostRequestDto = CommentPostRequestDto.builder()
                     .content(test)
                     .build();
-            commentService.postComment(userDetails, postId, commentPostRequestDto);
-            CommentResponseDto commentResponseDto = commentService.getCommentList(postId, 0, 1000).get(0);
+            commentService.postComment(userDetails, boardId, commentPostRequestDto);
+            CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
             Long commentId = commentResponseDto.getCommentId();
 
             // when
             commentService.deleteComment(userDetails, commentId);
 
             // then
-            assertEquals(0, boardService.getBoardDetail(postId, "").getCommentList().size());
+            assertEquals(0, boardService.getBoardDetail(boardId, "").getCommentList().size());
         }
 
         @Nested
         @DisplayName("실패")
-        class PostComment_fail{
+        class PostComment_fail {
             @Test
             @DisplayName("존재하지 않는 댓글 삭제 요청")
             void postComment_fail_comment_not_exist_board() {
@@ -234,8 +230,8 @@ class CommentServiceTest {
                 CommentPostRequestDto commentPostRequestDto = CommentPostRequestDto.builder()
                         .content(test)
                         .build();
-                commentService.postComment(userDetails, postId, commentPostRequestDto);
-                CommentResponseDto commentResponseDto = commentService.getCommentList(postId, 0, 1000).get(0);
+                commentService.postComment(userDetails, boardId, commentPostRequestDto);
+                CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
                 Long commentId = commentResponseDto.getCommentId();
 
                 // when
@@ -255,8 +251,8 @@ class CommentServiceTest {
                 CommentPostRequestDto commentPostRequestDto = CommentPostRequestDto.builder()
                         .content(test)
                         .build();
-                commentService.postComment(userDetails, postId, commentPostRequestDto);
-                CommentResponseDto commentResponseDto = commentService.getCommentList(postId, 0, 1000).get(0);
+                commentService.postComment(userDetails, boardId, commentPostRequestDto);
+                CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
                 Long commentId = commentResponseDto.getCommentId();
 
                 // when
