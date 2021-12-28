@@ -9,6 +9,7 @@ import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -81,13 +82,19 @@ public class BoardService {
             throw new IllegalArgumentException(ExceptionMessages.CONTENT_IS_EMPTY);
         }
 
-       BoardCategory boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase())
-               .orElseThrow(
-                       () -> new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY)
-               );
+        if (boardUploadRequestDto.getHashTags() != null && boardUploadRequestDto.getHashTags().size() > 5) {
+            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
+        }
 
+        BoardCategory boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase())
+                .orElseThrow(
+                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY)
+                );
 
-//        String imageUrl = s3Uploader.upload(multipartFile, imageDirName);
+        String imageUrl;
+        if (multipartFile != null) {
+            imageUrl = s3Uploader.upload(multipartFile, imageDirName);
+        }
 
 
         Board board = Board.builder()
@@ -100,7 +107,8 @@ public class BoardService {
                 .build();
         boardRepository.save(board);
 
-        // To Do : 해시태그 5개 까지만 받을 수 있도록 유효성 검사
+
+
         List<BoardHashTag> boardHashTagList = new ArrayList<>();
         if(boardUploadRequestDto.getHashTags() != null) {
             for(String hashTag : boardUploadRequestDto.getHashTags()) {
@@ -286,6 +294,20 @@ public class BoardService {
         }
 
         return boardSearchResponseDtoList;
+    }
+    //endregion
+
+    //region 해시태그 추천
+    public BoardHashTagResponseDto getRecommendHashTag() {
+        List<BoardHashTag> boardHashTagList = boardHashTagRepository.boardHashTagList();
+
+        if(boardHashTagList.size() == 0) {
+            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_IS_EMPTY);
+        }
+
+        return BoardHashTagResponseDto.builder().hashTags(boardHashTagList.stream().map(
+                h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
+        ).build();
     }
     //endregion
 }

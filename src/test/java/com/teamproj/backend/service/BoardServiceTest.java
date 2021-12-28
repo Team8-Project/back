@@ -133,6 +133,7 @@ class BoardServiceTest {
             hashTags.add("tag2");
 
 
+
             BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
                     .title(boardTitle)
                     .content(boardContent)
@@ -229,6 +230,43 @@ class BoardServiceTest {
 
                 // then
                 assertEquals(ExceptionMessages.NOT_EXIST_CATEGORY, exception.getMessage());
+            }
+
+
+            @Test
+            @DisplayName("실패4 / 해쉬태그 5개까지 입력 가능")
+            void uploadBoard_sucess() throws IOException {
+                // givien
+                BoardCategory boardCategory = new BoardCategory("카테고리");
+                boardCategoryRepository.save(boardCategory);
+
+                List<String> hashTags = new ArrayList<>();
+                hashTags.add("tag1");
+                hashTags.add("tag2");
+                hashTags.add("tag3");
+                hashTags.add("tag4");
+                hashTags.add("tag5");
+                hashTags.add("tag6");
+
+                BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
+                        .title(boardTitle)
+                        .content(boardContent)
+                        .hashTags(hashTags)
+                        .build();
+
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "image1", "image1", "application/doc", "image".getBytes()
+                );
+
+                // when
+                Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+                    boardService.uploadBoard(userDetails, boardUploadRequestDto,
+                            boardCategory.getCategoryName(), mockMultipartFile);
+                });
+
+
+                // then
+                assertEquals(ExceptionMessages.HASHTAG_MAX_FIVE, exception.getMessage());
             }
         }
     }
@@ -635,5 +673,67 @@ class BoardServiceTest {
         }
 
     }
+    //endregion
+
+    //region 추천 해시태그
+    @Nested
+    @DisplayName("게시글 추천 해시태그")
+    class getRecommendHashTag {
+
+        @Test
+        @DisplayName("성공")
+        void getRecommendHashTag_success() throws IOException {
+            // given
+            BoardCategory boardCategory = new BoardCategory("카테고리");
+            boardCategoryRepository.save(boardCategory);
+
+            List<String> hashTags = new ArrayList<>();
+            hashTags.add("tag1");
+            hashTags.add("tag2");
+            hashTags.add("tag3");
+            hashTags.add("tag4");
+            hashTags.add("tag5");
+
+
+
+            BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
+                    .title(boardTitle)
+                    .content(boardContent)
+                    .hashTags(hashTags)
+                    .build();
+
+            MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                    "image1", "image1", "application/doc", "image".getBytes()
+            );
+
+
+            boardService.uploadBoard(userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile);
+            boardService.uploadBoard(userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile);
+
+
+            // when
+            BoardHashTagResponseDto boardHashTagResponseDto = boardService.getRecommendHashTag();
+
+
+            // then
+            assertNotEquals(0, boardHashTagResponseDto.getHashTags().size());
+        }
+
+        @Test
+        @DisplayName("실패")
+        void getRecommendHashTag_fail() {
+
+            // when
+            Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+                        boardService.getRecommendHashTag();
+            }) ;
+
+            // then
+            assertEquals(ExceptionMessages.HASHTAG_IS_EMPTY, exception.getMessage());
+        }
+
+    }
+
+
     //endregion
 }

@@ -17,7 +17,6 @@ public class BoardSearchResponseDto {
     private String content;
     private String username;
     private String writer;
-    private String content;
     private LocalDate createdAt;
     private int views;
     private int likeCnt;
