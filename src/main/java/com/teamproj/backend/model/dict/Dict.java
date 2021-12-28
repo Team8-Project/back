@@ -32,6 +32,9 @@ public class Dict extends Timestamped {
     private String dictName;
 
     @Column(nullable = false)
+    private String summary;
+
+    @Column(nullable = false)
     private String content;
 
     @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)

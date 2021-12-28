@@ -19,6 +19,7 @@ public class DictHistoryDetailResponseDto {
     private String title;
     private String firstWriter;
     private String modifier;
+    private String summary;
     private String content;
     private LocalDate createdAt;
 }

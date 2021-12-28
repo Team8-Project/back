@@ -10,6 +10,7 @@ import lombok.Getter;
 public class DictSearchResultResponseDto {
     private Long dictId;
     private String title;
+    private String summary;
     private String meaning;
     private boolean isLike;
     private int likeCount;

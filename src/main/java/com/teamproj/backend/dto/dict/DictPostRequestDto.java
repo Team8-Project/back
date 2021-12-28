@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DictPostRequestDto {
     private String title;
+    private String summary;
     private String content;
 }

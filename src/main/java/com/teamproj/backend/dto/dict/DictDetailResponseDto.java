@@ -14,6 +14,7 @@ import java.time.LocalDate;
 public class DictDetailResponseDto {
     private Long dictId;
     private String title;
+    private String summary;
     private String meaning;
     private String firstWriter;
     private String recentWriter;
