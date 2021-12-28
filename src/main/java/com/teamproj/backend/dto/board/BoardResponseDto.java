@@ -15,6 +15,7 @@ public class BoardResponseDto {
     private Long boardId;
     private String thumbNail;
     private String title;
+    private String content;
     private String username;
     private String writer;
     private String content;

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class DictResponseDto {
     private Long dictId;
     private String title;
+    private String summary;
     private String meaning;
     private boolean isLike;
     private int likeCount;

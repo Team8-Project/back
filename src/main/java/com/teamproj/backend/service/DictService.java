@@ -57,6 +57,7 @@ public class DictService {
         return DictDetailResponseDto.builder()
                 .dictId(dict.getDictId())
                 .title(dict.getDictName())
+                .summary(dict.getSummary())
                 .meaning(dict.getContent())
                 .firstWriter(dict.getFirstAuthor().getNickname())
                 .recentWriter(dict.getRecentModifier().getNickname())
@@ -80,6 +81,7 @@ public class DictService {
                 .recentModifier(user)
                 .content(dictPostRequestDto.getContent())
                 .dictName(dictPostRequestDto.getTitle())
+                .summary(dictPostRequestDto.getSummary())
                 .build();
 
         dictRepository.save(dict);
@@ -97,6 +99,7 @@ public class DictService {
         Dict dict = getSafeDict(dictId);
 
         DictHistory dictHistory = DictHistory.builder()
+                .prevSummary(dict.getSummary())
                 .prevContent(dict.getContent())
                 .user(dict.getRecentModifier())
                 .dict(dict)
@@ -105,6 +108,7 @@ public class DictService {
         // 이전 내용 히스토리에 저장
         dictHistoryRepository.save(dictHistory);
 
+        dict.setSummary(dictPutRequestDto.getSummary());
         dict.setContent(dictPutRequestDto.getContent());
 
         return DictPutResponseDto.builder()
@@ -297,6 +301,7 @@ public class DictService {
             dictResponseDtoList.add(DictResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
+                    .summary(dict.getSummary())
                     .meaning(dict.getContent())
                     .isLike(isDictLike(dict, userDetails))
                     .likeCount(dict.getDictLikeList().size())
@@ -314,6 +319,7 @@ public class DictService {
             dictSearchResultResponseDto.add(DictSearchResultResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
+                    .summary(dict.getSummary())
                     .meaning(dict.getContent())
                     .isLike(isDictLike(dict, userDetails))
                     .likeCount(dict.getDictLikeList().size())

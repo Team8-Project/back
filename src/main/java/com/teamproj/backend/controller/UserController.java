@@ -13,6 +13,7 @@ import com.teamproj.backend.dto.user.userInfo.UserProfileImageModifyResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.KakaoUserService;
 import com.teamproj.backend.service.UserService;
+import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,12 +49,6 @@ public class UserController {
 
     @GetMapping("/api/userInfo")
     public ResponseDto<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String ip = req.getHeader("X-FORWARDED-FOR");
-        if (ip == null)
-            ip = req.getRemoteAddr();
-        System.out.println(ip);
-
         return ResponseDto.<UserInfoResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사용자 정보 요청 기능 수행")

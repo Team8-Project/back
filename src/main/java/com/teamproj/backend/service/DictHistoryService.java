@@ -40,6 +40,7 @@ public class DictHistoryService {
                 .build();
     }
 
+    // 용어 사전 수정내역 상세
     public DictHistoryDetailResponseDto getDictHistoryDetail(Long historyId) {
         DictHistory dictHistory = getSafeDictHistory(historyId);
 
@@ -49,6 +50,7 @@ public class DictHistoryService {
                 .title(dictHistory.getDict().getDictName())
                 .firstWriter(dictHistory.getDict().getFirstAuthor().getNickname())
                 .modifier(dictHistory.getUser().getNickname())
+                .summary(dictHistory.getPrevSummary())
                 .content(dictHistory.getPrevContent())
                 .createdAt(dictHistory.getCreatedAt().toLocalDate())
                 .build();
@@ -62,6 +64,7 @@ public class DictHistoryService {
         Dict dict = getSafeDict(dictHistory.getDict().getDictId());
 
         DictHistory recentDict = DictHistory.builder()
+                .prevSummary(dict.getSummary())
                 .prevContent(dict.getContent())
                 .user(dict.getRecentModifier())
                 .dict(dict)
@@ -69,6 +72,7 @@ public class DictHistoryService {
                 .build();
         dictHistoryRepository.save(recentDict);
 
+        dict.setSummary(dictHistory.getPrevSummary());
         dict.setContent(dictHistory.getPrevContent());
         dict.setRecentModifier(dictHistory.getUser());
 
