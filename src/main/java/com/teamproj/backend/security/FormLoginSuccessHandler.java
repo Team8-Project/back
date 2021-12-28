@@ -40,6 +40,7 @@ public class FormLoginSuccessHandler extends SavedRequestAwareAuthenticationSucc
 
         User user = jwtAuthenticateProcessor.getUser(userDetails);
         LoginResponseDto loginResponseDto = LoginResponseDto.builder()
+                .userId(user.getId())
                 .username(userDetails.getUsername())
                 .nickname(user.getNickname())
                 .build();

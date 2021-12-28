@@ -23,7 +23,7 @@ public class Quiz {
     private QuizBank solution;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
-    private List<QuizBank> choiceList = new ArrayList<>();
+    private final List<QuizBank> choiceList = new ArrayList<>();
 
     @Column(nullable = false)
     private String question;

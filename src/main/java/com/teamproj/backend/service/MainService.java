@@ -4,50 +4,74 @@ import com.teamproj.backend.Repository.CarouselImageRepository;
 import com.teamproj.backend.dto.main.MainPageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
-import com.teamproj.backend.model.main.CarouselImage;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import static com.teamproj.backend.util.RedisKey.CAROUSEL_URL_KEY;
+import static com.teamproj.backend.util.RedisKey.TODAY_LIST_KEY;
 
 @Service
 @RequiredArgsConstructor
 public class MainService {
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
-    private final CarouselImageRepository carouselImageRepository;
+
     private final DictService dictService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisService redisService;
+
+    private final CarouselImageRepository carouselImageRepository;
+
 
     public MainPageResponseDto getMainPageElements(String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = userDetails == null ? null : jwtAuthenticateProcessor.getUser(userDetails);
 
-        List<CarouselImage> carouselImageList = carouselImageRepository.findAll();
-        List<MainTodayMemeResponseDto> todayList = dictService.getTodayMeme(20);
-
-//        ValueOperations<String, Object> operations = redisTemplate.opsForValue();
-//        operations.set("test", "test");
-//        String redis = (String)operations.get("test");
-//        System.out.println(redis);
+        List<String> carouselImageUrlList = getSafeCarouselImageUrlList(redisService.getList(CAROUSEL_URL_KEY));
+        List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = getSafeMainTodayMemeResponseDtoList(redisService.getTodayList(TODAY_LIST_KEY));
 
         return MainPageResponseDto.builder()
                 .username(user == null ? null : user.getUsername())
                 .nickname(user == null ? null : user.getNickname())
-                .carousels(carouselImageListToStringList(carouselImageList))
-                .todayList(todayList)
+                .carousels(carouselImageUrlList)
+                .todayList(mainTodayMemeResponseDtoList)
                 .build();
     }
 
-    private List<String> carouselImageListToStringList(List<CarouselImage> carouselImageList) {
-        List<String> result = new ArrayList<>();
-        for (CarouselImage carouselImage : carouselImageList) {
-            result.add(carouselImage.getImageUrl());
+    // get SafeEntity
+    // CarouselImageUrlList
+    private List<String> getSafeCarouselImageUrlList(List<String> carouselImageUrlList) {
+        if (carouselImageUrlList == null) {
+            redisService.setCarouselImageUrl(CAROUSEL_URL_KEY, carouselImageRepository.findAll());
+            carouselImageUrlList = redisService.getList(CAROUSEL_URL_KEY);
+
+            if (carouselImageUrlList == null) {
+                return new ArrayList<>();
+            }
         }
-        return result;
+
+        return carouselImageUrlList;
     }
+
+    // MainTodayMemeResponseDtoList
+    private List<MainTodayMemeResponseDto> getSafeMainTodayMemeResponseDtoList(List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList) {
+        if (mainTodayMemeResponseDtoList == null) {
+            redisService.setTodayList(TODAY_LIST_KEY, dictService.getTodayMeme(20));
+            mainTodayMemeResponseDtoList = redisService.getTodayList(TODAY_LIST_KEY);
+
+            if (mainTodayMemeResponseDtoList == null) {
+                return new ArrayList<>();
+            }
+        }
+        // 섞은 다음 7개만 뽑아내기
+        Collections.shuffle(mainTodayMemeResponseDtoList);
+        int returnSize = Math.min(mainTodayMemeResponseDtoList.size(), 7);
+
+        return mainTodayMemeResponseDtoList.subList(0, returnSize);
+    }
+
 }
