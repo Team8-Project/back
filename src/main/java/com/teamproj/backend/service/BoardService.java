@@ -7,9 +7,9 @@ import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.S3Uploader;
+import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -26,6 +26,7 @@ public class BoardService {
     private final BoardLikeRepository boardLikeRepository;
     private final BoardImageRepository boardImageRepository;
     private final BoardHashTagRepository boardHashTagRepository;
+    private final BoardViewersRepository boardViewersRepository;
 
     private final CommentService commentService;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
@@ -108,10 +109,9 @@ public class BoardService {
         boardRepository.save(board);
 
 
-
         List<BoardHashTag> boardHashTagList = new ArrayList<>();
-        if(boardUploadRequestDto.getHashTags() != null) {
-            for(String hashTag : boardUploadRequestDto.getHashTags()) {
+        if (boardUploadRequestDto.getHashTags() != null) {
+            for (String hashTag : boardUploadRequestDto.getHashTags()) {
                 BoardHashTag boardHashTag = BoardHashTag.builder()
                         .hashTagName(hashTag)
                         .board(board)
@@ -140,7 +140,7 @@ public class BoardService {
                 .content(board.getContent())
                 .category(board.getBoardCategory().getCategoryName())
                 .thumbNail(board.getThumbNail())
-                .createdAt(board.getCreatedAt() == null ? null :  board.getCreatedAt().toLocalDate())
+                .createdAt(board.getCreatedAt() == null ? null : board.getCreatedAt().toLocalDate())
                 .hashTags(boardHashTagList == null ? null : boardHashTagList.stream().map(
                         e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                 )
@@ -157,17 +157,23 @@ public class BoardService {
                 );
 
         boolean isLike = false;
-        if(userDetails != null) {
+        if (userDetails != null) {
             Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(
                     board, jwtAuthenticateProcessor.getUser(userDetails)
             );
 
-            if(boardLike.isPresent()) {
+            if (boardLike.isPresent()) {
                 isLike = true;
             }
         }
 
-        boardRepository.updateView(boardId);
+        if (isView(board)) {
+            boardViewersRepository.save(BoardViewers.builder()
+                    .viewerIp(StatisticsUtils.getClientIp())
+                    .board(board)
+                    .build());
+            boardRepository.updateView(boardId);
+        }
 
         List<BoardLike> boardLikeList = boardLikeRepository.findAllByBoard(board);
 
@@ -182,6 +188,11 @@ public class BoardService {
                 .isLike(isLike)
                 .commentList(commentService.getCommentList(board.getBoardId(), 0, 10))
                 .build();
+    }
+
+    private boolean isView(Board board) {
+        Optional<BoardViewers> boardViewers = boardViewersRepository.findByViewerIpAndBoard(StatisticsUtils.getClientIp(), board);
+        return !boardViewers.isPresent();
     }
     //endregion
 
@@ -261,20 +272,20 @@ public class BoardService {
 
     //region 게시글 검색
     public List<BoardSearchResponseDto> boardSearch(String q) {
-        if(q == null || q.isEmpty()) {
+        if (q == null || q.isEmpty()) {
             throw new NullPointerException(ExceptionMessages.SEARCH_IS_EMPTY);
         }
 
         Optional<List<Board>> boardList = boardRepository.findByTitleContaining(q);
 
 
-        if(boardList.get().size() == 0) {
+        if (boardList.get().size() == 0) {
             throw new NullPointerException(ExceptionMessages.SEARCH_BOARD_IS_EMPTY);
         }
 
 
         List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
-        for(Board board : boardList.get()) {
+        for (Board board : boardList.get()) {
             boardSearchResponseDtoList.add(
                     BoardSearchResponseDto.builder()
                             .boardId(board.getBoardId())
@@ -301,7 +312,7 @@ public class BoardService {
     public BoardHashTagResponseDto getRecommendHashTag() {
         List<BoardHashTag> boardHashTagList = boardHashTagRepository.boardHashTagList();
 
-        if(boardHashTagList.size() == 0) {
+        if (boardHashTagList.size() == 0) {
             throw new IllegalArgumentException(ExceptionMessages.HASHTAG_IS_EMPTY);
         }
 
