@@ -3,6 +3,7 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.Repository.stat.StatQuizSolverRepository;
 import com.teamproj.backend.Repository.stat.StatQuizStarterRepository;
 import com.teamproj.backend.Repository.stat.StatVisitorRepository;
+import com.teamproj.backend.model.statistics.StatNumericData;
 import com.teamproj.backend.model.statistics.StatQuizSolver;
 import com.teamproj.backend.model.statistics.StatQuizStarter;
 import com.teamproj.backend.model.statistics.StatVisitor;
@@ -10,6 +11,7 @@ import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Service
@@ -39,6 +41,12 @@ public class StatService {
                 .solverIp(StatisticsUtils.getClientIp())
                 .score(score)
                 .build());
+    }
+
+    @Transactional
+    public void statVisitorToNumericData(Long statVisitorCnt, StatNumericData statNumericData){
+        statNumericData.setData(statNumericData.getData() + statVisitorCnt);
+        statVisitorRepository.deleteAll();
     }
 
     // GetSafeEntity
