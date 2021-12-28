@@ -22,6 +22,7 @@ public class QuizController {
     @GetMapping("/api/quiz/{category}")
     public ResponseDto<List<QuizResponseDto>> getQuizList(@RequestParam int count,
                                                           @PathVariable String category){
+
         return ResponseDto.<List<QuizResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("퀴즈 불러오기")

@@ -19,12 +19,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class QuizService {
     private final EntityManager entityManager;
+    private final StatService statService;
 
     // 문제 목록 불러오기
     public List<QuizResponseDto> getQuizList(int count, String category) {
         // QueryDSL 적용 구문
         List<Quiz> quizList = randomQuizPick(count, category);
-
+        // 통계 구문
+        statService.statQuizStarter(category);
         // DtoList 로 반환하는 과정에서 문제 속의 선택지 순서도 섞임
         return quizListToQuizResponseDtoList(quizList);
     }

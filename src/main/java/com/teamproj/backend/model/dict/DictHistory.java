@@ -33,4 +33,7 @@ public class DictHistory extends Timestamped {
 
     @Column(nullable = false)
     private String prevContent;
+
+    @Column(nullable = false)
+    private String prevSummary;
 }

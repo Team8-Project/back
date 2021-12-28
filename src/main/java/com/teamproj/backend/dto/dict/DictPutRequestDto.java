@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DictPutRequestDto {
+    private String summary;
     private String content;
 }
