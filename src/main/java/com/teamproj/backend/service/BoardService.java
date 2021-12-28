@@ -91,7 +91,7 @@ public class BoardService {
                         () -> new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY)
                 );
 
-        String imageUrl;
+        String imageUrl = "";
         if (multipartFile != null) {
             imageUrl = s3Uploader.upload(multipartFile, imageDirName);
         }
