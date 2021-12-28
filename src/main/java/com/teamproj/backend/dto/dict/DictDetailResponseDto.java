@@ -19,6 +19,7 @@ public class DictDetailResponseDto {
     private String firstWriter;
     private String recentWriter;
     private boolean isLike;
+    private int likeCount;
     private LocalDate createdAt;
     private LocalDate modifiedAt;
 }
