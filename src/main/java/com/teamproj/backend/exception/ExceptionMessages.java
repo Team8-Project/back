@@ -21,6 +21,14 @@ public final class ExceptionMessages {
 
     // Board
     public static final String NOT_EXIST_BOARD = "유효하지 않은 게시글입니다.";
+    public static final String NOT_EXIST_CATEGORY = "유효한 카테고리가 아닙니다.";
+    public static final String NOT_MY_BOARD = "권한이 없습니다.";
+
+    public static final String TITLE_IS_EMPTY = "제목은 필수 입력 값입니다.";
+    public static final String CONTENT_IS_EMPTY = "내용은 필수 입력 값입니다.";
+
+    public static final String SEARCH_IS_EMPTY = "검색어는 필수 입력 값입니다.";
+    public static final String SEARCH_BOARD_IS_EMPTY = "검색하려는 게시글이 없습니다.";
 
     // Comment
     public static final String NOT_MY_COMMENT = "권한이 없습니다.";
