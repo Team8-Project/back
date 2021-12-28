@@ -506,6 +506,23 @@ class DictServiceTest {
         @DisplayName("성공")
         void getRecommendKeyword() {
             // given
+            DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
+                    .title(UUID.randomUUID().toString())
+                    .content(UUID.randomUUID().toString())
+                    .build();
+            dictService.postDict(userDetails, dictPostRequestDto);
+
+            List<DictResponseDto> response = dictService.getDictList(0, 5, "");
+
+            // id 찾기
+            Long dictId = null;
+            for (DictResponseDto dictResponseDto : response) {
+                if (dictResponseDto.getTitle().equals(dictPostRequestDto.getTitle())) {
+                    dictId = dictResponseDto.getDictId();
+                    break;
+                }
+            }
+            dictService.likeDict(userDetails, dictId);
 
             // when
             List<String> recommendList = dictService.getSearchInfo();
