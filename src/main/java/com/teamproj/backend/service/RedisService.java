@@ -15,22 +15,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RedisService {
     /*
-    1. 메인페이지
-    1. (보류대상작업) 기한 지난 캐러셀이미지 출력 안함
-    2. 캐러셀 이미지 url
-    3. 오늘의 밈
-    4. 명예의 전당
-    5. 인기 게시글
-2. 게시글 검색
-    1. 인기 검색어
-3. 사전 검색
-    1. 추천 검색어
-4. 게시글 작성
-    1. 추천 해시태그
-5. (미정) 퀴즈
-    1. 퀴즈 목록 고정하기로 결정할 시 고정
-6. 이미지 관련
-    1. (우선순위 낮음) 게시글 작성 시 본문에 포함되지 않은 이미지들 정기적으로 삭제
+        1. 메인페이지
+            - 명예의 전당
+            - 인기 게시글
+        2. 게시글 검색
+            - 인기 검색어
+        3. 사전 검색
+            - 추천 검색어
+        4. 게시글 작성
+            - 추천 해시태그
+        5. (미정) 퀴즈
+            - 퀴즈 목록 고정하기로 결정할 시 고정
+        6. 이미지 관련
+            - (우선순위 낮음) 게시글 작성 시 본문에 포함되지 않은 이미지들 정기적으로 삭제
      */
     private final RedisTemplate<String, String> redisStringTemplate;
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
