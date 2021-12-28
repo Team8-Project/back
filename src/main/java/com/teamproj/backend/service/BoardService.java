@@ -85,9 +85,9 @@ public class BoardService {
                        () -> new NullPointerException("해당 카테고리가 없습니다.")
                );
 
-        if(multipartFile == null || multipartFile.getSize() == 0) {
-            throw new NullPointerException("등록하려는 게시글에 이미지가 없습니다.");
-        }
+//        if(multipartFile == null || multipartFile.getSize() == 0) {
+//            throw new NullPointerException("등록하려는 게시글에 이미지가 없습니다.");
+//        }
 
         String imageUrl = s3Uploader.upload(multipartFile, imageDirName);
 
@@ -97,6 +97,7 @@ public class BoardService {
                 .boardCategory(boardCategory)
                 .user(jwtAuthenticateProcessor.getUser(userDetails))
                 .thumbNail(imageUrl)
+                .enabled(true)
                 .build();
         boardRepository.save(board);
 
