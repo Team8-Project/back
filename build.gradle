@@ -71,7 +71,7 @@ dependencies {
 }
 
 test {
-//    exclude '**/*'
+    exclude '**/*'
     useJUnitPlatform()
 }
 

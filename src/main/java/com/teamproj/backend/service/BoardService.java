@@ -7,10 +7,7 @@ import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.util.JwtAuthenticateProcessor;
-import com.teamproj.backend.util.MySqlJpaTemplates;
-import com.teamproj.backend.util.S3Uploader;
-import com.teamproj.backend.util.StatisticsUtils;
+import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +30,8 @@ public class BoardService {
     private final BoardViewersRepository boardViewersRepository;
 
     private final CommentService commentService;
+    private final RedisService redisService;
+
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final EntityManager entityManager;
     private final S3Uploader s3Uploader;
@@ -319,17 +318,25 @@ public class BoardService {
     //region 해시태그 추천
     public BoardHashTagResponseDto getRecommendHashTag() {
 
-        JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
-        QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
+        List<String> recommendHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
 
-        List<BoardHashTag> boardHashTagList = query.from(qBoardHashTag)
-                .orderBy(NumberExpression.random().asc())
-                .limit(7)
-                .fetch();
+        List<String> resultdHashTagStrList = new ArrayList<>();
+        if (recommendHashTagStrList == null) {
+            JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
+            QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
 
-        return BoardHashTagResponseDto.builder().hashTags(boardHashTagList.stream().map(
-                h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
-        ).build();
+            List<BoardHashTag> boardHashTagList = query.from(qBoardHashTag)
+                    .orderBy(NumberExpression.random().asc())
+                    .limit(7)
+                    .fetch();
+
+            redisService.setRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY, boardHashTagList);
+            resultdHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
+        }
+
+        return BoardHashTagResponseDto.builder()
+                .hashTags(resultdHashTagStrList)
+                .build();
     }
     //endregion
 }
