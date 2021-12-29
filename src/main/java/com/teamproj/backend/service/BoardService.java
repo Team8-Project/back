@@ -1,17 +1,21 @@
 package com.teamproj.backend.service;
 
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.teamproj.backend.Repository.board.*;
 import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.MySqlJpaTemplates;
 import com.teamproj.backend.util.S3Uploader;
 import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +34,7 @@ public class BoardService {
 
     private final CommentService commentService;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
+    private final EntityManager entityManager;
     private final S3Uploader s3Uploader;
 
     private final String imageDirName = "boardImages";
@@ -62,7 +67,6 @@ public class BoardService {
                     .hashTags(board.getBoardHashTagList().stream().map(
                             e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                     )
-
                     .build());
         }
 
@@ -76,14 +80,18 @@ public class BoardService {
                                               String categoryName,
                                               MultipartFile multipartFile) throws IOException {
 
-        if (boardUploadRequestDto.getTitle().isEmpty()) {
+        String boardTitle = boardUploadRequestDto.getTitle();
+        String boardContent = boardUploadRequestDto.getContent();
+        List<String> boardRequestHashTagList = boardUploadRequestDto.getHashTags();
+
+        if (boardTitle.isEmpty()) {
             throw new IllegalArgumentException(ExceptionMessages.TITLE_IS_EMPTY);
         }
-        if (boardUploadRequestDto.getContent().isEmpty()) {
+        if (boardContent.isEmpty()) {
             throw new IllegalArgumentException(ExceptionMessages.CONTENT_IS_EMPTY);
         }
 
-        if (boardUploadRequestDto.getHashTags() != null && boardUploadRequestDto.getHashTags().size() > 5) {
+        if (boardRequestHashTagList != null && boardRequestHashTagList.size() > 5) {
             throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
         }
 
@@ -99,8 +107,8 @@ public class BoardService {
 
 
         Board board = Board.builder()
-                .title(boardUploadRequestDto.getTitle())
-                .content(boardUploadRequestDto.getContent())
+                .title(boardTitle)
+                .content(boardContent)
                 .boardCategory(boardCategory)
                 .user(jwtAuthenticateProcessor.getUser(userDetails))
                 .thumbNail(imageUrl)
@@ -110,8 +118,8 @@ public class BoardService {
 
 
         List<BoardHashTag> boardHashTagList = new ArrayList<>();
-        if (boardUploadRequestDto.getHashTags() != null) {
-            for (String hashTag : boardUploadRequestDto.getHashTags()) {
+        if (boardRequestHashTagList != null) {
+            for (String hashTag : boardRequestHashTagList) {
                 BoardHashTag boardHashTag = BoardHashTag.builder()
                         .hashTagName(hashTag)
                         .board(board)
@@ -310,11 +318,14 @@ public class BoardService {
 
     //region 해시태그 추천
     public BoardHashTagResponseDto getRecommendHashTag() {
-        List<BoardHashTag> boardHashTagList = boardHashTagRepository.boardHashTagList();
 
-        if (boardHashTagList.size() == 0) {
-            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_IS_EMPTY);
-        }
+        JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
+        QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
+
+        List<BoardHashTag> boardHashTagList = query.from(qBoardHashTag)
+                .orderBy(NumberExpression.random().asc())
+                .limit(7)
+                .fetch();
 
         return BoardHashTagResponseDto.builder().hashTags(boardHashTagList.stream().map(
                 h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))

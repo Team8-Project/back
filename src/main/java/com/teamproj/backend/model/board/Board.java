@@ -43,6 +43,7 @@ public class Board extends Timestamped {
     @JoinColumn(nullable = false)
     private BoardCategory boardCategory;
 
+
     @Column(columnDefinition = "boolean default true")
     private boolean enabled;
 
