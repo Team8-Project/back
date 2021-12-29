@@ -317,7 +317,6 @@ public class BoardService {
 
     //region 해시태그 추천
     public BoardHashTagResponseDto getRecommendHashTag() {
-
         List<String> recommendHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
 
         List<String> resultdHashTagStrList = new ArrayList<>();

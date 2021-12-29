@@ -5,6 +5,7 @@ import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
 import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.main.CarouselImage;
+import com.teamproj.backend.util.RedisKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -92,7 +93,11 @@ public class RedisService {
 
     public List<String> getRecommendHashTag(String key) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
-        return list.range(key, 0, list.size(key) - 1);
+
+        if(list.size(key)>0){
+            return list.range(key, 0, list.size(key) - 1);
+        }
+        return null;
     }
 
     // Utils
