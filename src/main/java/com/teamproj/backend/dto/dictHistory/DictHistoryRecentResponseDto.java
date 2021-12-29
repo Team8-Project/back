@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Builder
@@ -17,5 +18,5 @@ public class DictHistoryRecentResponseDto {
     private Long historyId;
     private Long revertFrom;
     private String writer;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 }

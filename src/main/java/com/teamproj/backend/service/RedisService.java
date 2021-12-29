@@ -5,7 +5,6 @@ import com.teamproj.backend.model.main.CarouselImage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,9 +32,6 @@ public class RedisService {
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
 
     public void setCarouselImageUrl(String key, List<CarouselImage> carouselImageList) {
-        ValueOperations<String, String> operations = redisStringTemplate.opsForValue();
-        operations.set(key, "hello world!");
-        operations.get(key);
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, carouselImageListToStringList(carouselImageList));
         list.range(key, 0, list.size(key)-1);
