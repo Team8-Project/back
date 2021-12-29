@@ -133,6 +133,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         skipPathList.add("GET,/api/dict/*");
         skipPathList.add("GET,/api/dict/*/history");
         skipPathList.add("GET,/api/dict/history/*");
+        skipPathList.add("GET,/api/searchInfo/dict");
         // 게시판 목록 API 허용
         skipPathList.add("GET,/api/board/subject");
         skipPathList.add("GET,/api/board/**");
