@@ -23,10 +23,7 @@ import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
 import static com.teamproj.backend.util.RedisKey.BEST_DICT_KEY;
@@ -55,11 +52,9 @@ public class DictService {
     // 베스트 용어 사전 가져오기
     public List<DictBestResponseDto> getBestDict(String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        List<Dict> dictList = getSafeDictBestByRedis(BEST_DICT_KEY);
+        List<Dict> dictList = getSafeBestDict(BEST_DICT_KEY);
 
-        Collections.shuffle(dictList);
-        int size = Math.min(5, dictList.size());
-        return dictListToDictBestResponseDtoList(dictList.subList(0, size), userDetails);
+        return dictListToDictBestResponseDtoList(dictList, userDetails);
     }
 
     // 사전 총 개수 출력
@@ -181,7 +176,6 @@ public class DictService {
     }
 
 
-
     public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
 
@@ -284,34 +278,19 @@ public class DictService {
                 .fetch();
     }
 
-    // DictBestByRedis
-    private List<Dict> getSafeDictBestByRedis(String key) {
-        List<Dict> dictList = redisService.getBestDict(key);
-        if (dictList == null) {
-            redisService.setBestDict(key, getSafeDictBest());
-            dictList = redisService.getBestDict(key);
-            if (dictList == null) {
-                dictList = dictRepository.findAll(PageRequest.of(0, 5)).toList();
-            }
-        }
-        return dictList;
-    }
+    // BestDict
+    public List<String> getSafeBestDict() {
+        List<Tuple> tupleList = getSafeBestDictTuple();
 
-    // DictBest
-    public List<Dict> getSafeDictBest() {
-        List<Tuple> tupleList = getSafeDictBestTuple();
-
-        List<Long> idList = new ArrayList<>();
+        List<String> idList = new ArrayList<>();
         for (Tuple tuple : tupleList) {
-            idList.add(tuple.get(0, Long.class));
+            idList.add(String.valueOf(tuple.get(0, Long.class)));
         }
-
-        Optional<List<Dict>> dictList = dictRepository.findByDictIdIn(idList);
-        return dictList.orElseGet(ArrayList::new);
+        return idList;
     }
 
     // DictBestTuple
-    private List<Tuple> getSafeDictBestTuple() {
+    private List<Tuple> getSafeBestDictTuple() {
         QDictViewers qDictViewers = QDictViewers.dictViewers;
 
         NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
@@ -336,6 +315,29 @@ public class DictService {
         }
 
         return result;
+    }
+
+    // BestDict
+    private List<Dict> getSafeBestDict(String key) {
+        List<String> bestDictIdList = redisService.getStringList(key);
+
+        if (bestDictIdList == null) {
+            redisService.setBestDict(key, getSafeBestDict());
+            bestDictIdList = redisService.getStringList(key);
+
+            if (bestDictIdList == null) {
+                return dictRepository.findAllByOrderByViewsDesc(PageRequest.of(0, 5)).toList();
+            }
+        }
+
+        Collections.shuffle(bestDictIdList);
+        List<Long> nums = new ArrayList<>();
+        for(String str : bestDictIdList.subList(0, Math.min(5, bestDictIdList.size()))){
+            nums.add(Long.parseLong(str));
+        }
+
+        Optional<List<Dict>> dictList = dictRepository.findAllByDictIdIn(nums);
+        return dictList.orElseGet(ArrayList::new);
     }
 
     // DictList 검색결과
@@ -382,7 +384,8 @@ public class DictService {
         return dictSearchResultResponseDto;
     }
 
-    private List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
+    // DictList to DictBestResponseDtoList
+    public List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
         List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
         for (Dict dict : dictList) {
             dictBestResponseDtoList.add(DictBestResponseDto.builder()

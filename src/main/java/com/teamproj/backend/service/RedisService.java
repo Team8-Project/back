@@ -3,9 +3,7 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.dto.dict.DictBestResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
-import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.main.CarouselImage;
-import com.teamproj.backend.util.RedisKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -33,22 +31,23 @@ public class RedisService {
      */
     private final RedisTemplate<String, String> redisStringTemplate;
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
-    private final RedisTemplate<String, Dict> redisDictTemplate;
+    private final RedisTemplate<String, Long> redisLongTemplate;
 
-    public void setBestDict(String key, List<Dict> dictList){
-        ListOperations<String, Dict> list = redisDictTemplate.opsForList();
-        list.leftPushAll(key, dictList);
+    public void setBestDict(String key, List<String> bestDictList){
+        ListOperations<String, String> list = redisStringTemplate.opsForList();
+        list.leftPushAll(key, bestDictList);
     }
 
-    public List<Dict> getBestDict(String key){
-        ListOperations<String, Dict> list = redisDictTemplate.opsForList();
-
-        if(list.size(key) < 5){
-            return list.range(key, 0, list.size(key) - 1);
-        }
-
-        return null;
-    }
+//    public List<Long> getBestDict(String key){
+//        ListOperations<String, Long> list = redisLongTemplate.opsForList();
+//        System.out.println(list.size(key));
+//
+//        if(list.size(key) >= 5){
+//            return list.range(key, 0, list.size(key) - 1);
+//        }
+//
+//        return null;
+//    }
 
     public void setRecommendSearch(String key, List<String> recommendSearch){
         ListOperations<String, String> list = redisStringTemplate.opsForList();
