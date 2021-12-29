@@ -677,7 +677,7 @@ class BoardServiceTest {
 
     //region 추천 해시태그
     @Nested
-    @DisplayName("게시글 추천 해시태그")
+    @DisplayName("추천 해시태그")
     class getRecommendHashTag {
 
         @Test

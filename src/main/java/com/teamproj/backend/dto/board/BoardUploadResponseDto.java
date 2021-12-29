@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -16,6 +17,6 @@ public class BoardUploadResponseDto {
     private String content;
     private String category;
     private String thumbNail;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
     private List<String> hashTags;
 }

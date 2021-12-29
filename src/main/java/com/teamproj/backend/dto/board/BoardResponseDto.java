@@ -3,9 +3,8 @@ package com.teamproj.backend.dto.board;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.web.bind.annotation.GetMapping;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -18,7 +17,7 @@ public class BoardResponseDto {
     private String content;
     private String username;
     private String writer;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
     private int views;
     private int likeCnt;
     private List<String> hashTags;
