@@ -36,6 +36,15 @@ public class DictController {
                 .build();
     }
 
+    @GetMapping("/api/count/dict")
+    public ResponseDto<DictTotalCountResponseDto> getDictTotalCount(){
+        return ResponseDto.<DictTotalCountResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("사전 총 개수 요청")
+                .data(dictService.getDictTotalCount())
+                .build();
+    }
+
     @GetMapping("/api/dict/{dictId}")
     public ResponseDto<DictDetailResponseDto> getDictDetail(@RequestHeader(value = "Authorization", required = false) String token,
                                                             @PathVariable Long dictId) {

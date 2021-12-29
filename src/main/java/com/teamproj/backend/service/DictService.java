@@ -7,12 +7,14 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
+import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,9 +38,9 @@ public class DictService {
     private final DictRepository dictRepository;
     private final DictHistoryRepository dictHistoryRepository;
     private final DictLikeRepository dictLikeRepository;
+    private final DictViewersRepository dictViewersRepository;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final JPAQueryFactory queryFactory;
-//    private final RecentSearchRepository recentSearchRepository;
 
     private final RedisService redisService;
 
@@ -49,10 +51,40 @@ public class DictService {
         return dictListToDictResponseDtoList(dictList, userDetails);
     }
 
+    public List<DictBestResponseDto> getBestDict(String token){
+        UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
+        List<Dict> dictList = getSafeDictBest();
+
+        Collections.shuffle(dictList);
+        int size = Math.min(5, dictList.size());
+        return dictListToDictBestResponseDtoList(dictList.subList(0, size), userDetails);
+    }
+
+
+
+    private List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
+        List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
+        for(Dict dict: dictList){
+
+        }
+        return dictBestResponseDtoList;
+    }
+
+
+
     // 사전 상세 정보 가져오기
     public DictDetailResponseDto getDictDetail(Long dictId, String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         Dict dict = getSafeDict(dictId);
+
+        // 조회수 증가
+        if (!isView(dict)) {
+            dictViewersRepository.save(DictViewers.builder()
+                    .viewerIp(StatisticsUtils.getClientIp())
+                    .dict(dict)
+                    .build());
+            dictRepository.updateView(dictId);
+        }
 
         return DictDetailResponseDto.builder()
                 .dictId(dict.getDictId())
@@ -146,10 +178,6 @@ public class DictService {
     }
 
     public List<String> getSearchInfo() {
-        /*
-            최근 검색어 기능은 프론트엔드에서 구현할 수 있는지 여부 검증되기 전까지
-            비활성화 상태로 유지합니다.
-        */
         List<String> result = getSafeRecommendSearch(DICT_RECOMMEND_SEARCH_KEY);
 
         Collections.shuffle(result);
@@ -171,21 +199,6 @@ public class DictService {
         return result;
     }
 
-//        public DictSearchInfoResponseDto getSearchInfo(UserDetailsImpl userDetails) {
-//        ValidChecker.loginCheck(userDetails);
-
-//        User user = jwtAuthenticateProcessor.getUser(userDetails);
-
-//        List<String> recent = getRecentSearch(user);
-//        List<String> recommend = getRecommendSearch(20);
-
-//        return DictSearchInfoResponseDto.builder()
-//                .recent(recent)
-//                .recommend(recommend)
-//                .build();
-//    }
-
-
     public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
 
@@ -196,6 +209,12 @@ public class DictService {
 
     // region 보조 기능
     // Utils
+    // 사전 상세보기 열람했는지 확인
+    private boolean isView(Dict dict) {
+        Optional<DictViewers> dictViewers = dictViewersRepository.findByViewerIpAndDict(StatisticsUtils.getClientIp(), dict);
+        return dictViewers.isPresent();
+    }
+
     // 사전 좋아요 표시했는지 확인
     private boolean isDictLike(Dict dict, UserDetailsImpl userDetails) {
         // 1. 로그인하지 않았으면 무조건 false.
@@ -224,6 +243,8 @@ public class DictService {
         return recommend;
     }
 
+
+
     // 오늘의 밈 출력
     public List<MainTodayMemeResponseDto> getTodayMeme(int size) {
         // 1. 좋아요 테이블에서 각 좋아요 개수 불러와서 내림차순으로 정렬
@@ -241,19 +262,6 @@ public class DictService {
 
         return recommend;
     }
-
-    // 최근 검색어 출력
-//    private List<String> getRecentSearch(User user) {
-//        List<RecentSearch> recentSearchList = getSafeRecentSearchList(user, QueryTypeEnum.DICT);
-//
-//        List<String> recent = new ArrayList<>();
-//
-//        for (RecentSearch recentSearch : recentSearchList) {
-//            recent.add(recentSearch.getQuery());
-//        }
-//
-//        return recent;
-//    }
 
     // Get SafeEntity
     // Dict
@@ -281,12 +289,6 @@ public class DictService {
         return dictLike.orElseThrow(() -> new NullPointerException(NOT_EXIST_DICT_LIKE));
     }
 
-    // RecentSearchList
-//    private List<RecentSearch> getSafeRecentSearchList(User user, QueryTypeEnum type) {
-//        Optional<List<RecentSearch>> recentSearchList = recentSearchRepository.findAllByUserAndTypeOrderByCreatedAtDesc(user, type);
-//        return recentSearchList.orElseGet(ArrayList::new);
-//    }
-
     // DictLikeTuple
     private List<Tuple> getSafeDictLikeCountTupleOrderByDescLimit(int size) {
         QDictLike qDictLike = QDictLike.dictLike;
@@ -297,6 +299,32 @@ public class DictService {
                 .groupBy(qDictLike.dict)
                 .orderBy(count.desc())
                 .limit(size)
+                .fetch();
+    }
+
+    // DictBest
+    private List<Dict> getSafeDictBest() {
+        List<Tuple> tupleList = getSafeDictBestTuple();
+
+        List<Long> idList = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            idList.add(tuple.get(0, Long.class));
+        }
+
+        Optional<List<Dict>> dictList = dictRepository.findByDictIdIn(idList);
+        return dictList.orElseGet(ArrayList::new);
+    }
+
+    // DictBestTuple
+    private List<Tuple> getSafeDictBestTuple() {
+        QDictViewers qDictViewers = QDictViewers.dictViewers;
+
+        NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
+        return queryFactory.select(qDictViewers.dict.dictId, qDictViewers.dict.count().as(count))
+                .from(qDictViewers)
+                .groupBy(qDictViewers.dict)
+                .orderBy(count.desc())
+                .limit(20)
                 .fetch();
     }
 
@@ -342,6 +370,12 @@ public class DictService {
         }
 
         return dictSearchResultResponseDto;
+    }
+
+    public DictTotalCountResponseDto getDictTotalCount() {
+        return DictTotalCountResponseDto.builder()
+                .totalCount(dictRepository.count())
+                .build();
     }
 
     // endregion
