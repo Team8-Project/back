@@ -39,6 +39,8 @@ public class Scheduler {
         redisTemplate.delete(TODAY_LIST_KEY);
         redisService.setCarouselImageUrl(CAROUSEL_URL_KEY, carouselImageRepository.findAll());
         redisService.setTodayList(TODAY_LIST_KEY, dictService.getTodayMeme(20));
+        System.out.println("해시 태그 데이터 교체");
+        redisTemplate.delete(HASHTAG_RECOMMEND_KEY);
 
         System.out.println("조회수 및 방문자 정보 초기화 .....");
         statService.statVisitorToNumericData(statVisitorRepository.count(), statNumericdataRepository.findByName("VISITOR"));

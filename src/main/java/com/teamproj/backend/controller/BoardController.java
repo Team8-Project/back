@@ -43,7 +43,7 @@ public class BoardController {
 
     @GetMapping("/api/board/{boardId}")
     public ResponseDto<BoardDetailResponseDto> getBoardDetail(@RequestHeader(value="Authorization", required = false) String token,
-                                                                 @PathVariable Long boardId) {
+                                                              @PathVariable Long boardId) {
         if(token == null){
             token = "";
         }
@@ -79,7 +79,7 @@ public class BoardController {
 
     @PostMapping("/api/board/{boardId}/like")
     public ResponseDto<BoardLikeResponseDto> boardLike(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                          @PathVariable Long boardId) {
+                                                       @PathVariable Long boardId) {
 
         return ResponseDto.<BoardLikeResponseDto>builder()
                 .status(HttpStatus.OK.toString())
