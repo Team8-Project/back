@@ -27,13 +27,16 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
+    // 댓글 목록 불러오기
     public List<CommentResponseDto> getCommentList(Long boardId, int page, int size) {
         Board board = getSafeBoard(boardId);
         Page<Comment> commentPage = commentRepository.findAllByBoardAndEnabledOrderByCreatedAt(board, true, PageRequest.of(page, size));
 
+        // CommentList to CommentResponseDtoList
         return commentListToCommentResponseDtoList(commentPage.toList());
     }
 
+    // 댓글 작성
     public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long boardId, CommentPostRequestDto commentPostRequestDto) {
         // 로그인 여부 확인
         ValidChecker.loginCheck(userDetails);
@@ -46,6 +49,7 @@ public class CommentService {
                 .enabled(true)
                 .build());
 
+        // Comment to CommentPostResponseDto
         return CommentPostResponseDto.builder()
                 .commentId(comment.getCommentId())
                 .profileImageUrl("")
@@ -56,11 +60,13 @@ public class CommentService {
                 .build();
     }
 
+    // 댓글 수정
     @Transactional
     public CommentPutResponseDto putComment(UserDetailsImpl userDetails, Long commentId, CommentPutRequestDto commentPutRequestDto) {
         // 로그인 여부 확인
         ValidChecker.loginCheck(userDetails);
 
+        // 수정하려는 댓글이 나의 댓글인지 확인
         Comment comment = commentIsMineCheck(userDetails, commentId);
         comment.update(commentPutRequestDto.getContent());
         commentRepository.save(comment);
@@ -70,6 +76,7 @@ public class CommentService {
                 .build();
     }
 
+    // 댓글 삭제
     @Transactional
     public CommentDeleteResponseDto deleteComment(UserDetailsImpl userDetails, Long commentId) {
         // 로그인 여부 확인

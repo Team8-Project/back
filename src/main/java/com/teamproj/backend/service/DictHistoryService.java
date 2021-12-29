@@ -56,8 +56,20 @@ public class DictHistoryService {
                 .build();
     }
 
+    // 용어사전 롤백
     @Transactional
     public DictRevertResponseDto revertDict(Long historyId, UserDetailsImpl userDetails) {
+        /*
+            롤백 기능 수행 절차
+            1. 기존의 데이터 recentDict를 DictHistory로 선언해 저장
+            2. 롤백하고자 하는 데이터를 dict로 덮어쓰기
+            3. good!
+
+            개선사항
+            1. 사전을 생성하는 순간부터 최초생성 역사를 생성시켜 관리하도록 하면, 수정시 생긴 최근 역사에 reverFrom을 부여할 시
+               롤백 시 어떤 데이터에서 가져온 건지 알 수 있음
+            2.
+         */
         ValidChecker.loginCheck(userDetails);
 
         DictHistory dictHistory = getSafeDictHistory(historyId);

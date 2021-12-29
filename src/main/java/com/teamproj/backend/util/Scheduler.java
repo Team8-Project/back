@@ -46,12 +46,8 @@ public class Scheduler {
     }
 
     // 현재는 매 시간 작업하도록 설정
-    @Scheduled(cron = "0 0 0/1 * * *")
-    public void refreshSchedule(){
-        System.out.println("비정기 작업 새로고침 실시 .....");
-        // 사전 추천 검색어 데이터 교체
-        System.out.println("사전 페이지 추천 검색어 교체 .....");
-        redisTemplate.delete(DICT_RECOMMEND_SEARCH_KEY);
-        redisService.setRecommendSearch(DICT_RECOMMEND_SEARCH_KEY, dictService.getRecommendSearch(20));
-    }
+//    @Scheduled(cron = "0 0 0/1 * * *")
+//    public void refreshSchedule(){
+//        System.out.println("비정기 작업 새로고침 실시 .....");
+//    }
 }

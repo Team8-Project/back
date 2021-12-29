@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -32,17 +33,22 @@ public class RedisService {
     public void setRecommendSearch(String key, List<String> recommendSearch){
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, recommendSearch);
+        redisStringTemplate.expire(key, 1, TimeUnit.HOURS);
     }
 
     public void setCarouselImageUrl(String key, List<CarouselImage> carouselImageList) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, carouselImageListToStringList(carouselImageList));
-        list.range(key, 0, list.size(key)-1);
     }
 
     public List<String> getStringList(String key) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
-        return list.range(key, 0, list.size(key) - 1);
+
+        if(list.size(key)>0){
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
     }
 
     public void setTodayList(String key, List<MainTodayMemeResponseDto> todayList) {
@@ -52,16 +58,23 @@ public class RedisService {
 
     public List<MainTodayMemeResponseDto> getTodayList(String key) {
         ListOperations<String, MainTodayMemeResponseDto> list = redisMainTodayMemeResponseDtoTemplate.opsForList();
-        return list.range(key, 0, list.size(key) - 1);
+
+        if(list.size(key)>0){
+            list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
     }
 
     // Utils
     // CarouselImageList to StringList
     public List<String> carouselImageListToStringList(List<CarouselImage> carouselImageList) {
         List<String> result = new ArrayList<>();
+
         for (CarouselImage carouselImage : carouselImageList) {
             result.add(carouselImage.getImageUrl());
         }
+
         return result;
     }
 }

@@ -202,7 +202,8 @@ class CommentServiceTest {
             commentService.deleteComment(userDetails, commentId);
 
             // then
-            assertEquals(0, boardService.getBoardDetail(boardId, "").getCommentList().size());
+            int commentSize = commentService.getCommentList(boardId, 0, 5).size();
+            assertEquals(0, commentSize);
         }
 
         @Nested
