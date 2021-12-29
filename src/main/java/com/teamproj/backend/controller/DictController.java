@@ -37,8 +37,8 @@ public class DictController {
     }
 
     @GetMapping("/api/count/dict")
-    public ResponseDto<DictTotalCountResponseDto> getDictTotalCount(){
-        return ResponseDto.<DictTotalCountResponseDto>builder()
+    public ResponseDto<Long> getDictTotalCount(){
+        return ResponseDto.<Long>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 총 개수 요청")
                 .data(dictService.getDictTotalCount())
