@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.util.RedisKey.DICT_RECOMMEND_SEARCH_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +39,8 @@ public class DictService {
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final JPAQueryFactory queryFactory;
 //    private final RecentSearchRepository recentSearchRepository;
+
+    private final RedisService redisService;
 
     // 사전 목록 가져오기
     public List<DictResponseDto> getDictList(int page, int size, String token) {
@@ -147,7 +150,25 @@ public class DictService {
             최근 검색어 기능은 프론트엔드에서 구현할 수 있는지 여부 검증되기 전까지
             비활성화 상태로 유지합니다.
         */
-        return getRecommendSearch(20);
+        List<String> result = getSafeRecommendSearch(DICT_RECOMMEND_SEARCH_KEY);
+
+        Collections.shuffle(result);
+        int returnSize = Math.min(result.size(), 7);
+        return result.subList(0, returnSize);
+    }
+
+    private List<String> getSafeRecommendSearch(String key) {
+        List<String> result = redisService.getStringList(key);
+
+        if (result == null) {
+            redisService.setRecommendSearch(key, getRecommendSearch(20));
+            result = redisService.getStringList(key);
+            if (result == null) {
+                return new ArrayList<>();
+            }
+        }
+
+        return result;
     }
 
 //        public DictSearchInfoResponseDto getSearchInfo(UserDetailsImpl userDetails) {
@@ -200,9 +221,7 @@ public class DictService {
             recommend.add(tuple.get(1, String.class));
         }
 
-        Collections.shuffle(recommend);
-        int returnSize = Math.min(recommend.size(), 7);
-        return recommend.subList(0, returnSize);
+        return recommend;
     }
 
     // 오늘의 밈 출력

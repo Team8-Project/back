@@ -19,8 +19,6 @@ public class RedisService {
             - 인기 게시글
         2. 게시글 검색
             - 인기 검색어
-        3. 사전 검색
-            - 추천 검색어
         4. 게시글 작성
             - 추천 해시태그
         5. (미정) 퀴즈
@@ -31,13 +29,18 @@ public class RedisService {
     private final RedisTemplate<String, String> redisStringTemplate;
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
 
+    public void setRecommendSearch(String key, List<String> recommendSearch){
+        ListOperations<String, String> list = redisStringTemplate.opsForList();
+        list.leftPushAll(key, recommendSearch);
+    }
+
     public void setCarouselImageUrl(String key, List<CarouselImage> carouselImageList) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, carouselImageListToStringList(carouselImageList));
         list.range(key, 0, list.size(key)-1);
     }
 
-    public List<String> getList(String key) {
+    public List<String> getStringList(String key) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         return list.range(key, 0, list.size(key) - 1);
     }
@@ -52,6 +55,8 @@ public class RedisService {
         return list.range(key, 0, list.size(key) - 1);
     }
 
+    // Utils
+    // CarouselImageList to StringList
     public List<String> carouselImageListToStringList(List<CarouselImage> carouselImageList) {
         List<String> result = new ArrayList<>();
         for (CarouselImage carouselImage : carouselImageList) {
