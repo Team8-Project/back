@@ -2,6 +2,7 @@ package com.teamproj.backend.util;
 
 import com.teamproj.backend.Repository.CarouselImageRepository;
 import com.teamproj.backend.Repository.board.BoardViewersRepository;
+import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.Repository.stat.StatNumericDataRepository;
 import com.teamproj.backend.Repository.stat.StatVisitorRepository;
 import com.teamproj.backend.service.DictService;
@@ -24,6 +25,7 @@ public class Scheduler {
     private final StatVisitorRepository statVisitorRepository;
     private final StatNumericDataRepository statNumericdataRepository;
     private final BoardViewersRepository boardViewersRepository;
+    private final DictViewersRepository dictViewersRepository;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -45,6 +47,8 @@ public class Scheduler {
         System.out.println("조회수 및 방문자 정보 초기화 .....");
         statService.statVisitorToNumericData(statVisitorRepository.count(), statNumericdataRepository.findByName("VISITOR"));
         boardViewersRepository.deleteAll();
+        redisService.setBestDict(BEST_DICT_KEY, dictService.getSafeDictBest());
+        dictViewersRepository.deleteAll();
     }
 
     // 현재는 매 시간 작업하도록 설정

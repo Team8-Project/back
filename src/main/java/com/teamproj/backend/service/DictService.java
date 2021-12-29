@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.util.RedisKey.BEST_DICT_KEY;
 import static com.teamproj.backend.util.RedisKey.DICT_RECOMMEND_SEARCH_KEY;
 
 @Service
@@ -51,26 +52,20 @@ public class DictService {
         return dictListToDictResponseDtoList(dictList, userDetails);
     }
 
-    public List<DictBestResponseDto> getBestDict(String token){
+    // 베스트 용어 사전 가져오기
+    public List<DictBestResponseDto> getBestDict(String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        List<Dict> dictList = getSafeDictBest();
+        List<Dict> dictList = getSafeDictBestByRedis(BEST_DICT_KEY);
 
         Collections.shuffle(dictList);
         int size = Math.min(5, dictList.size());
         return dictListToDictBestResponseDtoList(dictList.subList(0, size), userDetails);
     }
 
-
-
-    private List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
-        List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
-        for(Dict dict: dictList){
-
-        }
-        return dictBestResponseDtoList;
+    // 사전 총 개수 출력
+    public Long getDictTotalCount() {
+        return dictRepository.count();
     }
-
-
 
     // 사전 상세 정보 가져오기
     public DictDetailResponseDto getDictDetail(Long dictId, String token) {
@@ -185,19 +180,7 @@ public class DictService {
         return result.subList(0, returnSize);
     }
 
-    private List<String> getSafeRecommendSearch(String key) {
-        List<String> result = redisService.getStringList(key);
 
-        if (result == null) {
-            redisService.setRecommendSearch(key, getRecommendSearch(20));
-            result = redisService.getStringList(key);
-            if (result == null) {
-                return new ArrayList<>();
-            }
-        }
-
-        return result;
-    }
 
     public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
@@ -242,7 +225,6 @@ public class DictService {
 
         return recommend;
     }
-
 
 
     // 오늘의 밈 출력
@@ -302,8 +284,21 @@ public class DictService {
                 .fetch();
     }
 
+    // DictBestByRedis
+    private List<Dict> getSafeDictBestByRedis(String key) {
+        List<Dict> dictList = redisService.getBestDict(key);
+        if (dictList == null) {
+            redisService.setBestDict(key, getSafeDictBest());
+            dictList = redisService.getBestDict(key);
+            if (dictList == null) {
+                dictList = dictRepository.findAll(PageRequest.of(0, 5)).toList();
+            }
+        }
+        return dictList;
+    }
+
     // DictBest
-    private List<Dict> getSafeDictBest() {
+    public List<Dict> getSafeDictBest() {
         List<Tuple> tupleList = getSafeDictBestTuple();
 
         List<Long> idList = new ArrayList<>();
@@ -326,6 +321,21 @@ public class DictService {
                 .orderBy(count.desc())
                 .limit(20)
                 .fetch();
+    }
+
+    // RecommendSearch
+    private List<String> getSafeRecommendSearch(String key) {
+        List<String> result = redisService.getStringList(key);
+
+        if (result == null) {
+            redisService.setRecommendSearch(key, getRecommendSearch(20));
+            result = redisService.getStringList(key);
+            if (result == null) {
+                return new ArrayList<>();
+            }
+        }
+
+        return result;
     }
 
     // DictList 검색결과
@@ -372,8 +382,19 @@ public class DictService {
         return dictSearchResultResponseDto;
     }
 
-    public Long getDictTotalCount() {
-        return dictRepository.count();
+    private List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
+        List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
+        for (Dict dict : dictList) {
+            dictBestResponseDtoList.add(DictBestResponseDto.builder()
+                    .dictId(dict.getDictId())
+                    .title(dict.getDictName())
+                    .summary(dict.getSummary())
+                    .meaning(dict.getContent())
+                    .isLike(isDictLike(dict, userDetails))
+                    .likeCount(dict.getDictLikeList().size())
+                    .build());
+        }
+        return dictBestResponseDtoList;
     }
 
     // endregion

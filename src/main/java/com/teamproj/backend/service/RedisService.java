@@ -1,7 +1,9 @@
 package com.teamproj.backend.service;
 
+import com.teamproj.backend.dto.dict.DictBestResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
+import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.main.CarouselImage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
@@ -30,6 +32,22 @@ public class RedisService {
      */
     private final RedisTemplate<String, String> redisStringTemplate;
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
+    private final RedisTemplate<String, Dict> redisDictTemplate;
+
+    public void setBestDict(String key, List<Dict> dictList){
+        ListOperations<String, Dict> list = redisDictTemplate.opsForList();
+        list.leftPushAll(key, dictList);
+    }
+
+    public List<Dict> getBestDict(String key){
+        ListOperations<String, Dict> list = redisDictTemplate.opsForList();
+
+        if(list.size(key) < 5){
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
+    }
 
     public void setRecommendSearch(String key, List<String> recommendSearch){
         ListOperations<String, String> list = redisStringTemplate.opsForList();
