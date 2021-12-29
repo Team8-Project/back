@@ -31,7 +31,7 @@ public class MainService {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = userDetails == null ? null : jwtAuthenticateProcessor.getUser(userDetails);
 
-        List<String> carouselImageUrlList = getSafeCarouselImageUrlList(redisService.getList(CAROUSEL_URL_KEY));
+        List<String> carouselImageUrlList = getSafeCarouselImageUrlList(CAROUSEL_URL_KEY);
         List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = getSafeMainTodayMemeResponseDtoList(redisService.getTodayList(TODAY_LIST_KEY));
 
         return MainPageResponseDto.builder()
@@ -44,10 +44,12 @@ public class MainService {
 
     // get SafeEntity
     // CarouselImageUrlList
-    private List<String> getSafeCarouselImageUrlList(List<String> carouselImageUrlList) {
+    private List<String> getSafeCarouselImageUrlList(String key) {
+        List<String> carouselImageUrlList = redisService.getStringList(key);
+
         if (carouselImageUrlList == null) {
-            redisService.setCarouselImageUrl(CAROUSEL_URL_KEY, carouselImageRepository.findAll());
-            carouselImageUrlList = redisService.getList(CAROUSEL_URL_KEY);
+            redisService.setCarouselImageUrl(key, carouselImageRepository.findAll());
+            carouselImageUrlList = redisService.getStringList(key);
 
             if (carouselImageUrlList == null) {
                 return new ArrayList<>();

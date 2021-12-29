@@ -33,8 +33,8 @@ public class Scheduler {
     @Scheduled(cron = "0 0 0 * * *")
     public void dayRegularSchedule() {
         System.out.println("자정 정기 스케줄 실시 .....");
+        // 캐러셀이미지, 오늘의밈 데이터 교체
         System.out.println("메인 페이지 데이터 교체 .....");
-        // 캐러셀이미지, 오늘의밈 제품 교체
         redisTemplate.delete(CAROUSEL_URL_KEY);
         redisTemplate.delete(TODAY_LIST_KEY);
         redisService.setCarouselImageUrl(CAROUSEL_URL_KEY, carouselImageRepository.findAll());
@@ -43,5 +43,15 @@ public class Scheduler {
         System.out.println("조회수 및 방문자 정보 초기화 .....");
         statService.statVisitorToNumericData(statVisitorRepository.count(), statNumericdataRepository.findByName("VISITOR"));
         boardViewersRepository.deleteAll();
+    }
+
+    // 현재는 매 시간 작업하도록 설정
+    @Scheduled(cron = "0 0 0/1 * * *")
+    public void refreshSchedule(){
+        System.out.println("비정기 작업 새로고침 실시 .....");
+        // 사전 추천 검색어 데이터 교체
+        System.out.println("사전 페이지 추천 검색어 교체 .....");
+        redisTemplate.delete(DICT_RECOMMEND_SEARCH_KEY);
+        redisService.setRecommendSearch(DICT_RECOMMEND_SEARCH_KEY, dictService.getRecommendSearch(20));
     }
 }
