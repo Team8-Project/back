@@ -372,10 +372,8 @@ public class DictService {
         return dictSearchResultResponseDto;
     }
 
-    public DictTotalCountResponseDto getDictTotalCount() {
-        return DictTotalCountResponseDto.builder()
-                .totalCount(dictRepository.count())
-                .build();
+    public Long getDictTotalCount() {
+        return dictRepository.count();
     }
 
     // endregion
