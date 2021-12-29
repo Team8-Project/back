@@ -4,14 +4,11 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.teamproj.backend.Repository.RecentSearchRepository;
 import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
-import com.teamproj.backend.model.QueryTypeEnum;
-import com.teamproj.backend.model.RecentSearch;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -40,7 +37,7 @@ public class DictService {
     private final DictLikeRepository dictLikeRepository;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final JPAQueryFactory queryFactory;
-    private final RecentSearchRepository recentSearchRepository;
+//    private final RecentSearchRepository recentSearchRepository;
 
     // 사전 목록 가져오기
     public List<DictResponseDto> getDictList(int page, int size, String token) {
@@ -63,8 +60,8 @@ public class DictService {
                 .recentWriter(dict.getRecentModifier().getNickname())
                 .isLike(isDictLike(dict, userDetails))
                 .likeCount(dict.getDictLikeList().size())
-                .createdAt(dict.getCreatedAt().toLocalDate())
-                .modifiedAt(dict.getModifiedAt().toLocalDate())
+                .createdAt(dict.getCreatedAt())
+                .modifiedAt(dict.getModifiedAt())
                 .build();
     }
 
@@ -212,7 +209,7 @@ public class DictService {
     public List<MainTodayMemeResponseDto> getTodayMeme(int size) {
         // 1. 좋아요 테이블에서 각 좋아요 개수 불러와서 내림차순으로 정렬
         // 2. 그 중 20개정도 뽑아서 섞은다음 7개 찾아서 그걸로 탐색하고 정렬
-        // 3. 받아와서 MainTodayMemeResponseDto에 스택
+        // 3. 받아와서 MainTodayMemeResponseDto 에 스택
         // 4. good!
         List<Tuple> tupleList = getSafeDictLikeCountTupleOrderByDescLimit(size);
         List<MainTodayMemeResponseDto> recommend = new ArrayList<>();
@@ -266,10 +263,10 @@ public class DictService {
     }
 
     // RecentSearchList
-    private List<RecentSearch> getSafeRecentSearchList(User user, QueryTypeEnum type) {
-        Optional<List<RecentSearch>> recentSearchList = recentSearchRepository.findAllByUserAndTypeOrderByCreatedAtDesc(user, type);
-        return recentSearchList.orElseGet(ArrayList::new);
-    }
+//    private List<RecentSearch> getSafeRecentSearchList(User user, QueryTypeEnum type) {
+//        Optional<List<RecentSearch>> recentSearchList = recentSearchRepository.findAllByUserAndTypeOrderByCreatedAtDesc(user, type);
+//        return recentSearchList.orElseGet(ArrayList::new);
+//    }
 
     // DictLikeTuple
     private List<Tuple> getSafeDictLikeCountTupleOrderByDescLimit(int size) {

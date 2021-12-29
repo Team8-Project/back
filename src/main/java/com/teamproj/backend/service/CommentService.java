@@ -52,7 +52,7 @@ public class CommentService {
                 .commentWriterId(comment.getUser().getUsername())
                 .commentWriter(comment.getUser().getNickname())
                 .commentContent(comment.getContent())
-                .createdAt(comment.getCreatedAt().toLocalDate())
+                .createdAt(comment.getCreatedAt())
                 .build();
     }
 
@@ -131,7 +131,7 @@ public class CommentService {
                     .commentWriter(comment.getUser().getNickname())
                     .commentContent(comment.getContent())
                     .profileImageUrl("")
-                    .createdAt(comment.getCreatedAt().toLocalDate())
+                    .createdAt(comment.getCreatedAt())
                     .build());
         }
 

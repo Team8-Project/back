@@ -52,7 +52,7 @@ public class DictHistoryService {
                 .modifier(dictHistory.getUser().getNickname())
                 .summary(dictHistory.getPrevSummary())
                 .content(dictHistory.getPrevContent())
-                .createdAt(dictHistory.getCreatedAt().toLocalDate())
+                .createdAt(dictHistory.getCreatedAt())
                 .build();
     }
 
@@ -118,7 +118,7 @@ public class DictHistoryService {
                     .historyId(dictHistory.getDictHistoryId())
                     .revertFrom(dictHistory.getRevertFrom() == null ? null : dictHistory.getRevertFrom().getDictHistoryId())
                     .writer(dictHistory.getUser().getNickname())
-                    .createdAt(dictHistory.getCreatedAt().toLocalDate())
+                    .createdAt(dictHistory.getCreatedAt())
                     .build());
         }
 
