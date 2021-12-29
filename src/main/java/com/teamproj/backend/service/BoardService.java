@@ -56,7 +56,7 @@ public class BoardService {
                     .username(board.getUser().getUsername())
                     .writer(board.getUser().getNickname())
                     .content(board.getContent())
-                    .createdAt(board.getCreatedAt().toLocalDate())
+                    .createdAt(board.getCreatedAt())
                     .views(board.getViews())
                     .likeCnt(board.getLikes().size())
                     .hashTags(board.getBoardHashTagList().stream().map(
@@ -103,7 +103,7 @@ public class BoardService {
                 .content(boardUploadRequestDto.getContent())
                 .boardCategory(boardCategory)
                 .user(jwtAuthenticateProcessor.getUser(userDetails))
-                .thumbNail("https://img.insight.co.kr/static/2021/12/04/700/img_20211204160105_7381lxd4.webp")
+                .thumbNail(imageUrl)
                 .enabled(true)
                 .build();
         boardRepository.save(board);
@@ -128,7 +128,7 @@ public class BoardService {
 
         BoardImage boardImage = BoardImage.builder()
                 .board(board)
-                .imageUrl("https://img.insight.co.kr/static/2021/12/04/700/img_20211204160105_7381lxd4.webp")
+                .imageUrl(imageUrl)
                 .build();
 
         boardImageRepository.save(boardImage);
@@ -140,7 +140,7 @@ public class BoardService {
                 .content(board.getContent())
                 .category(board.getBoardCategory().getCategoryName())
                 .thumbNail(board.getThumbNail())
-                .createdAt(board.getCreatedAt() == null ? null : board.getCreatedAt().toLocalDate())
+                .createdAt(board.getCreatedAt() == null ? null : board.getCreatedAt())
                 .hashTags(boardHashTagList == null ? null : boardHashTagList.stream().map(
                         e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                 )
@@ -182,7 +182,7 @@ public class BoardService {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .writer(board.getUser().getNickname())
-                .createdAt(board.getCreatedAt().toLocalDate())
+                .createdAt(board.getCreatedAt())
                 .views(board.getViews())
                 .likeCnt(boardLikeList.size())
                 .isLike(isLike)
@@ -294,7 +294,7 @@ public class BoardService {
                             .username(board.getUser().getUsername())
                             .writer(board.getUser().getNickname())
                             .content(board.getContent())
-                            .createdAt(board.getCreatedAt().toLocalDate())
+                            .createdAt(board.getCreatedAt())
                             .views(board.getViews())
                             .likeCnt(board.getLikes().size())
                             .hashTags(board.getBoardHashTagList() == null ? null : board.getBoardHashTagList().stream().map(

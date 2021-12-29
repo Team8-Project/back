@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -16,7 +16,7 @@ public class BoardDetailResponseDto {
     private String title;
     private String content;
     private String writer;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
     private int views;
     private int likeCnt;
     private Boolean isLike;
