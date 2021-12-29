@@ -126,6 +126,18 @@ public class DictController {
                 .build();
     }
 
+    @GetMapping("/api/bestDict/dict")
+    public ResponseDto<List<DictBestResponseDto>> getBestDict(@RequestHeader(value = "Authorization", required = false) String token){
+        if (token == null) {
+            token = "";
+        }
+        return ResponseDto.<List<DictBestResponseDto>>builder()
+                .status(HttpStatus.OK.toString())
+                .message("오늘의 밈 카드 요청")
+                .data(dictService.getBestDict(token))
+                .build();
+    }
+
     @GetMapping("/api/dict/search")
     public ResponseDto<List<DictSearchResultResponseDto>> getSearchResult(@RequestHeader(value = "Authorization", required = false) String token,
                                                                           @RequestParam String q,
