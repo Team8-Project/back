@@ -4,6 +4,7 @@ package com.teamproj.backend.model.dict;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -36,6 +37,9 @@ public class Dict extends Timestamped {
 
     @Column(nullable = false)
     private String content;
+
+    @ColumnDefault("0")
+    private int views;
 
     @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
     private final List<DictHistory> dictHistoryList = new ArrayList<>();
