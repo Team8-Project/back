@@ -13,6 +13,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+
 import static com.teamproj.backend.util.RedisKey.*;
 
 @Component
@@ -47,7 +49,7 @@ public class Scheduler {
         System.out.println("조회수 및 방문자 정보 초기화 .....");
         statService.statVisitorToNumericData(statVisitorRepository.count(), statNumericdataRepository.findByName("VISITOR"));
         boardViewersRepository.deleteAll();
-        redisService.setBestDict(BEST_DICT_KEY, dictService.getSafeDictBest());
+        redisService.setBestDict(BEST_DICT_KEY, dictService.getSafeBestDict());
         dictViewersRepository.deleteAll();
     }
 
