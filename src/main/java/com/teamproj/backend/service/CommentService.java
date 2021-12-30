@@ -1,16 +1,18 @@
 package com.teamproj.backend.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.CommentRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.model.Comment;
+import com.teamproj.backend.model.QComment;
+import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.board.Board;
+import com.teamproj.backend.model.board.QBoard;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -26,15 +28,17 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final CommentRepository commentRepository;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
+    private final JPAQueryFactory queryFactory;
 
     // 댓글 목록 불러오기
-    public List<CommentResponseDto> getCommentList(Long boardId, int page, int size) {
-        Board board = getSafeBoard(boardId);
-        Page<Comment> commentPage = commentRepository.findAllByBoardAndEnabledOrderByCreatedAt(board, true, PageRequest.of(page, size));
+    public List<CommentResponseDto> getCommentList(Board board) {
+        List<Comment> commentList = getSafeCommentList(board);
 
         // CommentList to CommentResponseDtoList
-        return commentListToCommentResponseDtoList(commentPage.toList());
+        return commentListToCommentResponseDtoList(commentList);
     }
+
+
 
     // 댓글 작성
     public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long boardId, CommentPostRequestDto commentPostRequestDto) {
@@ -124,6 +128,27 @@ public class CommentService {
         }
 
         return comment.get();
+    }
+
+    // CommentList
+    private List<Comment> getSafeCommentList(Board board) {
+        if(board == null){
+            throw new NullPointerException(NOT_EXIST_BOARD);
+        }
+
+        QComment qComment = QComment.comment;
+        QBoard qBoard = QBoard.board;
+        QUser qUser = QUser.user;
+
+        return queryFactory.selectFrom(qComment)
+                .leftJoin(qComment.board, qBoard)
+                .fetchJoin()
+                .leftJoin(qComment.user, qUser)
+                .fetchJoin()
+                .where(qComment.board.eq(board)
+                        .and(qComment.enabled.eq(true)))
+                .orderBy(qComment.createdAt.asc())
+                .fetch();
     }
 
     // Entity to Dto
