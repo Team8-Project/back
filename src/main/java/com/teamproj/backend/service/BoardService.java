@@ -13,6 +13,8 @@ import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
+import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
+import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -244,8 +246,7 @@ public class BoardService {
 
         if (inputHashTagListSize <= dbHashTagListSize) {
             for (int i = 0; i < inputHashTagListSize; i++) {
-                boardHashTagList.get(i).updateHashTagName(newBoardHashTagList.get(i));
-                boardHashTagRepository.save(boardHashTagList.get(i));
+                updateHashTag(i, boardHashTagList, newBoardHashTagList);
             }
 
             for (int i = inputHashTagListSize; i < dbHashTagListSize; i++) {
@@ -253,8 +254,7 @@ public class BoardService {
             }
         } else {
             for (int i = 0; i < dbHashTagListSize; i++) {
-                boardHashTagList.get(i).updateHashTagName(newBoardHashTagList.get(i));
-                boardHashTagRepository.save(boardHashTagList.get(i));
+                updateHashTag(i, boardHashTagList, newBoardHashTagList);
             }
 
             for (int i = dbHashTagListSize; i < inputHashTagListSize; i++) {
@@ -288,6 +288,11 @@ public class BoardService {
         return BoardUpdateResponseDto.builder()
                 .result("게시글 수정 완료")
                 .build();
+    }
+
+    private void updateHashTag(int i, List<BoardHashTag> boardHashTagList, List<String> newBoardHashTagList) {
+        boardHashTagList.get(i).updateHashTagName(newBoardHashTagList.get(i));
+        boardHashTagRepository.save(boardHashTagList.get(i));
     }
     //endregion
 
@@ -351,7 +356,6 @@ public class BoardService {
 
         Optional<List<Board>> boardList = boardRepository.findByTitleContaining(q);
 
-
         if (boardList.get().size() == 0) {
             throw new NullPointerException(ExceptionMessages.SEARCH_BOARD_IS_EMPTY);
         }
@@ -404,4 +408,12 @@ public class BoardService {
                 .build();
     }
     //endregion
+
+    public List<MainTodayBoardResponseDto> getTodayBoard(int i) {
+        return null;
+    }
+
+    public List<MainMemeImageResponseDto> getTodayImage(int i) {
+        return null;
+    }
 }
