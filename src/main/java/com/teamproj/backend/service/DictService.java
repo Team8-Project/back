@@ -23,7 +23,10 @@ import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
 import static com.teamproj.backend.util.RedisKey.BEST_DICT_KEY;
@@ -45,16 +48,25 @@ public class DictService {
     // 사전 목록 가져오기
     public List<DictResponseDto> getDictList(int page, int size, String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
+        User user = getSafeUserByUserDetails(userDetails);
         List<Dict> dictList = getSafeDictPage(page, size);
-        return dictListToDictResponseDtoList(dictList, userDetails);
+        return dictListToDictResponseDtoList(dictList, user);
+    }
+
+    private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return null;
+        }
+        return jwtAuthenticateProcessor.getUser(userDetails);
     }
 
     // 베스트 용어 사전 가져오기
     public List<DictBestResponseDto> getBestDict(String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
+        User user = getSafeUserByUserDetails(userDetails);
         List<Dict> dictList = getSafeBestDict(BEST_DICT_KEY);
 
-        return dictListToDictBestResponseDtoList(dictList, userDetails);
+        return dictListToDictBestResponseDtoList(dictList, user);
     }
 
     // 사전 총 개수 출력
@@ -65,6 +77,7 @@ public class DictService {
     // 사전 상세 정보 가져오기
     public DictDetailResponseDto getDictDetail(Long dictId, String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
+        User user = getSafeUserByUserDetails(userDetails);
         Dict dict = getSafeDict(dictId);
 
         // 조회수 증가
@@ -83,7 +96,7 @@ public class DictService {
                 .meaning(dict.getContent())
                 .firstWriter(dict.getFirstAuthor().getNickname())
                 .recentWriter(dict.getRecentModifier().getNickname())
-                .isLike(isDictLike(dict, userDetails))
+                .isLike(user != null && isDictLike(dict, user))
                 .likeCount(dict.getDictLikeList().size())
                 .createdAt(dict.getCreatedAt())
                 .modifiedAt(dict.getModifiedAt())
@@ -151,7 +164,7 @@ public class DictService {
             2. 좋아요 중이 아닐 시 : 좋아요
          */
         boolean isLike = false;
-        if (isDictLike(dict, userDetails)) {
+        if (isDictLikeIndependence(dict, user)) {
             DictLike dictLike = getSafeDictLike(user, dict);
             dictLikeRepository.deleteById(dictLike.getDictLikeId());
         } else {
@@ -178,10 +191,10 @@ public class DictService {
 
     public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-
+        User user = getSafeUserByUserDetails(userDetails);
         List<Dict> dictList = getSafeDictListBySearch(q, page, size);
 
-        return dictListToDictSearchResultResponseDto(dictList, userDetails);
+        return dictListToDictSearchResultResponseDto(dictList, user);
     }
 
     // region 보조 기능
@@ -193,16 +206,23 @@ public class DictService {
     }
 
     // 사전 좋아요 표시했는지 확인
-    private boolean isDictLike(Dict dict, UserDetailsImpl userDetails) {
+    private boolean isDictLike(Dict dict, User user) {
         // 1. 로그인하지 않았으면 무조건 false.
         // 2. dictLikeList 가 비어있으면 무조건 false.
         // 3. 사용자의 dictLike 목록에 해당 dict 가 포함되어있지 않으면 false.
         // 4. 포함되어있을시 true.
-        if (userDetails == null) {
-            return false;
+        for (DictLike dictLike : dict.getDictLikeList()) {
+            if (dictLike.getUser().getId().equals(user.getId())) {
+                return true;
+            }
         }
-        Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(jwtAuthenticateProcessor.getUser(userDetails), dict);
+        return false;
+    }
 
+    // 좋아요 / 좋아요 취소 프로세스용 좋아요 체크
+    // 왜 이렇게 했는가? dict.getDictLikeList()를 사용하는 순간 외부에서 시행하는 JPA Delete 명령이 작동하지 않게 때문임!
+    private boolean isDictLikeIndependence(Dict dict, User user) {
+        Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(user, dict);
         return dictLike.isPresent();
     }
 
@@ -253,7 +273,6 @@ public class DictService {
 
         return queryFactory.selectFrom(qDict)
                 .leftJoin(qDict.dictLikeList, qDictLike)
-                .fetchJoin()
                 .offset(page)
                 .limit(size)
                 .fetch();
@@ -332,7 +351,7 @@ public class DictService {
 
         Collections.shuffle(bestDictIdList);
         List<Long> nums = new ArrayList<>();
-        for(String str : bestDictIdList.subList(0, Math.min(5, bestDictIdList.size()))){
+        for (String str : bestDictIdList.subList(0, Math.min(5, bestDictIdList.size()))) {
             nums.add(Long.parseLong(str));
         }
 
@@ -349,7 +368,7 @@ public class DictService {
 
     // Entity To Dto
     // DictDtoList to DictResponseDtoList
-    private List<DictResponseDto> dictListToDictResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
+    private List<DictResponseDto> dictListToDictResponseDtoList(List<Dict> dictList, User user) {
         List<DictResponseDto> dictResponseDtoList = new ArrayList<>();
 
         for (Dict dict : dictList) {
@@ -358,7 +377,7 @@ public class DictService {
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .isLike(isDictLike(dict, userDetails))
+                    .isLike(user != null && isDictLike(dict, user))
                     .likeCount(dict.getDictLikeList().size())
                     .build());
         }
@@ -367,7 +386,7 @@ public class DictService {
     }
 
     // DictDtoList to DictSearchResultResponseDtoList
-    private List<DictSearchResultResponseDto> dictListToDictSearchResultResponseDto(List<Dict> dictList, UserDetailsImpl userDetails) {
+    private List<DictSearchResultResponseDto> dictListToDictSearchResultResponseDto(List<Dict> dictList, User user) {
         List<DictSearchResultResponseDto> dictSearchResultResponseDto = new ArrayList<>();
 
         for (Dict dict : dictList) {
@@ -376,7 +395,7 @@ public class DictService {
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .isLike(isDictLike(dict, userDetails))
+                    .isLike(user != null && isDictLike(dict, user))
                     .likeCount(dict.getDictLikeList().size())
                     .build());
         }
@@ -385,7 +404,7 @@ public class DictService {
     }
 
     // DictList to DictBestResponseDtoList
-    public List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, UserDetailsImpl userDetails) {
+    public List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, User user) {
         List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
         for (Dict dict : dictList) {
             dictBestResponseDtoList.add(DictBestResponseDto.builder()
@@ -393,7 +412,7 @@ public class DictService {
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .isLike(isDictLike(dict, userDetails))
+                    .isLike(user != null && isDictLike(dict, user))
                     .likeCount(dict.getDictLikeList().size())
                     .build());
         }
