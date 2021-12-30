@@ -3,6 +3,7 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
+import com.teamproj.backend.dto.quiz.QuizResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
 import com.teamproj.backend.model.main.CarouselImage;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class RedisService {
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
     private final RedisTemplate<String, MainMemeImageResponseDto> redisMainMemeImageResponseDtoTemplate;
     private final RedisTemplate<String, MainTodayBoardResponseDto> redisMainTodayBoardResponseDtoTemplate;
+    private final RedisTemplate<String, QuizResponseDto> redisQuizResponseDtoTemplate;
 
     public void setBestDict(String key, List<String> bestDictList) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
@@ -141,6 +143,22 @@ public class RedisService {
     public void setTodayBoardList(String key, List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList) {
         ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
         list.leftPushAll(key, mainTodayBoardResponseDtoList);
+    }
+
+    public void setRandomQuiz(String key, List<QuizResponseDto> quizResponseDtoList){
+        ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
+        list.leftPushAll(key, quizResponseDtoList);
+        redisQuizResponseDtoTemplate.expire(key, 10, TimeUnit.MINUTES);
+    }
+
+    public List<QuizResponseDto> getRandomQuiz(String key) {
+        ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
+        redisQuizResponseDtoTemplate.getExpire(key, TimeUnit.SECONDS);
+        if(list.size(key) > 0){
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
     }
 }
 
