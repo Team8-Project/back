@@ -13,27 +13,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.teamproj.backend.util.RedisKey.*;
+import static com.teamproj.backend.exception.ExceptionMessages.*;
+
 @Service
 @RequiredArgsConstructor
 public class QuizService {
     private final EntityManager entityManager;
     private final StatService statService;
+    private final RedisService redisService;
 
     // 문제 목록 불러오기
     public List<QuizResponseDto> getQuizList(int count, String category) {
-        // QueryDSL 적용 구문
-        List<Quiz> quizList = randomQuizPick(count, category);
-        // 통계 구문
-        statService.statQuizStarter(category);
-        // DtoList 로 반환하는 과정에서 문제 속의 선택지 순서도 섞임
-        return quizListToQuizResponseDtoList(quizList);
-    }
+        List<QuizResponseDto> quizResponseDtoList = getSafeQuizResponseDtoList(RANDOM_QUIZ_KEY, count, category);
 
+        // 통계 구문. 쓰레드로 동작... 하게 할 예정;;
+        statService.statQuizStarter(category);
+
+        return quizResponseDtoList;
+    }
 
     // region 보조 기능
     // Utils
     // 퀴즈 목록을 랜덤하게 count 개 받아오는 기능
-    private List<Quiz> randomQuizPick(int count, String category) {
+    private List<Quiz> randomQuizPick(String category) {
         // count 개수 만큼의 레코드를 랜덤하게 받아오는 구문
         // MySqlJpaTemplates.DEFAULT : NumberExpression.random().asc()를 MySQL 에서 사용 가능하도록 튜닝한 템플릿.
         JPAQuery<Quiz> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
@@ -45,7 +48,6 @@ public class QuizService {
                 .fetchJoin()
                 .where(qQuiz.category.eq(category))
                 .orderBy(NumberExpression.random().asc())
-                .limit(count)
                 .fetch();
     }
 
@@ -58,6 +60,27 @@ public class QuizService {
         }
 
         return result;
+    }
+
+    // Get SafeEntity
+    // QuizResponseDtoList
+    private List<QuizResponseDto> getSafeQuizResponseDtoList(String key, int count, String category) {
+        List<QuizResponseDto> quizResponseDtoList = redisService.getRandomQuiz(key);
+
+        if(quizResponseDtoList == null){
+            // QueryDSL 적용 구문
+            List<Quiz> quizList = randomQuizPick(category);
+            // DtoList 로 반환하는 과정에서 문제 속의 선택지 순서도 섞임
+            redisService.setRandomQuiz(key, quizListToQuizResponseDtoList(quizList));
+            quizResponseDtoList = redisService.getRandomQuiz(key);
+
+            if(quizResponseDtoList == null){
+                throw new NullPointerException(NOT_EXIST_CATEGORY);
+            }
+        }
+
+        Collections.shuffle(quizResponseDtoList);
+        return quizResponseDtoList.subList(0, Math.min(count, quizResponseDtoList.size()));
     }
 
     // Entity to Dto
