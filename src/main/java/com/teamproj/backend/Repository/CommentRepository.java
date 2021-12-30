@@ -12,5 +12,5 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 //    List<Comment> findAllByBoardOrderByCreatedAtDesc(Board board);
 
-    Page<Comment> findAllByBoardAndEnabledOrderByCreatedAt(Board board, boolean b, Pageable pageable);
+    List<Comment> findAllByBoardAndEnabledOrderByCreatedAt(Board board, boolean b);
 }

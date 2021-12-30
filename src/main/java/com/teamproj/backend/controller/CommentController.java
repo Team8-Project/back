@@ -17,17 +17,6 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
 
-    @GetMapping("/api/board/{boardId}/comment")
-    public ResponseDto<List<CommentResponseDto>> getComments(@PathVariable Long boardId,
-                                                             @RequestParam int page,
-                                                             @RequestParam int size) {
-        return ResponseDto.<List<CommentResponseDto>>builder()
-                .status(HttpStatus.OK.toString())
-                .message("댓글 조회 요청")
-                .data(commentService.getCommentList(boardId, page, size))
-                .build();
-    }
-
     @PostMapping("/api/board/{boardId}/comment")
     public ResponseDto<CommentPostResponseDto> postComment(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                            @PathVariable Long boardId,

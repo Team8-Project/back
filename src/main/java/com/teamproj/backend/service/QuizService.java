@@ -3,9 +3,7 @@ package com.teamproj.backend.service;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.teamproj.backend.dto.quiz.QuizResponseDto;
-import com.teamproj.backend.model.quiz.QQuiz;
-import com.teamproj.backend.model.quiz.Quiz;
-import com.teamproj.backend.model.quiz.QuizBank;
+import com.teamproj.backend.model.quiz.*;
 import com.teamproj.backend.util.MySqlJpaTemplates;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,8 +38,11 @@ public class QuizService {
         // MySqlJpaTemplates.DEFAULT : NumberExpression.random().asc()를 MySQL 에서 사용 가능하도록 튜닝한 템플릿.
         JPAQuery<Quiz> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
         QQuiz qQuiz = new QQuiz("quiz");
+        QQuizBank qQuizBank = QQuizBank.quizBank;
 
         return query.from(qQuiz)
+                .leftJoin(qQuiz.choiceList, qQuizBank)
+                .fetchJoin()
                 .where(qQuiz.category.eq(category))
                 .orderBy(NumberExpression.random().asc())
                 .limit(count)
