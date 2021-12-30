@@ -37,11 +37,11 @@ public class DictController {
     }
 
     @GetMapping("/api/count/dict")
-    public ResponseDto<Long> getDictTotalCount(){
+    public ResponseDto<Long> getDictTotalCount(@RequestParam(required = false) String q) {
         return ResponseDto.<Long>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 총 개수 요청")
-                .data(dictService.getDictTotalCount())
+                .data(dictService.getDictTotalCount(q))
                 .build();
     }
 
@@ -127,7 +127,7 @@ public class DictController {
     }
 
     @GetMapping("/api/bestDict/dict")
-    public ResponseDto<List<DictBestResponseDto>> getBestDict(@RequestHeader(value = "Authorization", required = false) String token){
+    public ResponseDto<List<DictBestResponseDto>> getBestDict(@RequestHeader(value = "Authorization", required = false) String token) {
         if (token == null) {
             token = "";
         }

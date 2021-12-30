@@ -31,4 +31,6 @@ public interface DictRepository extends JpaRepository<Dict, Long> {
     Optional<List<Dict>> findAllByDictIdIn(List<Long> idList);
 
     Page<Dict> findAllByOrderByViewsDesc(Pageable pageable);
+
+    Long countByDictNameLikeOrContentLike(String nameQuery, String contentQuery);
 }

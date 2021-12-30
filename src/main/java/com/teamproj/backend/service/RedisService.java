@@ -1,6 +1,7 @@
 package com.teamproj.backend.service;
 
-import com.teamproj.backend.dto.dict.DictBestResponseDto;
+import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
+import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
 import com.teamproj.backend.model.main.CarouselImage;
@@ -31,25 +32,15 @@ public class RedisService {
      */
     private final RedisTemplate<String, String> redisStringTemplate;
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
-    private final RedisTemplate<String, Long> redisLongTemplate;
+    private final RedisTemplate<String, MainMemeImageResponseDto> redisMainMemeImageResponseDtoTemplate;
+    private final RedisTemplate<String, MainTodayBoardResponseDto> redisMainTodayBoardResponseDtoTemplate;
 
-    public void setBestDict(String key, List<String> bestDictList){
+    public void setBestDict(String key, List<String> bestDictList) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, bestDictList);
     }
 
-//    public List<Long> getBestDict(String key){
-//        ListOperations<String, Long> list = redisLongTemplate.opsForList();
-//        System.out.println(list.size(key));
-//
-//        if(list.size(key) >= 5){
-//            return list.range(key, 0, list.size(key) - 1);
-//        }
-//
-//        return null;
-//    }
-
-    public void setRecommendSearch(String key, List<String> recommendSearch){
+    public void setRecommendSearch(String key, List<String> recommendSearch) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, recommendSearch);
         redisStringTemplate.expire(key, 1, TimeUnit.HOURS);
@@ -63,7 +54,7 @@ public class RedisService {
     public List<String> getStringList(String key) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
 
-        if(list.size(key)>0){
+        if (list.size(key) > 0) {
             return list.range(key, 0, list.size(key) - 1);
         }
 
@@ -75,11 +66,12 @@ public class RedisService {
         list.leftPushAll(key, todayList);
     }
 
+
     public List<MainTodayMemeResponseDto> getTodayList(String key) {
         ListOperations<String, MainTodayMemeResponseDto> list = redisMainTodayMemeResponseDtoTemplate.opsForList();
 
-        if(list.size(key)>0){
-            list.range(key, 0, list.size(key) - 1);
+        if (list.size(key) > 0) {
+            return list.range(key, 0, list.size(key) - 1);
         }
 
         return null;
@@ -93,7 +85,7 @@ public class RedisService {
     public List<String> getRecommendHashTag(String key) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
 
-        if(list.size(key)>0){
+        if (list.size(key) > 0) {
             return list.range(key, 0, list.size(key) - 1);
         }
         return null;
@@ -119,6 +111,36 @@ public class RedisService {
         }
 
         return result;
+    }
+
+    public List<MainMemeImageResponseDto> getTodayMemeImageList(String key) {
+        ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
+
+        if (list.size(key) > 0) {
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
+    }
+
+    public void setTodayMemeImageList(String key, List<MainMemeImageResponseDto> mainMemeImageResponseDtoList) {
+        ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
+        list.leftPushAll(key, mainMemeImageResponseDtoList);
+    }
+
+    public List<MainTodayBoardResponseDto> getTodayBoardList(String key) {
+        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
+
+        if (list.size(key) > 0) {
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
+    }
+
+    public void setTodayBoardList(String key, List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList) {
+        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
+        list.leftPushAll(key, mainTodayBoardResponseDtoList);
     }
 }
 

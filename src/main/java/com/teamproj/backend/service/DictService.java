@@ -70,8 +70,12 @@ public class DictService {
     }
 
     // 사전 총 개수 출력
-    public Long getDictTotalCount() {
-        return dictRepository.count();
+    public Long getDictTotalCount(String q) {
+        if (q == null) {
+            return dictRepository.count();
+        }
+        String likeQuery = "%" + q + "%";
+        return dictRepository.countByDictNameLikeOrContentLike(likeQuery, likeQuery);
     }
 
     // 사전 상세 정보 가져오기
