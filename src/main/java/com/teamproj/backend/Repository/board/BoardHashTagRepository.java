@@ -10,7 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface BoardHashTagRepository extends JpaRepository<BoardHashTag, String> {
-    List<BoardHashTag> findByBoard(Board board);
+
+    @Transactional
+    @Modifying
+    @Query("delete from BoardHashTag h where h.board = :ids")
+    void deleteAllByIdInQuery(Board ids);
+
 
     @Modifying
     @Transactional
