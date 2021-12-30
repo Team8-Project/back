@@ -8,8 +8,5 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface DictViewersRepository extends JpaRepository<DictViewers, Long> {
-
-    Optional<DictViewers> findByViewerIpAndDict(String clientIp, Dict dict);
-
-
+    boolean existsByViewerIpAndDict(String clientIp, Dict dict);
 }

@@ -53,13 +53,6 @@ public class DictService {
         return dictListToDictResponseDtoList(dictList, user);
     }
 
-    private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
-        if (userDetails == null) {
-            return null;
-        }
-        return jwtAuthenticateProcessor.getUser(userDetails);
-    }
-
     // 베스트 용어 사전 가져오기
     public List<DictBestResponseDto> getBestDict(String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
@@ -168,7 +161,7 @@ public class DictService {
             2. 좋아요 중이 아닐 시 : 좋아요
          */
         boolean isLike = false;
-        if (isDictLikeIndependence(dict, user)) {
+        if (dictLikeRepository.existsByUserAndDict(user, dict)) {
             DictLike dictLike = getSafeDictLike(user, dict);
             dictLikeRepository.deleteById(dictLike.getDictLikeId());
         } else {
@@ -205,8 +198,7 @@ public class DictService {
     // Utils
     // 사전 상세보기 열람했는지 확인
     private boolean isView(Dict dict) {
-        Optional<DictViewers> dictViewers = dictViewersRepository.findByViewerIpAndDict(StatisticsUtils.getClientIp(), dict);
-        return dictViewers.isPresent();
+        return dictViewersRepository.existsByViewerIpAndDict(StatisticsUtils.getClientIp(), dict);
     }
 
     // 사전 좋아요 표시했는지 확인
@@ -221,13 +213,6 @@ public class DictService {
             }
         }
         return false;
-    }
-
-    // 좋아요 / 좋아요 취소 프로세스용 좋아요 체크
-    // 왜 이렇게 했는가? dict.getDictLikeList()를 사용하는 순간 외부에서 시행하는 JPA Delete 명령이 작동하지 않게 때문임!
-    private boolean isDictLikeIndependence(Dict dict, User user) {
-        Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(user, dict);
-        return dictLike.isPresent();
     }
 
     // 사전 추천 검색어 출력
@@ -264,6 +249,14 @@ public class DictService {
     }
 
     // Get SafeEntity
+    // User By UserDetails
+    private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return null;
+        }
+        return jwtAuthenticateProcessor.getUser(userDetails);
+    }
+
     // Dict
     public Dict getSafeDict(Long dictId) {
         Optional<Dict> dict = dictRepository.findById(dictId);
