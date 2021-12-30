@@ -1,5 +1,6 @@
 package com.teamproj.backend.Repository.dict;
 
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.Dict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,8 @@ public interface DictRepository extends JpaRepository<Dict, Long> {
     Optional<Page<Dict>> findAllByDictNameLikeOrContentLike(String nameQuery, String contentQuery, Pageable pageable);
 
     Dict findByDictName(String title);
+
+    List<Dict> findByFirstAuthor(User user);
 
     @Modifying
     @Transactional

@@ -7,19 +7,15 @@ import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyRequestDto;
 import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyResponseDto;
-import com.teamproj.backend.dto.user.userInfo.UserProfileImageModifyResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
-import com.teamproj.backend.util.S3Uploader;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
@@ -30,7 +26,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
-    private final S3Uploader s3Uploader;
 
     // 회원가입 기능
     public SignUpResponseDto signUp(SignUpRequestDto signUpRequestDto) {
@@ -85,20 +80,6 @@ public class UserService {
                 .build();
     }
 
-    @Transactional
-    public UserProfileImageModifyResponseDto profileImageModify(UserDetailsImpl userDetails,
-                                                                MultipartFile file) throws IOException {
-        ValidChecker.loginCheck(userDetails);
-
-        User user = getSafeUser(userDetails.getUsername());
-
-        String profileImageUrl = s3Uploader.upload(file, "profileImages");
-        user.setProfileImage(profileImageUrl);
-
-        return UserProfileImageModifyResponseDto.builder()
-                .profileImageUrl(profileImageUrl)
-                .build();
-    }
 
     // region 보조 기능
     // Utils
@@ -143,15 +124,4 @@ public class UserService {
             throw new IllegalArgumentException(ILLEGAL_MATCHING_PASSWORD_PASSWORD_CHECK);
         }
     }
-
-    // get SafeEntity
-    // User
-    private User getSafeUser(String username) {
-        Optional<User> user = userRepository.findByUsername(username);
-        if (!user.isPresent()) {
-            throw new NullPointerException(NOT_EXIST_USER);
-        }
-        return user.get();
-    }
-    // endregion
 }
