@@ -1,6 +1,6 @@
 package com.teamproj.backend.model.board;
 
-import com.teamproj.backend.dto.board.BoardUpdateRequestDto;
+import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
 import lombok.AllArgsConstructor;
@@ -53,9 +53,13 @@ public class Board extends Timestamped {
     @OneToMany(mappedBy = "board")
     private final List<BoardLike> Likes = new ArrayList<>();
 
-    public void update(BoardUpdateRequestDto boardUpdateRequestDto) {
+    public void update(BoardUpdateRequestDto boardUpdateRequestDto, String imageUrl) {
         this.title = boardUpdateRequestDto.getTitle();
         this.content = boardUpdateRequestDto.getContent();
+
+        if (!imageUrl.isEmpty()) {
+            this.thumbNail = imageUrl;
+        }
     }
 
     public void setEnabled(boolean enabled){

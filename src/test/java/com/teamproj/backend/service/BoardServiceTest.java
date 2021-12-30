@@ -1,12 +1,20 @@
 package com.teamproj.backend.service;
 
 
-
 import com.teamproj.backend.Repository.CommentRepository;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.board.*;
+import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
+import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
+import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
+import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
+import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
+import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
+import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
+import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
+import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.User;
@@ -27,8 +35,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -354,7 +360,7 @@ class BoardServiceTest {
 
         @Test
         @DisplayName("성공")
-        void updateBoard_success() {
+        void updateBoard_success() throws IOException {
             // given
             BoardCategory boardCategory = new BoardCategory("카테고리");
             Board board = Board.builder()
@@ -374,8 +380,14 @@ class BoardServiceTest {
                     .content(board.getContent())
                     .build();
 
+            MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                    "image1", "image1", "application/doc", "image".getBytes()
+            );
+
             // when
-            BoardUpdateResponseDto result = boardService.updateBoard(board.getBoardId(), userDetails, boardUpdateRequestDto);
+            BoardUpdateResponseDto result = boardService.updateBoard(
+                    board.getBoardId(), userDetails, boardUpdateRequestDto, mockMultipartFile
+            );
 
             // then
             assertEquals("게시글 수정 완료", result.getResult());
@@ -395,10 +407,13 @@ class BoardServiceTest {
                         .content("수정된 내용")
                         .build();
 
-                // when
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "image1", "image1", "application/doc", "image".getBytes()
+                );
 
+                // when
                 Exception exception = assertThrows(NullPointerException.class, () -> {
-                    boardService.updateBoard(0L, userDetails, boardUpdateRequestDto);
+                    boardService.updateBoard(0L, userDetails, boardUpdateRequestDto, mockMultipartFile);
                 });
 
                 // then
@@ -433,11 +448,16 @@ class BoardServiceTest {
                         .content(board.getContent())
                         .build();
 
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "image1", "image1", "application/doc", "image".getBytes()
+                );
 
 
                 // when
                 Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                    boardService.updateBoard(board.getBoardId(), userDetails, boardUpdateRequestDto);
+                    boardService.updateBoard(
+                            board.getBoardId(), userDetails, boardUpdateRequestDto, mockMultipartFile
+                    );
                 });
 
                 // then

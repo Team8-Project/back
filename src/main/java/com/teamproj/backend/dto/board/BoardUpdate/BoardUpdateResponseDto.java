@@ -1,5 +1,4 @@
-package com.teamproj.backend.dto.board;
-
+package com.teamproj.backend.dto.board.BoardUpdate;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BoardDeleteResponseDto {
+public class BoardUpdateResponseDto {
     private String result;
 }

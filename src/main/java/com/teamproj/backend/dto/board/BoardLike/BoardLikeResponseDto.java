@@ -1,16 +1,15 @@
-package com.teamproj.backend.dto.board;
+package com.teamproj.backend.dto.board.BoardLike;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BoardHashTagResponseDto {
-    private List<String> hashTags;
+public class BoardLikeResponseDto {
+    private Boolean result;
 }

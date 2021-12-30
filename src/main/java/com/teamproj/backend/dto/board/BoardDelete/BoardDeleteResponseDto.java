@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.board;
+package com.teamproj.backend.dto.board.BoardDelete;
 
 
 import lombok.AllArgsConstructor;
@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BoardLikeResponseDto {
-    private Boolean result;
+public class BoardDeleteResponseDto {
+    private String result;
 }

@@ -3,7 +3,16 @@ package com.teamproj.backend.service;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.teamproj.backend.Repository.board.*;
-import com.teamproj.backend.dto.board.*;
+import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
+import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
+import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
+import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
+import com.teamproj.backend.dto.board.BoardResponseDto;
+import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
+import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
+import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
+import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
+import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -14,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,8 +46,7 @@ public class BoardService {
     private final EntityManager entityManager;
     private final S3Uploader s3Uploader;
 
-    private final String imageDirName = "boardImages";
-
+    private final String S3dirName = "boardImages";
 
     //region 게시글 전체조회
     public List<BoardResponseDto> getBoard(String categoryName) {
@@ -58,11 +67,13 @@ public class BoardService {
                     .thumbNail(board.getThumbNail())
                     .title(board.getTitle())
                     .username(board.getUser().getUsername())
+                    .profileImageUrl(board.getUser().getProfileImage())
                     .writer(board.getUser().getNickname())
                     .content(board.getContent())
                     .createdAt(board.getCreatedAt())
                     .views(board.getViews())
                     .likeCnt(board.getLikes().size())
+                    .commentCnt(commentService.getCommentList(board).size())
                     .hashTags(board.getBoardHashTagList().stream().map(
                             e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                     )
@@ -101,7 +112,7 @@ public class BoardService {
 
         String imageUrl = "";
         if (multipartFile != null) {
-            imageUrl = s3Uploader.upload(multipartFile, imageDirName);
+            imageUrl = s3Uploader.upload(multipartFile, S3dirName);
         }
 
 
@@ -189,6 +200,8 @@ public class BoardService {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .writer(board.getUser().getNickname())
+                .profileImageUrl(board.getUser().getProfileImage())
+                .thumbNail(board.getThumbNail())
                 .createdAt(board.getCreatedAt())
                 .views(board.getViews())
                 .likeCnt(boardLikeList.size())
@@ -205,7 +218,10 @@ public class BoardService {
 
     //region 게시글 업데이트(수정)
     public BoardUpdateResponseDto updateBoard(Long boardId, UserDetailsImpl userDetails,
-                                              BoardUpdateRequestDto boardUpdateRequestDto) {
+                                              BoardUpdateRequestDto boardUpdateRequestDto,
+                                              MultipartFile multipartFile) throws IOException {
+
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(
                         () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
@@ -214,10 +230,60 @@ public class BoardService {
             throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
         }
 
-        board.update(boardUpdateRequestDto);
+        if (boardUpdateRequestDto.getHashTags().size() > 5) {
+            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
+        }
+
+        
+        // To Do : 현기증 날 것 같은 코드라서 리팩토링 필요
+        List<String> newBoardHashTagList = boardUpdateRequestDto.getHashTags();
+        List<BoardHashTag> boardHashTagList = boardHashTagRepository.findByBoard(board);
+
+        int inputHashTagListSize = newBoardHashTagList.size();
+        int dbHashTagListSize = boardHashTagList.size();
+
+        if (inputHashTagListSize <= dbHashTagListSize) {
+            for (int i = 0; i < inputHashTagListSize; i++) {
+                boardHashTagList.get(i).updateHashTagName(newBoardHashTagList.get(i));
+                boardHashTagRepository.save(boardHashTagList.get(i));
+            }
+
+            for (int i = inputHashTagListSize; i < dbHashTagListSize; i++) {
+                boardHashTagRepository.delete(boardHashTagList.get(i));
+            }
+        } else {
+            for (int i = 0; i < dbHashTagListSize; i++) {
+                boardHashTagList.get(i).updateHashTagName(newBoardHashTagList.get(i));
+                boardHashTagRepository.save(boardHashTagList.get(i));
+            }
+
+            for (int i = dbHashTagListSize; i < inputHashTagListSize; i++) {
+                BoardHashTag boardHashTag = BoardHashTag.builder()
+                                .hashTagName(newBoardHashTagList.get(i))
+                                .board(board)
+                                .build();
+
+                boardHashTagRepository.save(boardHashTag);
+            }
+        }
+        
+
+        String imageUrl = "";
+        if (!(multipartFile.getSize() == 0)) {
+            imageUrl = s3Uploader.upload(multipartFile, S3dirName);
+                String oldImageUrl = URLDecoder.decode(
+                        board.getThumbNail().replace(
+                                "https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/", ""
+                        ),
+                        "UTF-8"
+                );
+
+            s3Uploader.deleteFromS3(oldImageUrl);
+        }
+
+        board.update(boardUpdateRequestDto, imageUrl);
 
         boardRepository.save(board);
-
 
         return BoardUpdateResponseDto.builder()
                 .result("게시글 수정 완료")

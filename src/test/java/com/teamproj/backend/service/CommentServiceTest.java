@@ -2,7 +2,7 @@ package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
-import com.teamproj.backend.dto.board.BoardUploadRequestDto;
+import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
 import com.teamproj.backend.dto.comment.CommentPostRequestDto;
 import com.teamproj.backend.dto.comment.CommentResponseDto;
 import com.teamproj.backend.model.User;

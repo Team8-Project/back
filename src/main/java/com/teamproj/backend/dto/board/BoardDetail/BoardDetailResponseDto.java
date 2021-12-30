@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.board;
+package com.teamproj.backend.dto.board.BoardDetail;
 
 import com.teamproj.backend.dto.comment.CommentResponseDto;
 import lombok.AllArgsConstructor;
@@ -16,6 +16,8 @@ public class BoardDetailResponseDto {
     private String title;
     private String content;
     private String writer;
+    private String profileImageUrl;
+    private String thumbNail;
     private LocalDateTime createdAt;
     private int views;
     private int likeCnt;
