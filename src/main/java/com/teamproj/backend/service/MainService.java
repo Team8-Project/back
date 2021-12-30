@@ -1,7 +1,9 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.CarouselImageRepository;
+import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainPageResponseDto;
+import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -13,14 +15,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.teamproj.backend.util.RedisKey.CAROUSEL_URL_KEY;
-import static com.teamproj.backend.util.RedisKey.TODAY_LIST_KEY;
+import static com.teamproj.backend.util.RedisKey.*;
 
 @Service
 @RequiredArgsConstructor
 public class MainService {
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
+    private final BoardService boardService;
     private final DictService dictService;
     private final RedisService redisService;
 
@@ -32,7 +34,9 @@ public class MainService {
         User user = userDetails == null ? null : jwtAuthenticateProcessor.getUser(userDetails);
 
         List<String> carouselImageUrlList = getSafeCarouselImageUrlList(CAROUSEL_URL_KEY);
-        List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = getSafeMainTodayMemeResponseDtoList(redisService.getTodayList(TODAY_LIST_KEY));
+        List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = getSafeMainTodayMemeResponseDtoList(TODAY_LIST_KEY);
+        List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = getSafeMainMemeImageResponseDtoList(TODAY_MEME_IMAGE_LIST_KEY);
+        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = getSafeMainTodayBoardResponseDtoList(TODAY_BOARD_LIST_KEY);
 
         return MainPageResponseDto.builder()
                 .username(user == null ? null : user.getUsername())
@@ -43,6 +47,38 @@ public class MainService {
     }
 
     // get SafeEntity
+    // MainMemeImageResponseDtoList
+    public List<MainMemeImageResponseDto> getSafeMainMemeImageResponseDtoList(String key){
+        List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = redisService.getTodayMemeImageList(key);
+
+        if (mainMemeImageResponseDtoList == null) {
+            redisService.setTodayMemeImageList(key, boardService.getTodayImage(5));
+            mainMemeImageResponseDtoList = redisService.getTodayMemeImageList(key); // get List
+
+            if (mainMemeImageResponseDtoList == null) {
+                mainMemeImageResponseDtoList = null; // null
+            }
+        }
+
+        return mainMemeImageResponseDtoList;
+    }
+
+    // MainTodayBoardResponseDtoList
+    private List<MainTodayBoardResponseDto> getSafeMainTodayBoardResponseDtoList(String key) {
+        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
+
+        if (mainTodayBoardResponseDtoList == null) {
+            redisService.setTodayBoardList(key, boardService.getTodayBoard(5));
+            mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
+
+            if (mainTodayBoardResponseDtoList == null) {
+                mainTodayBoardResponseDtoList = null;
+            }
+        }
+
+        return mainTodayBoardResponseDtoList;
+    }
+
     // CarouselImageUrlList
     private List<String> getSafeCarouselImageUrlList(String key) {
         List<String> carouselImageUrlList = redisService.getStringList(key);
@@ -60,13 +96,15 @@ public class MainService {
     }
 
     // MainTodayMemeResponseDtoList
-    private List<MainTodayMemeResponseDto> getSafeMainTodayMemeResponseDtoList(List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList) {
+    private List<MainTodayMemeResponseDto> getSafeMainTodayMemeResponseDtoList(String key) {
+        List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = redisService.getTodayList(key);
+
         if (mainTodayMemeResponseDtoList == null) {
-            redisService.setTodayList(TODAY_LIST_KEY, dictService.getTodayMeme(20));
-            mainTodayMemeResponseDtoList = redisService.getTodayList(TODAY_LIST_KEY);
+            redisService.setTodayList(key, dictService.getTodayMeme(20));
+            mainTodayMemeResponseDtoList = redisService.getTodayList(key);
 
             if (mainTodayMemeResponseDtoList == null) {
-                return new ArrayList<>();
+                mainTodayMemeResponseDtoList = dictService.getTodayMeme(20);
             }
         }
         // 섞은 다음 7개만 뽑아내기
