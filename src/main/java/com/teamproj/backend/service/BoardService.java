@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -219,10 +220,10 @@ public class BoardService {
     //endregion
 
     //region 게시글 업데이트(수정)
+    @Transactional
     public BoardUpdateResponseDto updateBoard(Long boardId, UserDetailsImpl userDetails,
                                               BoardUpdateRequestDto boardUpdateRequestDto,
                                               MultipartFile multipartFile) throws IOException {
-
 
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(
@@ -236,37 +237,21 @@ public class BoardService {
             throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
         }
 
-        
-        // To Do : 현기증 날 것 같은 코드라서 리팩토링 필요
-        List<String> newBoardHashTagList = boardUpdateRequestDto.getHashTags();
-        List<BoardHashTag> boardHashTagList = boardHashTagRepository.findByBoard(board);
+        boardHashTagRepository.deleteAllByIdInQuery(board);
 
-        int inputHashTagListSize = newBoardHashTagList.size();
-        int dbHashTagListSize = boardHashTagList.size();
+        List<String> inputHashTagStrList = boardUpdateRequestDto.getHashTags();
+        List<BoardHashTag> boardHashTagList = new ArrayList<>();
 
-        if (inputHashTagListSize <= dbHashTagListSize) {
-            for (int i = 0; i < inputHashTagListSize; i++) {
-                updateHashTag(i, boardHashTagList, newBoardHashTagList);
-            }
-
-            for (int i = inputHashTagListSize; i < dbHashTagListSize; i++) {
-                boardHashTagRepository.delete(boardHashTagList.get(i));
-            }
-        } else {
-            for (int i = 0; i < dbHashTagListSize; i++) {
-                updateHashTag(i, boardHashTagList, newBoardHashTagList);
-            }
-
-            for (int i = dbHashTagListSize; i < inputHashTagListSize; i++) {
-                BoardHashTag boardHashTag = BoardHashTag.builder()
-                                .hashTagName(newBoardHashTagList.get(i))
-                                .board(board)
-                                .build();
-
-                boardHashTagRepository.save(boardHashTag);
-            }
+        for (String tempStr : inputHashTagStrList) {
+            BoardHashTag boardHashTag = BoardHashTag.builder()
+                    .hashTagName(tempStr)
+                    .board(board)
+                    .build();
+            boardHashTagList.add(boardHashTag);
         }
-        
+
+        boardHashTagRepository.saveAll(boardHashTagList);
+
 
         String imageUrl = "";
         if (!(multipartFile.getSize() == 0)) {
