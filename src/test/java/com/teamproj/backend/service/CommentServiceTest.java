@@ -6,6 +6,7 @@ import com.teamproj.backend.dto.board.BoardUploadRequestDto;
 import com.teamproj.backend.dto.comment.CommentPostRequestDto;
 import com.teamproj.backend.dto.comment.CommentResponseDto;
 import com.teamproj.backend.model.User;
+import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.security.UserDetailsImpl;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ class CommentServiceTest {
     User user2;
 
     Long boardId;
+    Board board;
 
     String category;
 
@@ -80,7 +82,8 @@ class CommentServiceTest {
         boardService.uploadBoard(userDetails, boardUploadRequestDto, category, null);
 
         // 게시글 조회
-        boardId = boardRepository.findByTitle(title).getBoardId();
+        board = boardRepository.findByTitle(title);
+        boardId = board.getBoardId();
     }
 
     @Nested
@@ -97,7 +100,7 @@ class CommentServiceTest {
             commentService.postComment(userDetails, boardId, commentPostRequestDto);
 
             // when
-            CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
+            CommentResponseDto commentResponseDto = commentService.getCommentList(board).get(0);
 
             // then
             assertEquals(user.getUsername(), commentResponseDto.getCommentWriterId());
@@ -112,7 +115,7 @@ class CommentServiceTest {
 
             // when
             Exception exception = assertThrows(NullPointerException.class,
-                    () -> commentService.getCommentList(0L, 0, 1000)
+                    () -> commentService.getCommentList(null)
             );
 
             // then
@@ -136,7 +139,7 @@ class CommentServiceTest {
             commentService.postComment(userDetails, boardId, commentPostRequestDto);
 
             // then
-            CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
+            CommentResponseDto commentResponseDto = commentService.getCommentList(board).get(0);
             assertEquals(user.getUsername(), commentResponseDto.getCommentWriterId());
             assertEquals(user.getNickname(), commentResponseDto.getCommentWriter());
             assertEquals(test, commentResponseDto.getCommentContent());
@@ -195,14 +198,14 @@ class CommentServiceTest {
                     .content(test)
                     .build();
             commentService.postComment(userDetails, boardId, commentPostRequestDto);
-            CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
+            CommentResponseDto commentResponseDto = commentService.getCommentList(board).get(0);
             Long commentId = commentResponseDto.getCommentId();
 
             // when
             commentService.deleteComment(userDetails, commentId);
 
             // then
-            int commentSize = commentService.getCommentList(boardId, 0, 5).size();
+            int commentSize = commentService.getCommentList(board).size();
             assertEquals(0, commentSize);
         }
 
@@ -232,7 +235,7 @@ class CommentServiceTest {
                         .content(test)
                         .build();
                 commentService.postComment(userDetails, boardId, commentPostRequestDto);
-                CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
+                CommentResponseDto commentResponseDto = commentService.getCommentList(board).get(0);
                 Long commentId = commentResponseDto.getCommentId();
 
                 // when
@@ -253,7 +256,7 @@ class CommentServiceTest {
                         .content(test)
                         .build();
                 commentService.postComment(userDetails, boardId, commentPostRequestDto);
-                CommentResponseDto commentResponseDto = commentService.getCommentList(boardId, 0, 1000).get(0);
+                CommentResponseDto commentResponseDto = commentService.getCommentList(board).get(0);
                 Long commentId = commentResponseDto.getCommentId();
 
                 // when

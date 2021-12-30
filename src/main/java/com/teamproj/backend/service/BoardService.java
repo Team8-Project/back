@@ -193,7 +193,7 @@ public class BoardService {
                 .views(board.getViews())
                 .likeCnt(boardLikeList.size())
                 .isLike(isLike)
-                .commentList(commentService.getCommentList(board.getBoardId(), 0, 10))
+                .commentList(commentService.getCommentList(board))
                 .build();
     }
 
