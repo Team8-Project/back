@@ -1,5 +1,6 @@
 package com.teamproj.backend.Repository.board;
 
+import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardHashTag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface BoardHashTagRepository extends JpaRepository<BoardHashTag, String> {
+    List<BoardHashTag> findByBoard(Board board);
 
     @Modifying
     @Transactional

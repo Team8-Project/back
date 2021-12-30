@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.board;
+package com.teamproj.backend.dto.board.BoardSearch;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

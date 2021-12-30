@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.board;
+package com.teamproj.backend.dto.board.BoardUpload;
 
 
 import lombok.AllArgsConstructor;
