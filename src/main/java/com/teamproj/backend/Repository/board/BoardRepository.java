@@ -3,6 +3,9 @@ package com.teamproj.backend.Repository.board;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +16,9 @@ import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
     Optional<List<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled);
+
     Optional<List<Board>> findByTitleContaining(String keyword);
+
     List<Board> findByUser(User user);
 
     @Modifying
@@ -22,4 +27,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     int updateView(Long id);
 
     Board findByTitle(String title);
+
+    List<Board> findAllByBoardIdInAndBoardCategory(List<Long> rankIdx, BoardCategory boardCategory);
+
+    Page<Board> findAllByBoardCategoryOrderByViews(BoardCategory boardCategory, Pageable pageable);
 }

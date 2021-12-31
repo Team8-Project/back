@@ -18,19 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class RedisService {
-    /*
-        1. 메인페이지
-            - 명예의 전당
-            - 인기 게시글
-        2. 게시글 검색
-            - 인기 검색어
-        4. 게시글 작성
-            - 추천 해시태그
-        5. (미정) 퀴즈
-            - 퀴즈 목록 고정하기로 결정할 시 고정
-        6. 이미지 관련
-            - (우선순위 낮음) 게시글 작성 시 본문에 포함되지 않은 이미지들 정기적으로 삭제
-     */
+    private final RedisTemplate<String, Object> redisTemplate;
     private final RedisTemplate<String, String> redisStringTemplate;
     private final RedisTemplate<String, MainTodayMemeResponseDto> redisMainTodayMemeResponseDtoTemplate;
     private final RedisTemplate<String, MainMemeImageResponseDto> redisMainMemeImageResponseDtoTemplate;
@@ -38,17 +26,20 @@ public class RedisService {
     private final RedisTemplate<String, QuizResponseDto> redisQuizResponseDtoTemplate;
 
     public void setBestDict(String key, List<String> bestDictList) {
+        redisTemplate.delete(key);
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, bestDictList);
     }
 
     public void setRecommendSearch(String key, List<String> recommendSearch) {
+        redisTemplate.delete(key);
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, recommendSearch);
         redisStringTemplate.expire(key, 1, TimeUnit.HOURS);
     }
 
     public void setCarouselImageUrl(String key, List<CarouselImage> carouselImageList) {
+        redisTemplate.delete(key);
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, carouselImageListToStringList(carouselImageList));
     }
@@ -64,6 +55,7 @@ public class RedisService {
     }
 
     public void setTodayList(String key, List<MainTodayMemeResponseDto> todayList) {
+        redisTemplate.delete(key);
         ListOperations<String, MainTodayMemeResponseDto> list = redisMainTodayMemeResponseDtoTemplate.opsForList();
         list.leftPushAll(key, todayList);
     }
@@ -80,6 +72,7 @@ public class RedisService {
     }
 
     public void setRecommendHashTag(String key, List<BoardHashTag> boardHashTagList) {
+        redisTemplate.delete(key);
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, hashTagListToStringList(boardHashTagList));
     }
@@ -90,6 +83,55 @@ public class RedisService {
         if (list.size(key) > 0) {
             return list.range(key, 0, list.size(key) - 1);
         }
+        return null;
+    }
+
+    public List<MainMemeImageResponseDto> getTodayMemeImageList(String key) {
+        ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
+
+        if (list.size(key) > 0) {
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
+    }
+
+    public void setTodayMemeImageList(String key, List<MainMemeImageResponseDto> mainMemeImageResponseDtoList) {
+        redisTemplate.delete(key);
+        ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
+        list.leftPushAll(key, mainMemeImageResponseDtoList);
+    }
+
+    public List<MainTodayBoardResponseDto> getTodayBoardList(String key) {
+        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
+
+        if (list.size(key) > 0) {
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
+    }
+
+    public void setTodayBoardList(String key, List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList) {
+        redisTemplate.delete(key);
+        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
+        list.leftPushAll(key, mainTodayBoardResponseDtoList);
+    }
+
+    public void setRandomQuiz(String key, List<QuizResponseDto> quizResponseDtoList){
+        redisTemplate.delete(key);
+        ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
+        list.leftPushAll(key, quizResponseDtoList);
+        redisQuizResponseDtoTemplate.expire(key, 10, TimeUnit.MINUTES);
+    }
+
+    public List<QuizResponseDto> getRandomQuiz(String key) {
+        ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
+        redisQuizResponseDtoTemplate.getExpire(key, TimeUnit.SECONDS);
+        if(list.size(key) > 0){
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
         return null;
     }
 
@@ -113,52 +155,6 @@ public class RedisService {
         }
 
         return result;
-    }
-
-    public List<MainMemeImageResponseDto> getTodayMemeImageList(String key) {
-        ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
-
-        if (list.size(key) > 0) {
-            return list.range(key, 0, list.size(key) - 1);
-        }
-
-        return null;
-    }
-
-    public void setTodayMemeImageList(String key, List<MainMemeImageResponseDto> mainMemeImageResponseDtoList) {
-        ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
-        list.leftPushAll(key, mainMemeImageResponseDtoList);
-    }
-
-    public List<MainTodayBoardResponseDto> getTodayBoardList(String key) {
-        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
-
-        if (list.size(key) > 0) {
-            return list.range(key, 0, list.size(key) - 1);
-        }
-
-        return null;
-    }
-
-    public void setTodayBoardList(String key, List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList) {
-        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
-        list.leftPushAll(key, mainTodayBoardResponseDtoList);
-    }
-
-    public void setRandomQuiz(String key, List<QuizResponseDto> quizResponseDtoList){
-        ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
-        list.leftPushAll(key, quizResponseDtoList);
-        redisQuizResponseDtoTemplate.expire(key, 10, TimeUnit.MINUTES);
-    }
-
-    public List<QuizResponseDto> getRandomQuiz(String key) {
-        ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
-        redisQuizResponseDtoTemplate.getExpire(key, TimeUnit.SECONDS);
-        if(list.size(key) > 0){
-            return list.range(key, 0, list.size(key) - 1);
-        }
-
-        return null;
     }
 }
 
