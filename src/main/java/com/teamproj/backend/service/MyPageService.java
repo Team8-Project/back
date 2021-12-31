@@ -3,6 +3,7 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
+import com.teamproj.backend.dto.MyPage.MyPageDictResponseDto;
 import com.teamproj.backend.dto.MyPage.MyPagePostBoard;
 import com.teamproj.backend.dto.MyPage.MyPageResponseDto;
 import com.teamproj.backend.dto.MyPage.MyPageProfileImageModifyResponseDto;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_USER;
 
@@ -45,7 +47,6 @@ public class MyPageService {
         List<Board> userBoard = boardRepository.findByUser(user);
         List<Dict> userDict = dictRepository.findByFirstAuthor(user);
 
-
         Long userId = user.getId();
         String nickname = user.getNickname();
         String profileImageUrl = user.getProfileImage();
@@ -54,19 +55,40 @@ public class MyPageService {
 
 
         List<MyPagePostBoard> postBoards = new ArrayList<>();
-        if (userBoard.size() > 0) {
+        if (postCount > 0) {
             for (Board board : userBoard) {
-                MyPagePostBoard myPagePostBoard = MyPagePostBoard.builder()
-                        .postId(board.getBoardId())
-                        .title(board.getTitle())
-                        .categoryName(board.getBoardCategory().getCategoryName())
-                        .writer(board.getUser().getNickname())
-                        .createdAt(board.getCreatedAt())
-                        .views(board.getViews())
-                        .likeCount(board.getLikes().size())
-                        .build();
+                postBoards.add(
+                        MyPagePostBoard.builder()
+                            .boardId(board.getBoardId())
+                            .title(board.getTitle())
+                            .category(board.getBoardCategory().getCategoryName())
+                            .writer(board.getUser().getNickname())
+                            .createdAt(board.getCreatedAt())
+                            .views(board.getViews())
+                            .likeCount(board.getLikes().size())
+                            .hashTags(board.getBoardHashTagList().stream().map(
+                                    e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new)))
+                            .build()
+                );
+            }
+        }
 
-                postBoards.add(myPagePostBoard);
+        List<MyPageDictResponseDto> userDictResponseList = new ArrayList<>();
+        if (dictCount > 0) {
+            for (Dict dict : userDict) {
+                userDictResponseList.add(
+                        MyPageDictResponseDto.builder()
+                            .dictId(dict.getDictId())
+                            .title(dict.getDictName())
+                            .summary(dict.getSummary())
+                            .meaning(dict.getContent())
+                            .likeCount(dict.getDictLikeList().size())
+                            .firstWriter(dict.getFirstAuthor().getNickname())
+                            .recentWriter(dict.getRecentModifier().getNickname())
+                            .createdAt(dict.getCreatedAt())
+                            .modifiedAt(dict.getModifiedAt())
+                            .build()
+                );
             }
         }
 
@@ -77,6 +99,7 @@ public class MyPageService {
                 .postCount(postCount)
                 .dictCount(dictCount)
                 .postBoards(postBoards)
+                .dict(userDictResponseList)
                 .build();
     }
 
