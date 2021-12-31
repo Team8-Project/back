@@ -1,5 +1,6 @@
 package com.teamproj.backend.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
@@ -26,6 +27,8 @@ import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_DICT_HI
 public class DictHistoryService {
     private final DictRepository dictRepository;
     private final DictHistoryRepository dictHistoryRepository;
+
+    private final JPAQueryFactory queryFactory;
 
     // 용어 사전 수정내역 목록
     public DictHistoryResponseDto getDictHistory(Long dictId) {

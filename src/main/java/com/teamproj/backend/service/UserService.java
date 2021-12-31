@@ -45,9 +45,11 @@ public class UserService {
     public UserInfoResponseDto getUserInfo(UserDetailsImpl userDetails) {
         ValidChecker.loginCheck(userDetails);
 
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
         return UserInfoResponseDto.builder()
                 .username(userDetails.getUsername())
-                .nickname(jwtAuthenticateProcessor.getUser(userDetails).getNickname())
+                .nickname(user.getNickname())
+                .profileImage(user.getProfileImage())
                 .build();
     }
 

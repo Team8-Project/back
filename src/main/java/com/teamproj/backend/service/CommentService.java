@@ -7,6 +7,7 @@ import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.QComment;
 import com.teamproj.backend.model.QUser;
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.QBoard;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -45,11 +46,12 @@ public class CommentService {
         // 로그인 여부 확인
         ValidChecker.loginCheck(userDetails);
 
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
         Board board = getSafeBoard(boardId);
         Comment comment = commentRepository.save(Comment.builder()
                 .board(board)
                 .content(commentPostRequestDto.getContent())
-                .user(jwtAuthenticateProcessor.getUser(userDetails))
+                .user(user)
                 .enabled(true)
                 .build());
 
@@ -57,8 +59,8 @@ public class CommentService {
         return CommentPostResponseDto.builder()
                 .commentId(comment.getCommentId())
                 .profileImageUrl("")
-                .commentWriterId(comment.getUser().getUsername())
-                .commentWriter(comment.getUser().getNickname())
+                .commentWriterId(user.getUsername())
+                .commentWriter(user.getNickname())
                 .commentContent(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .build();
@@ -85,11 +87,10 @@ public class CommentService {
     public CommentDeleteResponseDto deleteComment(UserDetailsImpl userDetails, Long commentId) {
         // 로그인 여부 확인
         ValidChecker.loginCheck(userDetails);
-        // 자신이 작성한 댓글인지 확인
-        commentIsMineCheck(userDetails, commentId);
 
+        // 자신이 작성한 댓글인지 확인
+        Comment comment = commentIsMineCheck(userDetails, commentId);
         // enabled 를 false 로 하여 삭제처리. 이후 쿼리에서 조회되지 않음!
-        Comment comment = getSafeComment(commentId);
         comment.setEnabled(false);
 
         return CommentDeleteResponseDto.builder()
@@ -114,20 +115,13 @@ public class CommentService {
     // Board
     private Board getSafeBoard(Long boardId) {
         Optional<Board> board = boardRepository.findById(boardId);
-        if (!board.isPresent()) {
-            throw new NullPointerException(NOT_EXIST_BOARD);
-        }
-        return board.get();
+        return board.orElseThrow(() -> new NullPointerException(NOT_EXIST_BOARD));
     }
 
     // Comment
     private Comment getSafeComment(Long commentId) {
         Optional<Comment> comment = commentRepository.findById(commentId);
-        if (!comment.isPresent()) {
-            throw new NullPointerException(NOT_EXIST_COMMENT);
-        }
-
-        return comment.get();
+        return comment.orElseThrow(() -> new NullPointerException(NOT_EXIST_COMMENT));
     }
 
     // CommentList
@@ -157,12 +151,13 @@ public class CommentService {
         List<CommentResponseDto> commentResponseDtoList = new ArrayList<>();
 
         for (Comment comment : commentList) {
+            User user = comment.getUser();
             commentResponseDtoList.add(CommentResponseDto.builder()
                     .commentId(comment.getCommentId())
-                    .commentWriterId(comment.getUser().getUsername())
-                    .commentWriter(comment.getUser().getNickname())
+                    .commentWriterId(user.getUsername())
+                    .commentWriter(user.getNickname())
                     .commentContent(comment.getContent())
-                    .profileImageUrl("")
+                    .profileImageUrl(user.getProfileImage())
                     .createdAt(comment.getCreatedAt())
                     .build());
         }
