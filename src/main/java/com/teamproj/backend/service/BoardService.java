@@ -2,7 +2,6 @@ package com.teamproj.backend.service;
 
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
-import com.teamproj.backend.Repository.RecentSearchRepository;
 import com.teamproj.backend.Repository.board.*;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
@@ -22,7 +21,10 @@ import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,17 +61,21 @@ public class BoardService {
     private final String S3dirName = "boardImages";
 
     //region 게시글 전체조회
-    public List<BoardResponseDto> getBoard(String categoryName) {
+    public List<BoardResponseDto> getBoard(String categoryName, int page, int size) {
         Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase());
         if (!boardCategory.isPresent()) {
             throw new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY);
         }
 
-        Optional<List<Board>> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory.get(), true);
+        Sort.Direction direction = Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, "boardId");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Optional<Page<Board>> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory.get(), true, pageable);
         return boardList.map(this::boardListToBoardResponseDtoList).orElseGet(ArrayList::new);
     }
 
-    private List<BoardResponseDto> boardListToBoardResponseDtoList(List<Board> boardList) {
+    private List<BoardResponseDto> boardListToBoardResponseDtoList(Page<Board> boardList) {
         List<BoardResponseDto> boardResponseDtoList = new ArrayList<>();
         for (Board board : boardList) {
             boardResponseDtoList.add(BoardResponseDto.builder()
