@@ -1,10 +1,12 @@
 package com.teamproj.backend.util;
 
 import com.teamproj.backend.Repository.CarouselImageRepository;
+import com.teamproj.backend.Repository.board.BoardTodayLikeRepository;
 import com.teamproj.backend.Repository.board.BoardViewersRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.Repository.stat.StatNumericDataRepository;
 import com.teamproj.backend.Repository.stat.StatVisitorRepository;
+import com.teamproj.backend.service.BoardService;
 import com.teamproj.backend.service.DictService;
 import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.service.StatService;
@@ -22,12 +24,14 @@ import static com.teamproj.backend.util.RedisKey.*;
 public class Scheduler {
     private final DictService dictService;
     private final StatService statService;
+    private final BoardService boardService;
 
     private final CarouselImageRepository carouselImageRepository;
     private final StatVisitorRepository statVisitorRepository;
     private final StatNumericDataRepository statNumericdataRepository;
     private final BoardViewersRepository boardViewersRepository;
     private final DictViewersRepository dictViewersRepository;
+    private final BoardTodayLikeRepository boardTodayLikeRepository;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -37,12 +41,14 @@ public class Scheduler {
     @Scheduled(cron = "0 0 0 * * *")
     public void dayRegularSchedule() {
         System.out.println("자정 정기 스케줄 실시 .....");
-        // 캐러셀이미지, 오늘의밈 데이터 교체
+        // 캐러셀이미지, 오늘의밈, 인기게시글, 명예의전당 데이터 교체
         System.out.println("메인 페이지 데이터 교체 .....");
-        redisTemplate.delete(CAROUSEL_URL_KEY);
-        redisTemplate.delete(TODAY_LIST_KEY);
         redisService.setCarouselImageUrl(CAROUSEL_URL_KEY, carouselImageRepository.findAll());
         redisService.setTodayList(TODAY_LIST_KEY, dictService.getTodayMeme(20));
+        redisService.setTodayMemeImageList(TODAY_MEME_IMAGE_LIST_KEY, boardService.getTodayImage(5));
+        redisService.setTodayBoardList(TODAY_BOARD_LIST_KEY, boardService.getTodayBoard(5));
+        boardTodayLikeRepository.resetAll();
+
         System.out.println("해시 태그 데이터 교체");
         redisTemplate.delete(HASHTAG_RECOMMEND_KEY);
 
@@ -52,10 +58,4 @@ public class Scheduler {
         redisService.setBestDict(BEST_DICT_KEY, dictService.getSafeBestDict());
         dictViewersRepository.deleteAll();
     }
-
-    // 현재는 매 시간 작업하도록 설정
-//    @Scheduled(cron = "0 0 0/1 * * *")
-//    public void refreshSchedule(){
-//        System.out.println("비정기 작업 새로고침 실시 .....");
-//    }
 }

@@ -17,12 +17,12 @@ import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
-import com.teamproj.backend.model.QueryTypeEnum;
-import com.teamproj.backend.model.RecentSearch;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,10 +31,12 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_CATEGORY;
+
 
 @Service
 @RequiredArgsConstructor
@@ -45,11 +47,13 @@ public class BoardService {
     private final BoardImageRepository boardImageRepository;
     private final BoardHashTagRepository boardHashTagRepository;
     private final BoardViewersRepository boardViewersRepository;
-    private final RecentSearchRepository recentSearchRepository;
+    private final BoardTodayLikeRepository boardTodayLikeRepository;
 
     private final CommentService commentService;
+    private final RedisService redisService;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
+    private final EntityManager entityManager;
     private final S3Uploader s3Uploader;
 
     private final String S3dirName = "boardImages";
@@ -261,12 +265,12 @@ public class BoardService {
         String imageUrl = "";
         if (!(multipartFile.getSize() == 0)) {
             imageUrl = s3Uploader.upload(multipartFile, S3dirName);
-                String oldImageUrl = URLDecoder.decode(
-                        board.getThumbNail().replace(
-                                "https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/", ""
-                        ),
-                        "UTF-8"
-                );
+            String oldImageUrl = URLDecoder.decode(
+                    board.getThumbNail().replace(
+                            "https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/", ""
+                    ),
+                    "UTF-8"
+            );
 
             s3Uploader.deleteFromS3(oldImageUrl);
         }
@@ -315,6 +319,8 @@ public class BoardService {
         if (findBoardLike.isPresent()) {
             boardLikeRepository.delete(findBoardLike.get());
 
+            todayLikeCancelProc(board);
+
             return BoardLikeResponseDto.builder()
                     .result(false)
                     .build();
@@ -327,9 +333,37 @@ public class BoardService {
 
         boardLikeRepository.save(boardLike);
 
+        todayLikeProc(board, board.getBoardCategory());
+
         return BoardLikeResponseDto.builder()
                 .result(true)
                 .build();
+    }
+
+    private void todayLikeCancelProc(Board board) {
+        Optional<BoardTodayLike> boardTodayLike = boardTodayLikeRepository.findByBoard(board);
+        if (boardTodayLike.isPresent()) {
+            Long likeCount = boardTodayLike.get().getLikeCount();
+            if (likeCount > 0) {
+                boardTodayLike.get().setLikeCount(likeCount - 1);
+                boardTodayLikeRepository.save(boardTodayLike.get());
+            }
+        }
+    }
+
+    private void todayLikeProc(Board board, BoardCategory boardCategory) {
+        Optional<BoardTodayLike> boardTodayLike = boardTodayLikeRepository.findByBoard(board);
+        if(boardTodayLike.isPresent()){
+            boardTodayLike.get().setLikeCount(boardTodayLike.get().getLikeCount()+1);
+            boardTodayLikeRepository.save(boardTodayLike.get());
+        }else{
+            BoardTodayLike newBoardTodayLike = BoardTodayLike.builder()
+                    .board(board)
+                    .boardCategory(boardCategory)
+                    .likeCount(1L)
+                    .build();
+            boardTodayLikeRepository.save(newBoardTodayLike);
+        }
     }
     //endregion
 
@@ -378,11 +412,97 @@ public class BoardService {
     }
     //endregion
 
-    public List<MainTodayBoardResponseDto> getTodayBoard(int i) {
-        return null;
+    //region 해시태그 추천
+    public BoardHashTagResponseDto getRecommendHashTag() {
+        List<String> recommendHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
+
+        List<String> resultdHashTagStrList = new ArrayList<>();
+        if (recommendHashTagStrList == null) {
+            JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
+            QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
+
+            List<BoardHashTag> boardHashTagList = query.from(qBoardHashTag)
+                    .orderBy(NumberExpression.random().asc())
+                    .limit(7)
+                    .fetch();
+
+            redisService.setRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY, boardHashTagList);
+            resultdHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
+        }
+
+        return BoardHashTagResponseDto.builder()
+                .hashTags(resultdHashTagStrList)
+                .build();
+    }
+    //endregion
+
+    // region 인기 게시글
+    public List<MainTodayBoardResponseDto> getTodayBoard(int count) {
+        List<Board> boardList = getTodayBoardElement(count, "FREEBOARD");
+
+        return boardListToMainTodayBoardResponseDtoList(boardList);
     }
 
-    public List<MainMemeImageResponseDto> getTodayImage(int i) {
-        return null;
+    public List<MainTodayBoardResponseDto> boardListToMainTodayBoardResponseDtoList(List<Board> boardList) {
+        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = new ArrayList<>();
+        for (Board board : boardList) {
+            mainTodayBoardResponseDtoList.add(MainTodayBoardResponseDto.builder()
+                    .boardId(board.getBoardId())
+                    .thumbNail(board.getThumbNail())
+                    .title(board.getTitle())
+                    .writer(board.getUser().getNickname())
+                    .build());
+        }
+        return mainTodayBoardResponseDtoList;
     }
+    // endregion
+
+    // region 명예의 전당
+    public List<MainMemeImageResponseDto> getTodayImage(int count) {
+        List<Board> boardList = getTodayBoardElement(count, "MEME");
+
+        return boardListToMainMemeImageResponseDto(boardList);
+    }
+
+    public List<MainMemeImageResponseDto> boardListToMainMemeImageResponseDto(List<Board> boardList) {
+        List<MainMemeImageResponseDto> mainMemeImageResponseDto = new ArrayList<>();
+        for (Board board : boardList) {
+            mainMemeImageResponseDto.add(MainMemeImageResponseDto.builder()
+                    .boardId(board.getBoardId())
+                    .imageUrl(board.getThumbNail())
+                    .build());
+        }
+        return mainMemeImageResponseDto;
+    }
+    // endregion
+
+    // region 인기 게시글, 명예의 전당 데이터 산출 도구
+    private List<Board> getTodayBoardElement(int count, String category) {
+        BoardCategory boardCategory = getSafeBoardCategory(category);
+        List<BoardTodayLike> boardTodayLikeList = boardTodayLikeRepository.findAllByBoardCategoryOrderByLikeCountDesc(boardCategory, PageRequest.of(0, count)).toList();
+        List<Long> rankIdx = getRankIndex(boardTodayLikeList);
+
+        if(!rankIdx.isEmpty()){
+            return boardRepository.findAllByBoardIdInAndBoardCategory(rankIdx, boardCategory);
+        }else {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Long> getRankIndex(List<BoardTodayLike> boardTodayLikeList) {
+        List<Long> result = new ArrayList<>();
+
+        for (BoardTodayLike boardTodayLike : boardTodayLikeList) {
+            result.add(boardTodayLike.getBoard().getBoardId());
+        }
+
+        return result;
+    }
+
+    private BoardCategory getSafeBoardCategory(String category) {
+        return boardCategoryRepository.findById(category).orElseThrow(
+                () -> new NullPointerException(NOT_EXIST_CATEGORY)
+        );
+    }
+    // endregion
 }
