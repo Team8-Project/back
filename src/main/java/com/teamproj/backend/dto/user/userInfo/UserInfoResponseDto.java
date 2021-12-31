@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class UserInfoResponseDto {
     private String username;
     private String nickname;
+    private String profileImage;
 }

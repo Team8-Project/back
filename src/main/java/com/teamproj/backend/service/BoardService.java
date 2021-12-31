@@ -459,7 +459,7 @@ public class BoardService {
 
     // region 명예의 전당
     public List<MainMemeImageResponseDto> getTodayImage(int count) {
-        List<Board> boardList = getTodayBoardElement(count, "MEME");
+        List<Board> boardList = getTodayBoardElement(count, "IMAGEBOARD");
 
         return boardListToMainMemeImageResponseDto(boardList);
     }

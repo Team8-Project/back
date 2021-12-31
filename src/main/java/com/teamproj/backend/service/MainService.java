@@ -107,7 +107,7 @@ public class MainService {
                 redisService.setTodayMemeImageList(key, setElement);
                 mainMemeImageResponseDtoList = redisService.getTodayMemeImageList(key); // get List
             } else {
-                BoardCategory boardCategory = boardCategoryRepository.findById("MEME").get();
+                BoardCategory boardCategory = boardCategoryRepository.findById("IMAGEBOARD").get();
                 List<Board> boardList = boardRepository.findAllByBoardCategoryOrderByViews(boardCategory, PageRequest.of(0, 5)).toList();
                 return boardService.boardListToMainMemeImageResponseDto(boardList);
             }
