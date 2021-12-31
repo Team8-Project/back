@@ -75,6 +75,7 @@ public class RedisService {
         redisTemplate.delete(key);
         ListOperations<String, String> list = redisStringTemplate.opsForList();
         list.leftPushAll(key, hashTagListToStringList(boardHashTagList));
+        redisStringTemplate.expire(key, 10, TimeUnit.MINUTES);
     }
 
     public List<String> getRecommendHashTag(String key) {

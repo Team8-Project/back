@@ -2,6 +2,7 @@ package com.teamproj.backend.service;
 
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
+import com.teamproj.backend.Repository.RecentSearchRepository;
 import com.teamproj.backend.Repository.board.*;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
@@ -20,6 +21,7 @@ import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +36,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_CATEGORY;
+
 
 @Service
 @RequiredArgsConstructor
@@ -143,9 +146,9 @@ public class BoardService {
                         .build();
 
                 boardHashTagList.add(boardHashTag);
-                boardHashTagRepository.save(boardHashTag);
             }
 
+            boardHashTagRepository.saveAll(boardHashTagList);
             board.setHashTagList(boardHashTagList);
             boardRepository.save(board);
         }
@@ -166,7 +169,7 @@ public class BoardService {
                 .category(board.getBoardCategory().getCategoryName())
                 .thumbNail(board.getThumbNail())
                 .createdAt(board.getCreatedAt() == null ? null : board.getCreatedAt())
-                .hashTags(boardHashTagList == null ? null : boardHashTagList.stream().map(
+                .hashTags(boardHashTagList.size() == 0 ? null : boardHashTagList.stream().map(
                         e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                 )
                 .build();
@@ -237,13 +240,15 @@ public class BoardService {
             throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
         }
 
-        if (boardUpdateRequestDto.getHashTags().size() > 5) {
+
+        List<String> inputHashTagStrList = boardUpdateRequestDto.getHashTags();
+        if (inputHashTagStrList.size() > 5) {
             throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
         }
 
         boardHashTagRepository.deleteAllByIdInQuery(board);
 
-        List<String> inputHashTagStrList = boardUpdateRequestDto.getHashTags();
+
         List<BoardHashTag> boardHashTagList = new ArrayList<>();
 
         for (String tempStr : inputHashTagStrList) {
@@ -277,11 +282,6 @@ public class BoardService {
         return BoardUpdateResponseDto.builder()
                 .result("게시글 수정 완료")
                 .build();
-    }
-
-    private void updateHashTag(int i, List<BoardHashTag> boardHashTagList, List<String> newBoardHashTagList) {
-        boardHashTagList.get(i).updateHashTagName(newBoardHashTagList.get(i));
-        boardHashTagRepository.save(boardHashTagList.get(i));
     }
     //endregion
 
@@ -373,15 +373,23 @@ public class BoardService {
             throw new NullPointerException(ExceptionMessages.SEARCH_IS_EMPTY);
         }
 
-        Optional<List<Board>> boardList = boardRepository.findByTitleContaining(q);
+//        RecentSearch recentSearch = RecentSearch.builder()
+//                .viewerIp(StatisticsUtils.getClientIp())
+//                .query(q)
+//                .type(QueryTypeEnum.BOARD)
+//                .build();
+//        recentSearchRepository.save(recentSearch);
 
-        if (boardList.get().size() == 0) {
+        Optional<List<Board>> findBoardList = boardRepository.findByTitleContaining(q);
+
+        List<Board> boardList = findBoardList.get();
+        if (boardList.size() == 0) {
             throw new NullPointerException(ExceptionMessages.SEARCH_BOARD_IS_EMPTY);
         }
 
 
         List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
-        for (Board board : boardList.get()) {
+        for (Board board : boardList) {
             boardSearchResponseDtoList.add(
                     BoardSearchResponseDto.builder()
                             .boardId(board.getBoardId())
@@ -393,7 +401,7 @@ public class BoardService {
                             .createdAt(board.getCreatedAt())
                             .views(board.getViews())
                             .likeCnt(board.getLikes().size())
-                            .hashTags(board.getBoardHashTagList() == null ? null : board.getBoardHashTagList().stream().map(
+                            .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
                                     h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                             )
                             .build()

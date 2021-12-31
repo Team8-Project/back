@@ -67,6 +67,9 @@ class BoardServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BoardHashTagService boardHashTagService;
+
     @Mock
     private ServletRequestAttributes attributes;
 
@@ -169,7 +172,6 @@ class BoardServiceTest {
             );
             Optional<Board> board = boardRepository.findById(boardUploadResponseDto.getBoardId());
 
-            System.out.println(board.get().isEnabled());
             // then
             assertEquals(board.get().getBoardId(), boardUploadResponseDto.getBoardId());
             assertEquals(boardTitle, boardUploadResponseDto.getTitle());
@@ -741,7 +743,7 @@ class BoardServiceTest {
 
 
             // when
-            BoardHashTagResponseDto boardHashTagResponseDto = boardService.getRecommendHashTag();
+            BoardHashTagResponseDto boardHashTagResponseDto = boardHashTagService.getRecommendHashTag();
 
 
             // then

@@ -22,6 +22,10 @@ public class RecentSearch extends Timestamped {
     @JoinColumn(nullable = false)
     private User user;
 
+    //@Column(nullable = false)
+    //private String viewerIp;
+
+
     @Column(nullable = false)
     private String query;
 
