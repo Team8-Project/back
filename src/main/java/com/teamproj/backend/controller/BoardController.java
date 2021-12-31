@@ -108,15 +108,4 @@ public class BoardController {
                 .data(boardService.boardSearch(q))
                 .build();
     }
-
-    @GetMapping("/api/board/hashTag")
-    public ResponseDto<BoardHashTagResponseDto> getRecommendHashTag() {
-
-        return ResponseDto.<BoardHashTagResponseDto>builder()
-                .status(HttpStatus.OK.toString())
-                .message("게시글 추천 해시태그 받기 요청")
-                .data(boardService.getRecommendHashTag())
-                .build();
-    }
-
 }
