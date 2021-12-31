@@ -1,5 +1,6 @@
 package com.teamproj.backend.controller;
 
+import com.teamproj.backend.Repository.board.BoardTodayLikeRepository;
 import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.main.MainPageResponseDto;
 import com.teamproj.backend.service.MainService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class MainController {
     private final MainService mainService;
+    private final BoardTodayLikeRepository boardTodayLikeRepository;
 
     @GetMapping("/api/main")
     public ResponseDto<MainPageResponseDto> getMainPageElements(@RequestHeader(value="Authorization", required = false) String token){
