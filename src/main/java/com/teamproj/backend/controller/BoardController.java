@@ -28,11 +28,13 @@ public class BoardController {
     private final BoardService boardService;
 
     @GetMapping("/api/board/list/{categoryName}")
-    public ResponseDto<List<BoardResponseDto>> getBoard(@PathVariable String categoryName){
+    public ResponseDto<List<BoardResponseDto>> getBoard(@PathVariable String categoryName,
+                                                        @RequestParam("page") int page,
+                                                        @RequestParam("size") int size ){
         return ResponseDto.<List<BoardResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("게시글 목록 불러오기")
-                .data(boardService.getBoard(categoryName))
+                .data(boardService.getBoard(categoryName, page, size))
                 .build();
     }
 

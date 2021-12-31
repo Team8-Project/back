@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    Optional<List<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled);
+    Optional<Page<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled, Pageable pageable);
 
     Optional<List<Board>> findByTitleContaining(String keyword);
 

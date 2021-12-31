@@ -116,7 +116,7 @@ class BoardServiceTest {
             boardCategoryRepository.save(boardCategory);
 
             // when
-            List<BoardResponseDto> boardResponseDtoList = boardService.getBoard("카테고리");
+            List<BoardResponseDto> boardResponseDtoList = boardService.getBoard("카테고리", 1, 1);
 
             // then
             for(BoardResponseDto boardResponseDto : boardResponseDtoList) {
@@ -130,7 +130,7 @@ class BoardServiceTest {
 
             // when
             Exception exception = assertThrows(NullPointerException.class, () -> {
-                boardService.getBoard("없는 카테고리");
+                boardService.getBoard("없는 카테고리", 1, 1);
             });
 
             // then
