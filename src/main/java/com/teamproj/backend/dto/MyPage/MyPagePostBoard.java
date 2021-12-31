@@ -13,10 +13,14 @@ import java.util.List;
 public class MyPagePostBoard {
     private Long boardId;
     private String title;
+    private String username;
+    private String profileImageUrl;
     private String category;
     private String writer;
+    private String content;
     private LocalDateTime createdAt;
     private int views;
     private int likeCount;
+    private int commentCnt;
     private List<String> hashTags;
 }

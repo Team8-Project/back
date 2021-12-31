@@ -33,6 +33,8 @@ public class MyPageService {
     private final BoardRepository boardRepository;
     private final DictRepository dictRepository;
     private final UserRepository userRepository;
+    private final CommentService commentService;
+
     private final S3Uploader s3Uploader;
 
     public MyPageResponseDto myPage(UserDetailsImpl userDetails) {
@@ -61,11 +63,15 @@ public class MyPageService {
                         MyPagePostBoard.builder()
                             .boardId(board.getBoardId())
                             .title(board.getTitle())
+                            .username(board.getUser().getUsername())
+                            .profileImageUrl(board.getUser().getProfileImage())
                             .category(board.getBoardCategory().getCategoryName())
                             .writer(board.getUser().getNickname())
+                            .content(board.getContent())
                             .createdAt(board.getCreatedAt())
                             .views(board.getViews())
                             .likeCount(board.getLikes().size())
+                            .commentCnt(commentService.getCommentList(board).size())
                             .hashTags(board.getBoardHashTagList().stream().map(
                                     e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new)))
                             .build()
