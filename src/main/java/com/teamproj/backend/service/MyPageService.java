@@ -59,6 +59,7 @@ public class MyPageService {
                 MyPagePostBoard myPagePostBoard = MyPagePostBoard.builder()
                         .postId(board.getBoardId())
                         .title(board.getTitle())
+                        .categoryName(board.getBoardCategory().getCategoryName())
                         .writer(board.getUser().getNickname())
                         .createdAt(board.getCreatedAt())
                         .views(board.getViews())

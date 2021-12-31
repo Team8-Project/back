@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class MyPagePostBoard {
     private Long postId;
     private String title;
+    private String categoryName;
     private String writer;
     private LocalDateTime createdAt;
     private int views;
