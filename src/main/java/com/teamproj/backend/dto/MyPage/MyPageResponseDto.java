@@ -16,4 +16,5 @@ public class MyPageResponseDto {
     private int postCount;
     private int dictCount;
     private List<MyPagePostBoard> postBoards;
+    private List<MyPageDictResponseDto> dict;
 }
