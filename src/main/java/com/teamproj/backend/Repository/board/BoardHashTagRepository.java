@@ -15,10 +15,4 @@ public interface BoardHashTagRepository extends JpaRepository<BoardHashTag, Stri
     @Modifying
     @Query("delete from BoardHashTag h where h.board = :ids")
     void deleteAllByIdInQuery(Board ids);
-
-
-    @Modifying
-    @Transactional
-    @Query(value="select HASH_TAG_ID from BOARD_HASH_TAG order by rand() limit 7", nativeQuery = true)
-    List<BoardHashTag> boardHashTagList();
 }

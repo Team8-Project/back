@@ -2,7 +2,6 @@ package com.teamproj.backend.service;
 
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
-import com.teamproj.backend.Repository.RecentSearchRepository;
 import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
 import com.teamproj.backend.model.board.QBoardHashTag;
@@ -27,7 +26,7 @@ public class BoardHashTagService {
     public BoardHashTagResponseDto getRecommendHashTag() {
         List<String> recommendHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
 
-        List<String> resultdHashTagStrList = new ArrayList<>();
+        List<String> resultHashTagStrList = new ArrayList<>();
         if (recommendHashTagStrList == null) {
             JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
             QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
@@ -38,12 +37,12 @@ public class BoardHashTagService {
                     .fetch();
 
             redisService.setRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY, boardHashTagList);
-            resultdHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
+            resultHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
         }
 
         Collections.shuffle(recommendHashTagStrList);
         return BoardHashTagResponseDto.builder()
-                .hashTags(resultdHashTagStrList.subList(0, 6))
+                .hashTags(resultHashTagStrList.subList(0, 6))
                 .build();
     }
     //endregion
