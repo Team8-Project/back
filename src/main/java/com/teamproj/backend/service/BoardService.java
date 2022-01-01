@@ -9,6 +9,7 @@ import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardYesterdayLikeCountRankDto;
+import com.teamproj.backend.dto.board.BoardMemeBest.BoardMemeBestResponseDto;
 import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
@@ -38,9 +39,7 @@ import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -481,6 +480,26 @@ public class BoardService {
     }
   
     // endregion
+
+
+
+    //region 명예의 밈짤 받기
+    public List<BoardMemeBestResponseDto> getBestMeme(String categoryName) {
+
+        BoardCategory boardCategory = getSafeBoardCategory(categoryName);
+
+        List<Board> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory, true);
+
+
+        LocalDateTime dateNow = LocalDateTime.now();
+
+        LocalDateTime dateAgo = dateNow.minusDays(7);
+
+//        QBoard qBoard = new QBoard();
+
+        return null;
+    }
+    //endregion
 
     //region 중복코드 정리
     private Board getSafeBoard(Long boardId) {
