@@ -1,6 +1,5 @@
 package com.teamproj.backend.service;
 
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
@@ -27,8 +26,6 @@ import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_DICT_HI
 public class DictHistoryService {
     private final DictRepository dictRepository;
     private final DictHistoryRepository dictHistoryRepository;
-
-    private final JPAQueryFactory queryFactory;
 
     // 용어 사전 수정내역 목록
     public DictHistoryResponseDto getDictHistory(Long dictId) {
@@ -64,14 +61,12 @@ public class DictHistoryService {
     public DictRevertResponseDto revertDict(Long historyId, UserDetailsImpl userDetails) {
         /*
             롤백 기능 수행 절차
-            1. 기존의 데이터 recentDict를 DictHistory로 선언해 저장
-            2. 롤백하고자 하는 데이터를 dict로 덮어쓰기
+            1. 기존의 데이터 recentDict 를 DictHistory 로 선언해 저장
+            2. 롤백하고자 하는 데이터를 dict 로 덮어쓰기
             3. good!
 
             개선사항
-            1. 사전을 생성하는 순간부터 최초생성 역사를 생성시켜 관리하도록 하면, 수정시 생긴 최근 역사에 reverFrom을 부여할 시
-               롤백 시 어떤 데이터에서 가져온 건지 알 수 있음
-            2.
+            1. 롤백 기록 어떻게 해야할 지.
          */
         ValidChecker.loginCheck(userDetails);
 

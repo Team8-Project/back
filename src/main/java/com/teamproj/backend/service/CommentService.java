@@ -74,8 +74,8 @@ public class CommentService {
 
         // 수정하려는 댓글이 나의 댓글인지 확인
         Comment comment = commentIsMineCheck(userDetails, commentId);
+        // 수정 후 적용
         comment.update(commentPutRequestDto.getContent());
-        commentRepository.save(comment);
 
         return CommentPutResponseDto.builder()
                 .result("수정 성공")
@@ -90,7 +90,7 @@ public class CommentService {
 
         // 자신이 작성한 댓글인지 확인
         Comment comment = commentIsMineCheck(userDetails, commentId);
-        // enabled 를 false 로 하여 삭제처리. 이후 쿼리에서 조회되지 않음!
+        // enabled 를 false 로 하여 삭제 처리. 이후 쿼리에서 조회되지 않음!
         comment.setEnabled(false);
 
         return CommentDeleteResponseDto.builder()
@@ -108,6 +108,7 @@ public class CommentService {
             throw new IllegalArgumentException(NOT_MY_COMMENT);
         }
 
+        // 내 댓글이 맞으면 그 댓글의 정보를 반환해 줌.
         return comment;
     }
 

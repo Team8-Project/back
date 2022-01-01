@@ -42,7 +42,9 @@ public class UserService {
                 .build();
     }
 
+    // 로그인한 사용자의 ID, 닉네임, 프로필사진을 불러오는 기능.
     public UserInfoResponseDto getUserInfo(UserDetailsImpl userDetails) {
+        // 비로그인 사용자가 요청 시 예외 발생.
         ValidChecker.loginCheck(userDetails);
 
         User user = jwtAuthenticateProcessor.getUser(userDetails);
@@ -53,25 +55,31 @@ public class UserService {
                 .build();
     }
 
+    // 아이디 중복검사
     public SignUpCheckResponseDto usernameValidCheck(String username) {
         Optional<User> found = userRepository.findByUsername(username);
         System.out.println("아이디 중복검사 결과 : " + !found.isPresent());
+        // True 일 경우 사용 가능, False 일 경우 사용 불가.
         return SignUpCheckResponseDto.builder()
                 .result(!found.isPresent())
                 .build();
     }
 
+    // 닉네임 중복 검사
     public SignUpCheckResponseDto nicknameValidCheck(String nickname) {
         Optional<User> found = userRepository.findByNickname(nickname);
         System.out.println("닉네임 중복검사 결과 : " + !found.isPresent());
+        // True 일 경우 사용 가능, False 일 경우 사용 불가.
         return SignUpCheckResponseDto.builder()
                 .result(!found.isPresent())
                 .build();
     }
 
+    // 닉네임 수정
     @Transactional
     public UserNicknameModifyResponseDto nicknameModify(UserDetailsImpl userDetails,
                                                         UserNicknameModifyRequestDto userNicknameModifyRequestDto) {
+        // 비회원은 요청 불가.
         ValidChecker.loginCheck(userDetails);
 
         User user = jwtAuthenticateProcessor.getUser(userDetails);
@@ -81,7 +89,6 @@ public class UserService {
                 .result("변경 완료")
                 .build();
     }
-
 
     // region 보조 기능
     // Utils

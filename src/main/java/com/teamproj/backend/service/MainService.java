@@ -29,8 +29,6 @@ public class MainService {
     private final RedisService redisService;
 
     private final CarouselImageRepository carouselImageRepository;
-    private final BoardRepository boardRepository;
-    private final BoardCategoryRepository boardCategoryRepository;
 
 
     public MainPageResponseDto getMainPageElements(String token) {
@@ -70,10 +68,16 @@ public class MainService {
     }
 
     // MainTodayMemeResponseDtoList
-    // 오늘의밈(사전)
+    // 오늘의밈(사전) : 전날 조회수 상위 20개의 목록을 받아 섞은 뒤 7개만 반환 : 사용자는 오늘의 밈 데이터를 정해진 풀 속에서 랜덤하게 받아오는것으로 인지.
     private List<MainTodayMemeResponseDto> getSafeMainTodayMemeResponseDtoList(String key) {
+        // 1. Redis 에서 데이터 조회 시도
         List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = redisService.getTodayList(key);
 
+        // 2-1. 조회 결과 사이즈 0일 경우 null 로 반환하게 설정해놨음 == null 은 빈 데이터라는 소리
+        // 2-2. 조회 결과가 20개보다 작을 경우 충분한 랜덤성을 제공하기 어렵다고 판단, 20개가 될 때까지 계속 스캔을 진행하도록 설정.
+        //      Q) 아니, 그러면 처음 20회 조회는 무조건 이 불필요한 과정을 거친다는 말인가요 ??!?!?!!
+        //      A) 그건 아니다. 전날의 데이터를 기반으로 하기 때문에 전날 20종류 이상의 조회가 있었다면 진행하지 않는 구문이다.
+        //         이건 사람들이 열람한 사전 데이터가 20종륲가 넘지 않을 것을 고려해 넣은 안전장치이다.
         if (mainTodayMemeResponseDtoList == null || mainTodayMemeResponseDtoList.size() < 20) {
             List<MainTodayMemeResponseDto> setElement = dictService.getTodayMeme(20);
 
@@ -96,6 +100,7 @@ public class MainService {
     public List<MainMemeImageResponseDto> getSafeMainMemeImageResponseDtoList(String key) {
         List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = redisService.getTodayMemeImageList(key);
 
+        // getSafeMainTodayMemeResponseDtoList 기능과 동일함.
         if (mainMemeImageResponseDtoList == null || mainMemeImageResponseDtoList.size() < 5) {
             List<MainMemeImageResponseDto> setElement = boardService.getTodayImage(5);
 
@@ -115,6 +120,7 @@ public class MainService {
     private List<MainTodayBoardResponseDto> getSafeMainTodayBoardResponseDtoList(String key) {
         List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
 
+        // getSafeMainTodayMemeResponseDtoList 기능과 동일함.
         if (mainTodayBoardResponseDtoList == null || mainTodayBoardResponseDtoList.size() < 5) {
             List<MainTodayBoardResponseDto> setElement = boardService.getTodayBoard(5);
 
