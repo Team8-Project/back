@@ -2,9 +2,7 @@ package com.teamproj.backend.service;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.core.types.dsl.NumberPath;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.board.*;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
@@ -480,12 +478,6 @@ public class BoardService {
                 .orderBy(likeCnt.desc())
                 .limit(count)
                 .fetch();
-    }
-
-    private BoardCategory getSafeBoardCategory(String category) {
-        return boardCategoryRepository.findById(category).orElseThrow(
-                () -> new NullPointerException(NOT_EXIST_CATEGORY)
-        );
     }
   
     // endregion
