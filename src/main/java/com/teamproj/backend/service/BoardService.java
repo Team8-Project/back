@@ -1,11 +1,8 @@
 package com.teamproj.backend.service;
 
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.teamproj.backend.Repository.board.*;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
-import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
 import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
@@ -18,9 +15,10 @@ import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.util.*;
+import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.S3Uploader;
+import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +26,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -36,8 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_CATEGORY;
 
 
 @Service
@@ -52,26 +47,21 @@ public class BoardService {
     private final BoardTodayLikeRepository boardTodayLikeRepository;
 
     private final CommentService commentService;
-    private final RedisService redisService;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
-    private final EntityManager entityManager;
     private final S3Uploader s3Uploader;
 
     private final String S3dirName = "boardImages";
 
     //region 게시글 전체조회
     public List<BoardResponseDto> getBoard(String categoryName, int page, int size) {
-        Optional<BoardCategory> boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase());
-        if (!boardCategory.isPresent()) {
-            throw new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY);
-        }
+        BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
         Sort.Direction direction = Sort.Direction.DESC;
         Sort sort = Sort.by(direction, "boardId");
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Optional<Page<Board>> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory.get(), true, pageable);
+        Optional<Page<Board>> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory, true, pageable);
         return boardList.map(this::boardListToBoardResponseDtoList).orElseGet(ArrayList::new);
     }
 
@@ -117,14 +107,10 @@ public class BoardService {
             throw new IllegalArgumentException(ExceptionMessages.CONTENT_IS_EMPTY);
         }
 
-        if (boardRequestHashTagList != null && boardRequestHashTagList.size() > 5) {
-            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
-        }
+        // 입력된 해시태그가 5개 넘는지 체크
+        HashTagIsMaxFiveCheck(boardRequestHashTagList);
 
-        BoardCategory boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase())
-                .orElseThrow(
-                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY)
-                );
+        BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
         String imageUrl = "";
         if (multipartFile != null) {
@@ -185,10 +171,7 @@ public class BoardService {
     //region 게시글 상세 조회
     public BoardDetailResponseDto getBoardDetail(Long boardId, String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(
-                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
-                );
+        Board board = getSafeBoard(boardId);
 
         boolean isLike = false;
         if (userDetails != null) {
@@ -238,22 +221,18 @@ public class BoardService {
                                               BoardUpdateRequestDto boardUpdateRequestDto,
                                               MultipartFile multipartFile) throws IOException {
 
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(
-                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
-                );
-        if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
-        }
+        Board board = getSafeBoard(boardId);
+
+        // 게시글 수정 권한 체크
+        checkPermissionToBoard(userDetails, board);
 
 
         List<String> inputHashTagStrList = boardUpdateRequestDto.getHashTags();
-        if (inputHashTagStrList.size() > 5) {
-            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
-        }
+
+        // 입력된 해시태그가 5개 넘는지 체크
+        HashTagIsMaxFiveCheck(inputHashTagStrList);
 
         boardHashTagRepository.deleteAllByIdInQuery(board);
-
 
         List<BoardHashTag> boardHashTagList = new ArrayList<>();
 
@@ -289,18 +268,16 @@ public class BoardService {
                 .result("게시글 수정 완료")
                 .build();
     }
+
+
     //endregion
 
     //region 게시글 삭제
     public BoardDeleteResponseDto deleteBoard(UserDetailsImpl userDetails, Long boardId) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(
-                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
-                );
+        Board board = getSafeBoard(boardId);
 
-        if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
-        }
+        // 게시글 삭제 권한 체크
+        checkPermissionToBoard(userDetails, board);
 
         board.setEnabled(false);
         boardRepository.save(board);
@@ -309,14 +286,13 @@ public class BoardService {
                 .result("게시글 삭제 완료")
                 .build();
     }
+
+
     //endregion
 
     //region 게시글 좋아요
     public BoardLikeResponseDto boardLike(UserDetailsImpl userDetails, Long boardId) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(
-                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
-                );
+        Board board = getSafeBoard(boardId);
 
         Optional<BoardLike> findBoardLike = boardLikeRepository.findByBoardAndUser(
                 board, jwtAuthenticateProcessor.getUser(userDetails)
@@ -418,30 +394,6 @@ public class BoardService {
     }
     //endregion
 
-    //region 해시태그 추천
-    public BoardHashTagResponseDto getRecommendHashTag() {
-        List<String> recommendHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
-
-        List<String> resultdHashTagStrList = new ArrayList<>();
-        if (recommendHashTagStrList == null) {
-            JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
-            QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
-
-            List<BoardHashTag> boardHashTagList = query.from(qBoardHashTag)
-                    .orderBy(NumberExpression.random().asc())
-                    .limit(7)
-                    .fetch();
-
-            redisService.setRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY, boardHashTagList);
-            resultdHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
-        }
-
-        return BoardHashTagResponseDto.builder()
-                .hashTags(resultdHashTagStrList)
-                .build();
-    }
-    //endregion
-
     // region 인기 게시글
     public List<MainTodayBoardResponseDto> getTodayBoard(int count) {
         List<Board> boardList = getTodayBoardElement(count, "FREEBOARD");
@@ -505,10 +457,35 @@ public class BoardService {
         return result;
     }
 
-    private BoardCategory getSafeBoardCategory(String category) {
-        return boardCategoryRepository.findById(category).orElseThrow(
-                () -> new NullPointerException(NOT_EXIST_CATEGORY)
-        );
-    }
     // endregion
+
+    //region 중복코드 정리
+    private Board getSafeBoard(Long boardId) {
+        return boardRepository.findById(boardId)
+                .orElseThrow(
+                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
+                );
+    }
+
+    private BoardCategory getSafeBoardCategory(String categoryName) {
+        BoardCategory boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase())
+                .orElseThrow(
+                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY)
+                );
+        return boardCategory;
+    }
+
+    private void checkPermissionToBoard(UserDetailsImpl userDetails, Board board) {
+        if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
+            throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
+        }
+    }
+
+
+    private void HashTagIsMaxFiveCheck(List<String> inputHashTagStrList) {
+        if (inputHashTagStrList != null && inputHashTagStrList.size() > 5) {
+            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
+        }
+    }
+    //endregion
 }
