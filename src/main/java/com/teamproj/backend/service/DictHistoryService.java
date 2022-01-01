@@ -114,7 +114,7 @@ public class DictHistoryService {
 
     // DictHistoryList
     private List<DictHistory> getSafeDictHistoryList(Dict dict) {
-        Optional<List<DictHistory>> dictHistory = dictHistoryRepository.findAllByDict(dict);
+        Optional<List<DictHistory>> dictHistory = dictHistoryRepository.findAllByDictOrderByCreatedAtDesc(dict);
         return dictHistory.orElseGet(ArrayList::new);
     }
 

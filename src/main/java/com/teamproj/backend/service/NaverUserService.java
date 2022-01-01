@@ -31,7 +31,7 @@ public class NaverUserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    //    @Value("${kakao.client-id}")
+    //    @Value("${naver.client-id}")
     private String clientId;
 
     public ResponseEntity<KakaoUserResponseDto> kakaoLogin(String code) throws JsonProcessingException {

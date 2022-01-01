@@ -295,6 +295,7 @@ public class DictService {
         // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않음
         return queryFactory.selectFrom(qDict)
                 .leftJoin(qDict.dictLikeList, qDictLike)
+                .orderBy(qDict.createdAt.desc())
                 .offset(page)
                 .limit(size)
                 .fetch();
