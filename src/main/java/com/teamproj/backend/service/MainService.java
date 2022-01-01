@@ -8,18 +8,14 @@ import com.teamproj.backend.dto.main.MainPageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
-import com.teamproj.backend.model.board.Board;
-import com.teamproj.backend.model.board.BoardCategory;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static com.teamproj.backend.util.RedisKey.*;
 
@@ -81,7 +77,7 @@ public class MainService {
         if (mainTodayMemeResponseDtoList == null || mainTodayMemeResponseDtoList.size() < 20) {
             List<MainTodayMemeResponseDto> setElement = dictService.getTodayMeme(20);
 
-            if (setElement != null) {
+            if (setElement.size() > 0) {
                 redisService.setTodayList(key, setElement);
                 mainTodayMemeResponseDtoList = redisService.getTodayList(key);
             } else {
@@ -103,13 +99,11 @@ public class MainService {
         if (mainMemeImageResponseDtoList == null || mainMemeImageResponseDtoList.size() < 5) {
             List<MainMemeImageResponseDto> setElement = boardService.getTodayImage(5);
 
-            if (setElement != null) {
+            if (setElement.size() > 0) {
                 redisService.setTodayMemeImageList(key, setElement);
                 mainMemeImageResponseDtoList = redisService.getTodayMemeImageList(key); // get List
             } else {
-                BoardCategory boardCategory = boardCategoryRepository.findById("IMAGEBOARD").get();
-                List<Board> boardList = boardRepository.findAllByBoardCategoryOrderByViews(boardCategory, PageRequest.of(0, 5)).toList();
-                return boardService.boardListToMainMemeImageResponseDto(boardList);
+                return new ArrayList<>();
             }
         }
 
@@ -124,13 +118,11 @@ public class MainService {
         if (mainTodayBoardResponseDtoList == null || mainTodayBoardResponseDtoList.size() < 5) {
             List<MainTodayBoardResponseDto> setElement = boardService.getTodayBoard(5);
 
-            if (setElement != null) {
+            if (setElement.size() > 0) {
                 redisService.setTodayBoardList(key, setElement);
                 mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
             } else {
-                BoardCategory boardCategory = boardCategoryRepository.findById("FREEBOARD").get();
-                List<Board> boardList = boardRepository.findAllByBoardCategoryOrderByViews(boardCategory, PageRequest.of(0, 5)).toList();
-                return boardService.boardListToMainTodayBoardResponseDtoList(boardList);
+                return new ArrayList<>();
             }
         }
 
