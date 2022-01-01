@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.Optional;
+import java.util.Random;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
 
@@ -34,7 +35,18 @@ public class UserService {
         signUpValidCheck(signUpRequestDto);
         String encodedPassword = passwordEncoder.encode(signUpRequestDto.getPassword());
 
-        userRepository.save(new User(signUpRequestDto, encodedPassword));
+        String[] profileImageArr = {"https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/static/default_blue.png",
+                "https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/static/default_orange.png",
+                "https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/static/default_yellow.png"
+        };
+
+        User user = new User(signUpRequestDto, encodedPassword);
+        Random random = new Random();
+        user.setProfileImage(profileImageArr[random.nextInt(3)]);
+
+        userRepository.save(user);
+
+
 
         return SignUpResponseDto.builder()
                 .username(signUpRequestDto.getUsername())
