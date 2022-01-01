@@ -17,7 +17,9 @@ public class DictDetailResponseDto {
     private String summary;
     private String meaning;
     private String firstWriter;
+    private String firstWriterProfileImage;
     private String recentWriter;
+    private String recentWriterProfileImage;
     private boolean isLike;
     private int likeCount;
     private LocalDateTime createdAt;

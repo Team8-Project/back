@@ -47,26 +47,36 @@ public class DictService {
 
     // 사전 목록 가져오기
     public List<DictResponseDto> getDictList(int page, int size, String token) {
+        // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
+        // 2. 받아온 회원 정보로 User 정보 받아오기 - 좋아요 했는지 여부 판단하기 위해 (select from user 시행 지점)
         User user = getSafeUserByUserDetails(userDetails);
+        // 3. 사전 목록 가져오기 - 현재 페이지네이션이 잘못 되어있는데 프론트엔드 분들이 교정해서 쓰고 계셔서 수정 하지 않음.
         List<Dict> dictList = getSafeDictPage(page, size);
+        // 4. 사전 목록을 알맞은 반환 양식으로 변환하여 return.
         return dictListToDictResponseDtoList(dictList, user);
     }
 
     // 베스트 용어 사전 가져오기
     public List<DictBestResponseDto> getBestDict(String token) {
+        // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
+        // 2. 받아온 회원 정보로 User 정보 받아오기 - 좋아요 했는지 여부 판단하기 위해 (select from user 시행 지점)
         User user = getSafeUserByUserDetails(userDetails);
+        // 3. 베스트 용어 사전 목록 가져오기 - 전날 가장 많이 열람한 게시글 목록을 출력. 부하 처리를 위해 Redis 에 0시에 캐싱.
         List<Dict> dictList = getSafeBestDict(BEST_DICT_KEY);
-
+        // 4. 사전 목록을 알맞은 반환 양식으로 변환하여 return.
         return dictListToDictBestResponseDtoList(dictList, user);
     }
 
     // 사전 총 개수 출력
+    // 프론트엔드의 총 페이지 출력을 위해.
     public Long getDictTotalCount(String q) {
+        // 1. 쿼리가 없을 경우 : 전체 사전의 개수 출력
         if (q == null) {
             return dictRepository.count();
         }
+        // 2. 쿼리가 있을 경우 : 쿼리의 검색결과의 개수 출력
         String likeQuery = "%" + q + "%";
         return dictRepository.countByDictNameLikeOrContentLike(likeQuery, likeQuery);
     }
@@ -78,6 +88,10 @@ public class DictService {
         Dict dict = getSafeDict(dictId);
 
         // 조회수 증가
+        // 1. 조회수 테이블 열람
+        // 2. 조회수 테이블에 내가 확인했다는 기록(IP로 판단)이 존재할 경우 조회수 상승하지 않음
+        // 3. 존재하지 않을 경우 조회수 상승하고 조회수 테이블에 사용자 정보 등록.
+        // 조회수 테이블은 매일 0시에 초기화 됨.
         if (!isView(dict)) {
             dictViewersRepository.save(DictViewers.builder()
                     .viewerIp(StatisticsUtils.getClientIp())
@@ -86,13 +100,18 @@ public class DictService {
             dictRepository.updateView(dictId);
         }
 
+        // 사용자 정보가 존재할 경우 좋아요 여부 감별 실시.
+        User firstWriter = dict.getFirstAuthor();
+        User recentWriter = dict.getRecentModifier();
         return DictDetailResponseDto.builder()
                 .dictId(dict.getDictId())
                 .title(dict.getDictName())
                 .summary(dict.getSummary())
                 .meaning(dict.getContent())
-                .firstWriter(dict.getFirstAuthor().getNickname())
-                .recentWriter(dict.getRecentModifier().getNickname())
+                .firstWriter(firstWriter.getNickname())
+                .firstWriterProfileImage(firstWriter.getProfileImage())
+                .recentWriter(recentWriter.getNickname())
+                .recentWriterProfileImage(recentWriter.getProfileImage())
                 .isLike(user != null && isDictLike(dict, user))
                 .likeCount(dict.getDictLikeList().size())
                 .createdAt(dict.getCreatedAt())
@@ -102,13 +121,16 @@ public class DictService {
 
     // 사전 작성하기
     public DictPostResponseDto postDict(UserDetailsImpl userDetails, DictPostRequestDto dictPostRequestDto) {
+        // 비회원이 함수로 요청하는지 확인(JWT 토큰의 유효성으로 확인)
         ValidChecker.loginCheck(userDetails);
 
+        // 이미 같은 이름의 사전이 존재할 경우 예외 발생.
         if (dictRepository.existsByDictName(dictPostRequestDto.getTitle())) {
             throw new IllegalArgumentException(EXIST_DICT);
         }
         User user = jwtAuthenticateProcessor.getUser(userDetails);
 
+        // 최초 작성자와 최근 수정자는 우선 동일하게 부여함.
         Dict dict = Dict.builder()
                 .firstAuthor(user)
                 .recentModifier(user)
@@ -177,6 +199,7 @@ public class DictService {
                 .build();
     }
 
+    // 추천 검색어 기능. 현재 활용되지 않고 있음.
     public List<String> getSearchInfo() {
         List<String> result = getSafeRecommendSearch(DICT_RECOMMEND_SEARCH_KEY);
 
@@ -185,8 +208,9 @@ public class DictService {
         return result.subList(0, returnSize);
     }
 
-
+    // 검색 기능
     public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
+        // 검색 결과를 좋아요 했는지 확인하기 위해 사용자 정보를 받음.
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = getSafeUserByUserDetails(userDetails);
         List<Dict> dictList = getSafeDictListBySearch(q, page, size);
@@ -268,6 +292,7 @@ public class DictService {
         QDict qDict = QDict.dict;
         QDictLike qDictLike = QDictLike.dictLike;
 
+        // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않음
         return queryFactory.selectFrom(qDict)
                 .leftJoin(qDict.dictLikeList, qDictLike)
                 .offset(page)
@@ -357,6 +382,7 @@ public class DictService {
     }
 
     // DictList 검색결과
+    // ElasticSearch 로 변경 고려 중.
     private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
         String queryString = "%" + q + "%";
         Optional<Page<Dict>> searchResult = dictRepository.findAllByDictNameLikeOrContentLike(queryString, queryString, PageRequest.of(page, size));
@@ -374,6 +400,8 @@ public class DictService {
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
+                    .firstWriter(dict.getFirstAuthor().getNickname())
+                    .createdAt(dict.getCreatedAt())
                     .isLike(user != null && isDictLike(dict, user))
                     .likeCount(dict.getDictLikeList().size())
                     .build());

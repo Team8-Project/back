@@ -21,6 +21,9 @@ public class StatService {
     private final StatQuizStarterRepository statQuizStarterRepository;
     private final StatQuizSolverRepository statQuizSolverRepository;
 
+    // 일일 방문자 통계
+    // 하루 지나면 삭제됩니다.
+    // 원래 데이터 전부 쌓아놓고 싶었는데 용량을 고려하여..
     public long statVisitor() {
         StatVisitor statVisitor = getSaveStatVisitorByVisitorIp(StatisticsUtils.getClientIp(), StatisticsUtils.getClientReferer());
         statVisitorRepository.save(statVisitor);
@@ -28,6 +31,7 @@ public class StatService {
         return statVisitorRepository.count();
     }
 
+    // 퀴즈 시작한사람 통계
     public void statQuizStarter(String category){
         statQuizStarterRepository.save(StatQuizStarter.builder()
                 .type(category)
@@ -35,6 +39,7 @@ public class StatService {
                 .build());
     }
 
+    // 퀴즈 푼 사람 통계. 점수도.
     public void statQuizSolver(String category, int score){
         statQuizSolverRepository.save(StatQuizSolver.builder()
                 .type(category)
@@ -43,6 +48,8 @@ public class StatService {
                 .build());
     }
 
+    // 전체 방문자수 통계.
+    // 하루에 한 번씩 일일 방문자수의 레코드 수를 반영하도록 되어 있음.
     @Transactional
     public void statVisitorToNumericData(Long statVisitorCnt, StatNumericData statNumericData){
         statNumericData.setData(statNumericData.getData() + statVisitorCnt);

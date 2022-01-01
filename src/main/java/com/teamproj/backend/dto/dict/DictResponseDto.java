@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 @NoArgsConstructor
@@ -14,6 +16,8 @@ public class DictResponseDto {
     private String title;
     private String summary;
     private String meaning;
+    private String firstWriter;
+    private LocalDateTime createdAt;
     private boolean isLike;
     private int likeCount;
 }

@@ -29,7 +29,7 @@ public class JwtDecoder {
 
         Date now = new Date();
         if (expiredDate.before(now)) {
-            throw new IllegalArgumentException("유효한 토큰이 아닙니다.");
+            throw new IllegalArgumentException("만료된 토큰입니다.");
         }
 
         HashMap<String, String> userInfo = new HashMap<>();

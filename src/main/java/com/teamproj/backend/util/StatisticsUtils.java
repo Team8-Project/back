@@ -6,10 +6,13 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 
 public class StatisticsUtils {
+    // 유입 지점을 확인
     public static String getClientReferer() {
         HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         return req.getHeader("referer");
     }
+
+    // 방문자 IP를 확인
     public static String getClientIp() {
         HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String ip = req.getHeader("X-Forwarded-For");
