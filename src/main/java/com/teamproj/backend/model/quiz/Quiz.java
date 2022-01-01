@@ -30,4 +30,7 @@ public class Quiz {
 
     @Column(nullable = false)
     private String category;
+
+    @Column
+    private String quizImage;
 }

@@ -1,12 +1,17 @@
 package com.teamproj.backend.service;
 
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.board.*;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
+import com.teamproj.backend.dto.board.BoardLike.BoardYesterdayLikeCountRankDto;
 import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
@@ -16,11 +21,11 @@ import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
+import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +37,9 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +65,8 @@ public class BoardService {
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final EntityManager entityManager;
     private final S3Uploader s3Uploader;
+
+    private final JPAQueryFactory queryFactory;
 
     private final String S3dirName = "boardImages";
 
@@ -359,10 +369,10 @@ public class BoardService {
 
     private void todayLikeProc(Board board, BoardCategory boardCategory) {
         Optional<BoardTodayLike> boardTodayLike = boardTodayLikeRepository.findByBoard(board);
-        if(boardTodayLike.isPresent()){
-            boardTodayLike.get().setLikeCount(boardTodayLike.get().getLikeCount()+1);
+        if (boardTodayLike.isPresent()) {
+            boardTodayLike.get().setLikeCount(boardTodayLike.get().getLikeCount() + 1);
             boardTodayLikeRepository.save(boardTodayLike.get());
-        }else{
+        } else {
             BoardTodayLike newBoardTodayLike = BoardTodayLike.builder()
                     .board(board)
                     .boardCategory(boardCategory)
@@ -444,19 +454,16 @@ public class BoardService {
 
     // region 인기 게시글
     public List<MainTodayBoardResponseDto> getTodayBoard(int count) {
-        List<Board> boardList = getTodayBoardElement(count, "FREEBOARD");
+        List<BoardYesterdayLikeCountRankDto> boardYesterdayLikeCountRankDtoList = getTodayBoardElement(count, "FREEBOARD");
 
-        return boardListToMainTodayBoardResponseDtoList(boardList);
-    }
-
-    public List<MainTodayBoardResponseDto> boardListToMainTodayBoardResponseDtoList(List<Board> boardList) {
+        // BoardYesterdayLikeCountRankDto To MainTodayBoardResponseDto
         List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = new ArrayList<>();
-        for (Board board : boardList) {
+        for (BoardYesterdayLikeCountRankDto dto : boardYesterdayLikeCountRankDtoList) {
             mainTodayBoardResponseDtoList.add(MainTodayBoardResponseDto.builder()
-                    .boardId(board.getBoardId())
-                    .thumbNail(board.getThumbNail())
-                    .title(board.getTitle())
-                    .writer(board.getUser().getNickname())
+                    .boardId(dto.getBoardId())
+                    .thumbNail(dto.getThumbNail())
+                    .title(dto.getTitle())
+                    .writer(dto.getNickname())
                     .build());
         }
         return mainTodayBoardResponseDtoList;
@@ -465,44 +472,59 @@ public class BoardService {
 
     // region 명예의 전당
     public List<MainMemeImageResponseDto> getTodayImage(int count) {
-        List<Board> boardList = getTodayBoardElement(count, "IMAGEBOARD");
+        List<BoardYesterdayLikeCountRankDto> boardYesterdayLikeCountRankDtoList = getTodayBoardElement(count, "IMAGEBOARD");
 
-        return boardListToMainMemeImageResponseDto(boardList);
-    }
-
-    public List<MainMemeImageResponseDto> boardListToMainMemeImageResponseDto(List<Board> boardList) {
-        List<MainMemeImageResponseDto> mainMemeImageResponseDto = new ArrayList<>();
-        for (Board board : boardList) {
-            mainMemeImageResponseDto.add(MainMemeImageResponseDto.builder()
-                    .boardId(board.getBoardId())
-                    .imageUrl(board.getThumbNail())
+        // BoardYesterdayLikeCountRankDto To MainMemeImageResponseDto
+        List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = new ArrayList<>();
+        for (BoardYesterdayLikeCountRankDto dto : boardYesterdayLikeCountRankDtoList) {
+            mainMemeImageResponseDtoList.add(MainMemeImageResponseDto.builder()
+                    .boardId(dto.getBoardId())
+                    .imageUrl(dto.getThumbNail())
                     .build());
         }
-        return mainMemeImageResponseDto;
+
+        return mainMemeImageResponseDtoList;
     }
     // endregion
 
-    // region 인기 게시글, 명예의 전당 데이터 산출 도구
-    private List<Board> getTodayBoardElement(int count, String category) {
+    // region 인기 게시글, 명예의 전당 어제 좋아요 데이터 산출 도구
+    private List<BoardYesterdayLikeCountRankDto> getTodayBoardElement(int count, String category) {
         BoardCategory boardCategory = getSafeBoardCategory(category);
-        List<BoardTodayLike> boardTodayLikeList = boardTodayLikeRepository.findAllByBoardCategoryOrderByLikeCountDesc(boardCategory, PageRequest.of(0, count)).toList();
-        List<Long> rankIdx = getRankIndex(boardTodayLikeList);
+        List<Tuple> tupleList = getYesterdayLikeCountRankTuple(boardCategory, count);
 
-        if(!rankIdx.isEmpty()){
-            return boardRepository.findAllByBoardIdInAndBoardCategory(rankIdx, boardCategory);
-        }else {
-            return new ArrayList<>();
-        }
-    }
-
-    private List<Long> getRankIndex(List<BoardTodayLike> boardTodayLikeList) {
-        List<Long> result = new ArrayList<>();
-
-        for (BoardTodayLike boardTodayLike : boardTodayLikeList) {
-            result.add(boardTodayLike.getBoard().getBoardId());
+        List<BoardYesterdayLikeCountRankDto> result = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            result.add(BoardYesterdayLikeCountRankDto.builder()
+                    .boardId(tuple.get(0, Long.class))
+                    .thumbNail(tuple.get(1, String.class))
+                    .title(tuple.get(2, String.class))
+                    .nickname(tuple.get(3, String.class))
+                    .likeCnt(tuple.get(4, Long.class))
+                    .build());
         }
 
         return result;
+    }
+
+    private List<Tuple> getYesterdayLikeCountRankTuple(BoardCategory boardCategory, int count) {
+        QBoardLike qBoardLike = QBoardLike.boardLike;
+        QBoard qBoard = QBoard.board;
+        QUser qUser = QUser.user;
+
+        LocalDateTime startDatetime = LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(0, 0, 0)); //어제 00:00:00
+        LocalDateTime endDatetime = LocalDateTime.of(LocalDate.now(), LocalTime.of(23, 59, 59)); //오늘 23:59:59
+        NumberPath<Long> likeCnt = Expressions.numberPath(Long.class, "c");
+
+        return queryFactory.select(qBoard.boardId, qBoard.thumbNail, qBoard.title, qUser.nickname, qBoardLike.board.count().as(likeCnt))
+                .from(qBoardLike)
+                .leftJoin(qBoardLike.board, qBoard)
+                .leftJoin(qBoardLike.user, qUser)
+                .where(qBoard.boardCategory.eq(boardCategory)
+                        .and(qBoardLike.createdAt.between(startDatetime, endDatetime)))
+                .groupBy(qBoardLike.board)
+                .orderBy(likeCnt.desc())
+                .limit(count)
+                .fetch();
     }
 
     private BoardCategory getSafeBoardCategory(String category) {
