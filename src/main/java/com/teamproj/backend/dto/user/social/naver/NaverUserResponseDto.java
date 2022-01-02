@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.kakao;
+package com.teamproj.backend.dto.user.social.naver;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class KakaoUserResponseDto {
+public class NaverUserResponseDto {
     private String token;
     private String result;
 }

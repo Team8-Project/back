@@ -2,10 +2,11 @@ package com.teamproj.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.teamproj.backend.dto.ResponseDto;
-import com.teamproj.backend.dto.kakao.KakaoUserResponseDto;
+import com.teamproj.backend.dto.user.social.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpCheckResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
+import com.teamproj.backend.dto.user.social.naver.NaverUserResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyRequestDto;
 import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyResponseDto;
@@ -42,8 +43,13 @@ public class UserController {
     }
 
     @GetMapping("/api/user/naver/callback")
-    public ResponseEntity<KakaoUserResponseDto> naverLogin(@RequestParam String code) throws JsonProcessingException {
-        return naverUserService.kakaoLogin(code);
+    public ResponseDto<ResponseEntity<NaverUserResponseDto>> naverLogin(@RequestParam String code,
+                                                           @RequestParam String state) throws JsonProcessingException {
+        return ResponseDto.<ResponseEntity<NaverUserResponseDto>>builder()
+                .status(HttpStatus.OK.toString())
+                .message("네이버 소셜 로그인 요청")
+                .data(naverUserService.naverLogin(code, state))
+                .build();
     }
 
     @GetMapping("/api/userInfo")
