@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamproj.backend.Repository.UserRepository;
+import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.user.social.kakao.KakaoUserInfoDto;
 import com.teamproj.backend.dto.user.social.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.dto.user.social.naver.NaverUserInfoDto;
@@ -13,10 +14,7 @@ import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,7 +43,7 @@ public class NaverUserService {
     @Value("${naver.secret-key}")
     private String secretKey;
 
-    public ResponseEntity<NaverUserResponseDto> naverLogin(String code, String state) throws JsonProcessingException {
+    public ResponseEntity<ResponseDto<NaverUserResponseDto>> naverLogin(String code, String state) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getAccessToken(code, state);
 
@@ -62,16 +60,21 @@ public class NaverUserService {
         String jwt_token = forceLogin(naverUser); // 로그인처리 후 토큰 받아오기
         HttpHeaders headers = new HttpHeaders();
         headers.set(AUTH_HEADER, TOKEN_TYPE + " " + jwt_token);
-        NaverUserResponseDto naverUserResponseDto = NaverUserResponseDto.builder()
-                .result("로그인 성공")
-                .token(TOKEN_TYPE + " " + jwt_token)
-                .build();
         System.out.println("naver user's token : " + TOKEN_TYPE + " " + jwt_token);
         System.out.println("LOGIN SUCCESS!");
 
+        NaverUserResponseDto naverUserResponseDto = NaverUserResponseDto.builder()
+                .userId(naverUser.getId())
+                .nickname(naverUser.getNickname())
+                .build();
+        ResponseDto<NaverUserResponseDto> responseDto = ResponseDto.<NaverUserResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("네이버 소셜 로그인 요청")
+                .data(naverUserResponseDto)
+                .build();
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(naverUserResponseDto);
+                .body(responseDto);
     }
 
     // 1. "인가 코드"로 "액세스 토큰" 요청
@@ -204,18 +207,7 @@ public class NaverUserService {
         }
         return sameUser;
     }
-
-    //    private HeaderDto forceLogin(
-//            User kakaoUser
-//    ) {
-//        UserDetails userDetails = new UserDetailsImpl(kakaoUser);
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//        HeaderDto headerDto = new HeaderDto();
-//        headerDto.setTOKEN(JWTAuthProvider.createToken(kakaoUser.getNickname(),Long.toString(kakaoUser.getKakaoId())));
-//        return headerDto;
-//    }
+    
     private String forceLogin(User kakaoUser) {
         UserDetailsImpl userDetails = UserDetailsImpl.builder()
                 .username(kakaoUser.getUsername())

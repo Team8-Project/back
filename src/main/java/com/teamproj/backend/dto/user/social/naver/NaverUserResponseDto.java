@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NaverUserResponseDto {
-    private String token;
-    private String result;
+    private Long userId;
+    private String nickname;
 }

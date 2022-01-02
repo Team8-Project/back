@@ -43,13 +43,9 @@ public class UserController {
     }
 
     @GetMapping("/api/user/naver/callback")
-    public ResponseDto<ResponseEntity<NaverUserResponseDto>> naverLogin(@RequestParam String code,
+    public ResponseEntity<ResponseDto<NaverUserResponseDto>> naverLogin(@RequestParam String code,
                                                            @RequestParam String state) throws JsonProcessingException {
-        return ResponseDto.<ResponseEntity<NaverUserResponseDto>>builder()
-                .status(HttpStatus.OK.toString())
-                .message("네이버 소셜 로그인 요청")
-                .data(naverUserService.naverLogin(code, state))
-                .build();
+        return naverUserService.naverLogin(code, state);
     }
 
     @GetMapping("/api/userInfo")
