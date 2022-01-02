@@ -9,4 +9,5 @@ public class RedisKey {
     public static final String TODAY_MEME_IMAGE_LIST_KEY = "TODAY_MEME_IMAGE_LIST";
     public static final String TODAY_BOARD_LIST_KEY = "TODAY_BOARD_LIST";
     public static final String RANDOM_QUIZ_KEY = "RANDOM_QUIZ";
+    public static final String BEST_MEME_JJAL_KEY = "BEST_MEME_JJAL_KEY";
 }

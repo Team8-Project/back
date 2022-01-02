@@ -1,5 +1,6 @@
 package com.teamproj.backend.service;
 
+import com.teamproj.backend.dto.board.BoardMemeBest.BoardMemeBestResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
@@ -24,6 +25,7 @@ public class RedisService {
     private final RedisTemplate<String, MainMemeImageResponseDto> redisMainMemeImageResponseDtoTemplate;
     private final RedisTemplate<String, MainTodayBoardResponseDto> redisMainTodayBoardResponseDtoTemplate;
     private final RedisTemplate<String, QuizResponseDto> redisQuizResponseDtoTemplate;
+    private final RedisTemplate<String, BoardMemeBestResponseDto> redisMemeBestResponseDtoTemplate;
 
     public void setBestDict(String key, List<String> bestDictList) {
         redisTemplate.delete(key);
@@ -157,5 +159,23 @@ public class RedisService {
 
         return result;
     }
+
+    //region 명예의 밈짤
+    public List<BoardMemeBestResponseDto> getBestMemeImgList(String key) {
+        ListOperations<String, BoardMemeBestResponseDto> list = redisMemeBestResponseDtoTemplate.opsForList();
+
+        if (list.size(key) > 0) {
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
+    }
+
+    public void setBestMemeImgList(String key, List<BoardMemeBestResponseDto> boardMemeBestResponseDtoList) {
+        redisTemplate.delete(key);
+        ListOperations<String, BoardMemeBestResponseDto> list = redisMemeBestResponseDtoTemplate.opsForList();
+        list.leftPushAll(key, boardMemeBestResponseDtoList);
+    }
+    //endregion
 }
 
