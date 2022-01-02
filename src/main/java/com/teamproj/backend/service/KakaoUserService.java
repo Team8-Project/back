@@ -4,12 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamproj.backend.Repository.UserRepository;
-import com.teamproj.backend.dto.kakao.KakaoUserInfoDto;
-import com.teamproj.backend.dto.kakao.KakaoUserResponseDto;
+import com.teamproj.backend.dto.user.social.kakao.KakaoUserInfoDto;
+import com.teamproj.backend.dto.user.social.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -33,8 +32,9 @@ public class KakaoUserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-//    @Value("${kakao.client-id}")
+    @Value("${kakao.client-id}")
     private String clientId;
+    private String accessToken;
 
     public ResponseEntity<KakaoUserResponseDto> kakaoLogin(String code) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
@@ -99,6 +99,7 @@ public class KakaoUserService {
     }
 
     private KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
+        this.accessToken = accessToken;
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
@@ -120,13 +121,6 @@ public class KakaoUserService {
         Long id = jsonNode.get("id").asLong();
         String nickname = jsonNode.get("properties")
                 .get("nickname").asText();
-//        String email;
-//        if(jsonNode.get("kakao_account").get("email") == null)
-//            email = UUID.randomUUID().toString() + "@contap.com";
-//        else
-//            email = jsonNode.get("kakao_account")
-//                    .get("email").asText();
-
 
         return new KakaoUserInfoDto(id, nickname);
     }
@@ -147,14 +141,14 @@ public class KakaoUserService {
     private User registerKakaoUserIfNeeded(
             KakaoUserInfoDto kakaoUserInfoDto
     ) {
-// DB 에 중복된 Kakao Id 가 있는지 확인
+        // DB 에 중복된 Kakao Id 가 있는지 확인
         Long kakaoId = kakaoUserInfoDto.getId();
         User kakaoUser = userRepository.findByKakaoId(kakaoId)
                 .orElse(null);
         if (kakaoUser == null) {
             // 회원가입
             // username: random UUID
-            String username = "KAKAO" + UUID.randomUUID().toString();
+            String username = "KAKAO" + UUID.randomUUID();
 
             // username: kakao nickname
             String nickname = kakaoUserInfoDto.getNickname();
@@ -163,10 +157,7 @@ public class KakaoUserService {
             String password = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
 
-            // email: kakao email
-//            String email = kakaoUserInfoDto.getEmail();
             kakaoUser = User.builder()
-//                    .email(email)
                     .username(username)
                     .password(encodedPassword)
                     .nickname(nickname)
@@ -190,17 +181,6 @@ public class KakaoUserService {
         return sameUser;
     }
 
-    //    private HeaderDto forceLogin(
-//            User kakaoUser
-//    ) {
-//        UserDetails userDetails = new UserDetailsImpl(kakaoUser);
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//        HeaderDto headerDto = new HeaderDto();
-//        headerDto.setTOKEN(JWTAuthProvider.createToken(kakaoUser.getNickname(),Long.toString(kakaoUser.getKakaoId())));
-//        return headerDto;
-//    }
     private String forceLogin(User kakaoUser) {
         UserDetailsImpl userDetails = UserDetailsImpl.builder()
                 .username(kakaoUser.getUsername())

@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.kakao;
+package com.teamproj.backend.dto.user.social.kakao;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
