@@ -8,5 +8,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DictHistoryRepository extends JpaRepository<DictHistory, Long> {
-    Optional<List<DictHistory>> findAllByDict(Dict dict);
+    Optional<List<DictHistory>> findAllByDictOrderByCreatedAtDesc(Dict dict);
 }

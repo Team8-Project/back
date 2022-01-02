@@ -65,14 +65,14 @@ public class QuizService {
     // Get SafeEntity
     // QuizResponseDtoList
     private List<QuizResponseDto> getSafeQuizResponseDtoList(String key, int count, String category) {
-        List<QuizResponseDto> quizResponseDtoList = redisService.getRandomQuiz(key);
+        List<QuizResponseDto> quizResponseDtoList = redisService.getRandomQuiz(key + category);
 
         if(quizResponseDtoList == null){
             // QueryDSL 적용 구문
             List<Quiz> quizList = randomQuizPick(category);
             // DtoList 로 반환하는 과정에서 문제 속의 선택지 순서도 섞임
-            redisService.setRandomQuiz(key, quizListToQuizResponseDtoList(quizList));
-            quizResponseDtoList = redisService.getRandomQuiz(key);
+            redisService.setRandomQuiz(key + category, quizListToQuizResponseDtoList(quizList));
+            quizResponseDtoList = redisService.getRandomQuiz(key + category);
 
             if(quizResponseDtoList == null){
                 throw new NullPointerException(NOT_EXIST_CATEGORY);
