@@ -4,6 +4,7 @@ import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.dict.DictLike;
 import com.teamproj.backend.util.Timestamped;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,9 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class User extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +38,9 @@ public class User extends Timestamped {
     @Column(unique = true)
     private Long kakaoId;
 
+    @Column(unique = true)
+    private Long naverId;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private final List<Board> boardList = new ArrayList<>();
 
@@ -46,6 +52,10 @@ public class User extends Timestamped {
 
     public void setKakaoId(Long kakaoId) {
         this.kakaoId = kakaoId;
+    }
+
+    public void setNaverId(Long naverId) {
+        this.naverId = naverId;
     }
 
     public void setNickname(String nickname) {
@@ -61,15 +71,6 @@ public class User extends Timestamped {
         this.nickname = signUpRequestDto.getNickname();
         this.password = encodedPassword;
     }
-
-
-//    @Builder
-//    public User(String username, String password, String nickname){
-//        this.username = username;
-//        this.password = password;
-//        this.nickname = nickname;
-//        this.kakaoId = null;
-//    }
 
     @Builder
     public User(String username, String password, String nickname, Long kakaoId) {
