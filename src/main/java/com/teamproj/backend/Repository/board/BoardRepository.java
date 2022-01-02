@@ -15,20 +15,23 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    Optional<Page<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled, Pageable pageable);
-
-    List<Board> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean b);
-
-    Optional<List<Board>> findByTitleContaining(String keyword);
+    Board findByTitle(String title);
 
     List<Board> findByUser(User user);
+
+    Long countByBoardCategory(BoardCategory boardCategory);
+
+    Optional<Page<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled, Pageable pageable);
+
+    Optional<List<Board>> findByTitleContaining(String keyword);
 
     @Modifying
     @Transactional
     @Query("update Board b set b.views = b.views + 1 where b.boardId = :id")
     int updateView(Long id);
 
-    Board findByTitle(String title);
+    // 미사용 코드들(삭제 예정)
+    List<Board> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean b);
 
     List<Board> findAllByBoardIdInAndBoardCategory(List<Long> rankIdx, BoardCategory boardCategory);
 

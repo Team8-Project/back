@@ -58,4 +58,11 @@ public class Scheduler {
         redisService.setBestDict(BEST_DICT_KEY, dictService.getSafeBestDict());
         dictViewersRepository.deleteAll();
     }
+
+    @Scheduled(cron = "0 0 0 * * 0")
+    public void weekendSchedule() {
+        System.out.println("매주 일요일 스케줄 실시");
+        // 명예의 밈짤 데이터 교체
+        redisService.setBestMemeImgList(BEST_MEME_JJAL_KEY, boardService.getBestMemeImg("MEME"));
+    }
 }

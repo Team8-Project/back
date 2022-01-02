@@ -118,7 +118,17 @@ public class BoardController {
         return ResponseDto.<List<BoardMemeBestResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("명예의 밈짤 받기 요청")
-                .data(boardService.getBestMeme(categoryName))
+                .data(boardService.getBestMemeImg(categoryName))
+                .build();
+    }
+
+    @GetMapping("/api/board/count/{categoryName}")
+    public ResponseDto<Long> getTotalBoardCount(@PathVariable String categoryName) {
+
+        return ResponseDto.<Long>builder()
+                .status(HttpStatus.OK.toString())
+                .message("게시글 총 개수 출력 요청")
+                .data(boardService.getTotalBoardCount(categoryName))
                 .build();
     }
 }

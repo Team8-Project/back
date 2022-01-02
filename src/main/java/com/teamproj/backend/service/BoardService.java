@@ -1,7 +1,6 @@
 package com.teamproj.backend.service;
 
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.DateTemplate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -22,10 +21,9 @@ import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.board.*;
-import com.teamproj.backend.model.dict.QDict;
-import com.teamproj.backend.model.dict.QDictLike;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.RedisKey;
 import com.teamproj.backend.util.S3Uploader;
 import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
@@ -42,11 +40,13 @@ import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.teamproj.backend.model.board.QBoardLike.boardLike;
-
+import static com.teamproj.backend.util.RedisKey.*;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +60,7 @@ public class BoardService {
     private final BoardTodayLikeRepository boardTodayLikeRepository;
 
     private final CommentService commentService;
+    private final RedisService redisService;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final S3Uploader s3Uploader;
@@ -72,7 +73,7 @@ public class BoardService {
     public List<BoardResponseDto> getBoard(String categoryName, int page, int size) {
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
-        Sort.Direction direction = Sort.Direction.DESC;
+        Sort.Direction direction = Sort.Direction.ASC;
         Sort sort = Sort.by(direction, "boardId");
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -488,8 +489,27 @@ public class BoardService {
     // endregion
 
     //region 명예의 밈짤 받기
-    public List<BoardMemeBestResponseDto> getBestMeme(String categoryName) {
+    public List<BoardMemeBestResponseDto> getBestMemeImg(String categoryName) {
 
+        List<BoardMemeBestResponseDto> boardMemeBestResponseDtoList = redisService.getBestMemeImgList(BEST_MEME_JJAL_KEY);
+
+        if (boardMemeBestResponseDtoList == null) {
+
+            boardMemeBestResponseDtoList = getBestMemeResponseDtoList(categoryName);
+
+            if (boardMemeBestResponseDtoList.size() > 0) {
+                redisService.setBestMemeImgList(BEST_MEME_JJAL_KEY, boardMemeBestResponseDtoList);
+                boardMemeBestResponseDtoList = redisService.getBestMemeImgList(BEST_MEME_JJAL_KEY);
+            } else {
+                return new ArrayList<>();
+            }
+        }
+
+        return boardMemeBestResponseDtoList;
+    }
+
+
+    private List<BoardMemeBestResponseDto> getBestMemeResponseDtoList(String categoryName) {
         LocalDateTime startDatetime = LocalDateTime.of(LocalDate.now().minusDays(7), LocalTime.of(0, 0, 0)); //어제 00:00:00
         LocalDateTime endDatetime = LocalDateTime.of(LocalDate.now(), LocalTime.of(23, 59, 59)); //오늘 23:59:59
         NumberPath<Long> likeCnt = Expressions.numberPath(Long.class, "c");
@@ -499,7 +519,7 @@ public class BoardService {
         QUser qUser = QUser.user;
 
         List<Tuple> tupleList = queryFactory
-                .select(qBoard.boardId, qBoard.thumbNail, qBoard.title, qUser.username, qBoard.thumbNail, qUser.nickname, qBoard.content, qBoard.createdAt, qBoard.views, qBoardLike.board.count().as(likeCnt))
+                .select(qBoard.boardId, qBoard.thumbNail, qBoard.title, qUser.username, qBoard.thumbNail, qUser.nickname, qBoard.content, qBoard.views, qBoardLike.board.count().as(likeCnt))
                 .from(qBoardLike)
                 .leftJoin(qBoardLike.board, qBoard)
                 .leftJoin(qBoardLike.user, qUser)
@@ -512,10 +532,11 @@ public class BoardService {
                 .fetch();
 
 
-        List<BoardMemeBestResponseDto> boardMemeBestResponseDtos = new ArrayList<>();
+        List<BoardMemeBestResponseDto> boardMemeBestResponseDtoList = new ArrayList<>();
+
         for (Tuple tuple : tupleList) {
 
-            boardMemeBestResponseDtos.add(
+            boardMemeBestResponseDtoList.add(
                     BoardMemeBestResponseDto.builder()
                             .boardId(tuple.get(0, Long.class))
                             .thumbNail(tuple.get(1,String.class))
@@ -524,14 +545,29 @@ public class BoardService {
                             .profileImageUrl(tuple.get(4, String.class))
                             .writer(tuple.get(5, String.class))
                             .content(tuple.get(6, String.class))
-                            .createdAt(tuple.get(7, LocalDateTime.class))
-                            .views(tuple.get(8, int.class))
-                            .likeCnt(tuple.get(9, Long.class))
+                            .views(tuple.get(7, int.class))
+                            .likeCnt(tuple.get(8, Long.class))
                             .build()
             );
         }
 
-        return boardMemeBestResponseDtos;
+
+        return boardMemeBestResponseDtoList;
+    }
+    //endregion
+
+    //region 카테고리별 게시글 총 개수
+    public Long getTotalBoardCount(String categoryName) {
+        BoardCategory boardCategory = getSafeBoardCategory(categoryName);
+
+        // To Do: 프론트분에게 물어보고 둘 중에 하나 전송
+
+        // 1. 카테고리에 해당하는 보드 갯수
+        Long totalCategoryBoardCount = boardRepository.countByBoardCategory(boardCategory);
+        // 2. 모든 게시글 갯수
+        Long totalBoardCount = boardRepository.count();
+
+        return totalCategoryBoardCount;
     }
     //endregion
 
