@@ -16,7 +16,8 @@ public class BoardMemeBestResponseDto {
     private String username;
     private String profileImageUrl;
     private String writer;
+    private String content;
     private LocalDateTime createdAt;
     private int views;
-    private int likeCnt;
+    private Long likeCnt;
 }

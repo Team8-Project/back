@@ -1,6 +1,7 @@
 package com.teamproj.backend.service;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.DateTemplate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -21,6 +22,8 @@ import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.board.*;
+import com.teamproj.backend.model.dict.QDict;
+import com.teamproj.backend.model.dict.QDictLike;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.S3Uploader;
@@ -41,6 +44,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.teamproj.backend.model.board.QBoardLike.boardLike;
 
 
 @Service
@@ -459,7 +464,7 @@ public class BoardService {
     }
 
     private List<Tuple> getYesterdayLikeCountRankTuple(BoardCategory boardCategory, int count) {
-        QBoardLike qBoardLike = QBoardLike.boardLike;
+        QBoardLike qBoardLike = boardLike;
         QBoard qBoard = QBoard.board;
         QUser qUser = QUser.user;
 
@@ -472,32 +477,61 @@ public class BoardService {
                 .leftJoin(qBoardLike.board, qBoard)
                 .leftJoin(qBoardLike.user, qUser)
                 .where(qBoard.boardCategory.eq(boardCategory)
-                        .and(qBoardLike.createdAt.between(startDatetime, endDatetime)))
+                        .and(qBoardLike.createdAt.between(startDatetime, endDatetime))
+                        .and(qBoard.enabled.eq(true)))
                 .groupBy(qBoardLike.board)
                 .orderBy(likeCnt.desc())
                 .limit(count)
                 .fetch();
     }
-  
+
     // endregion
-
-
 
     //region 명예의 밈짤 받기
     public List<BoardMemeBestResponseDto> getBestMeme(String categoryName) {
 
-        BoardCategory boardCategory = getSafeBoardCategory(categoryName);
+        LocalDateTime startDatetime = LocalDateTime.of(LocalDate.now().minusDays(7), LocalTime.of(0, 0, 0)); //어제 00:00:00
+        LocalDateTime endDatetime = LocalDateTime.of(LocalDate.now(), LocalTime.of(23, 59, 59)); //오늘 23:59:59
+        NumberPath<Long> likeCnt = Expressions.numberPath(Long.class, "c");
 
-        List<Board> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory, true);
+        QBoard qBoard = QBoard.board;
+        QBoardLike qBoardLike = boardLike;
+        QUser qUser = QUser.user;
+
+        List<Tuple> tupleList = queryFactory
+                .select(qBoard.boardId, qBoard.thumbNail, qBoard.title, qUser.username, qBoard.thumbNail, qUser.nickname, qBoard.content, qBoard.createdAt, qBoard.views, qBoardLike.board.count().as(likeCnt))
+                .from(qBoardLike)
+                .leftJoin(qBoardLike.board, qBoard)
+                .leftJoin(qBoardLike.user, qUser)
+                .where(qBoard.boardCategory.categoryName.eq(categoryName)
+                        .and(qBoardLike.createdAt.between(startDatetime, endDatetime))
+                        .and(qBoard.enabled.eq(true)))
+                .groupBy(qBoardLike.board)
+                .orderBy(likeCnt.desc())
+                .limit(5)
+                .fetch();
 
 
-        LocalDateTime dateNow = LocalDateTime.now();
+        List<BoardMemeBestResponseDto> boardMemeBestResponseDtos = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
 
-        LocalDateTime dateAgo = dateNow.minusDays(7);
+            boardMemeBestResponseDtos.add(
+                    BoardMemeBestResponseDto.builder()
+                            .boardId(tuple.get(0, Long.class))
+                            .thumbNail(tuple.get(1,String.class))
+                            .title(tuple.get(2, String.class))
+                            .username(tuple.get(3, String.class))
+                            .profileImageUrl(tuple.get(4, String.class))
+                            .writer(tuple.get(5, String.class))
+                            .content(tuple.get(6, String.class))
+                            .createdAt(tuple.get(7, LocalDateTime.class))
+                            .views(tuple.get(8, int.class))
+                            .likeCnt(tuple.get(9, Long.class))
+                            .build()
+            );
+        }
 
-//        QBoard qBoard = new QBoard();
-
-        return null;
+        return boardMemeBestResponseDtos;
     }
     //endregion
 
