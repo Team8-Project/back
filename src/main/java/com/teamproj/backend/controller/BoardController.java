@@ -6,6 +6,7 @@ import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
+import com.teamproj.backend.dto.board.BoardMemeBest.BoardMemeBestResponseDto;
 import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
@@ -42,7 +43,7 @@ public class BoardController {
     public ResponseDto<BoardUploadResponseDto> uploadBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                            @PathVariable String categoryName,
                                                            @RequestPart BoardUploadRequestDto boardUploadRequestDto,
-                                                           @RequestPart(required = false) MultipartFile multipartFile
+                                                           @RequestPart(value = "thumbNail", required = false) MultipartFile multipartFile
                                                             ) throws IOException {
 
         return ResponseDto.<BoardUploadResponseDto>builder()
@@ -108,6 +109,16 @@ public class BoardController {
                 .status(HttpStatus.OK.toString())
                 .message("게시글 검색 요청")
                 .data(boardService.boardSearch(q))
+                .build();
+    }
+
+    @GetMapping("/api/board/{categoryName}/best")
+    public ResponseDto<List<BoardMemeBestResponseDto>> getBestMeme(@PathVariable String categoryName) {
+
+        return ResponseDto.<List<BoardMemeBestResponseDto>>builder()
+                .status(HttpStatus.OK.toString())
+                .message("명예의 밈짤 받기 요청")
+                .data(boardService.getBestMeme(categoryName))
                 .build();
     }
 }

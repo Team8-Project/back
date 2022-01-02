@@ -17,6 +17,8 @@ import java.util.Optional;
 public interface BoardRepository extends JpaRepository<Board, Long> {
     Optional<Page<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled, Pageable pageable);
 
+    List<Board> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean b);
+
     Optional<List<Board>> findByTitleContaining(String keyword);
 
     List<Board> findByUser(User user);
@@ -31,4 +33,5 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     List<Board> findAllByBoardIdInAndBoardCategory(List<Long> rankIdx, BoardCategory boardCategory);
 
     Page<Board> findAllByBoardCategoryOrderByViews(BoardCategory boardCategory, Pageable pageable);
+
 }
