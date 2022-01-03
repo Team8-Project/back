@@ -7,6 +7,10 @@ branches:
   only:
     - develop
 
+# gradlew 권한 추가
+before_install:
+  - chmod +x gradlew
+
 # Travis CI 서버의 Home
 cache:
   directories:
