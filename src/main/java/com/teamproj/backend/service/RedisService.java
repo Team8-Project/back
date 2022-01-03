@@ -73,6 +73,7 @@ public class RedisService {
         return null;
     }
 
+    //region 추천 해시태그
     public void setRecommendHashTag(String key, List<BoardHashTag> boardHashTagList) {
         redisTemplate.delete(key);
         ListOperations<String, String> list = redisStringTemplate.opsForList();
@@ -88,6 +89,7 @@ public class RedisService {
         }
         return null;
     }
+    //endregion
 
     public List<MainMemeImageResponseDto> getTodayMemeImageList(String key) {
         ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();

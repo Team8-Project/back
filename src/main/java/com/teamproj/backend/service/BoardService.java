@@ -73,7 +73,7 @@ public class BoardService {
     public List<BoardResponseDto> getBoard(String categoryName, int page, int size) {
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
-        Sort.Direction direction = Sort.Direction.ASC;
+        Sort.Direction direction = Sort.Direction.DESC;
         Sort sort = Sort.by(direction, "boardId");
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -519,7 +519,8 @@ public class BoardService {
         QUser qUser = QUser.user;
 
         List<Tuple> tupleList = queryFactory
-                .select(qBoard.boardId, qBoard.thumbNail, qBoard.title, qUser.username, qBoard.thumbNail, qUser.nickname, qBoard.content, qBoard.views, qBoardLike.board.count().as(likeCnt))
+                .select(qBoard.boardId, qBoard.thumbNail, qBoard.title, qUser.username, qBoard.thumbNail,
+                        qUser.nickname, qBoard.content, qBoard.views, qBoardLike.board.count().as(likeCnt))
                 .from(qBoardLike)
                 .leftJoin(qBoardLike.board, qBoard)
                 .leftJoin(qBoardLike.user, qUser)
@@ -560,14 +561,7 @@ public class BoardService {
     public Long getTotalBoardCount(String categoryName) {
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
-        // To Do: 프론트분에게 물어보고 둘 중에 하나 전송
-
-        // 1. 카테고리에 해당하는 보드 갯수
-        Long totalCategoryBoardCount = boardRepository.countByBoardCategory(boardCategory);
-        // 2. 모든 게시글 갯수
-        Long totalBoardCount = boardRepository.count();
-
-        return totalCategoryBoardCount;
+        return boardRepository.countByBoardCategory(boardCategory);
     }
     //endregion
 

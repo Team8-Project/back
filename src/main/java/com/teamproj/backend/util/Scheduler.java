@@ -49,9 +49,6 @@ public class Scheduler {
         redisService.setTodayBoardList(TODAY_BOARD_LIST_KEY, boardService.getTodayBoard(5));
         boardTodayLikeRepository.resetAll();
 
-        System.out.println("추천 해시태그 데이터 초기화");
-        redisTemplate.delete(HASHTAG_RECOMMEND_KEY);
-
         System.out.println("조회수 및 방문자 정보 초기화 .....");
         statService.statVisitorToNumericData(statVisitorRepository.count(), statNumericdataRepository.findByName("VISITOR"));
         boardViewersRepository.deleteAll();
