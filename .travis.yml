@@ -39,6 +39,20 @@ deploy:
       branch: develop
     local_dir: deploy # before_deploy에서 생성한 디렉토리
 
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: team8-deploy # S3 버킷
+    key: team8-deploy.zip # S3 버킷에 저장된 team8-deploy.zip 파일을 EC2로 배포
+    bundle_type: zip
+    application: memeglememegle-deploy # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
+    deployment_group: memeglememegle-deploy-group # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
+    region: ap-northeast-2
+    wait-until-deployed: true
+    on:
+      repo: Team8-Project/back
+      branch: develop
+
 # CI 실행 완료시 메일로 알람
 notifications:
   email:
