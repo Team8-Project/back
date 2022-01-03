@@ -52,7 +52,7 @@ public class NaverUserService {
 
         // 3. "네이버 사용자 정보"로 필요시 회원가입  및 이미 같은 id가 있으면 기존회원으로 로그인
         User naverUser = registerNaverOrUpdateNaver(snsUserInfoDto);
-//
+
         // 4. 강제 로그인 처리
         final String AUTH_HEADER = "Authorization";
         final String TOKEN_TYPE = "BEARER";
@@ -109,6 +109,7 @@ public class NaverUserService {
         return jsonNode.get("access_token").asText();
     }
 
+    // 2. "액세스 토큰"으로 "네이버 사용자 정보" 가져오기
     private NaverUserInfoDto getNaverUserInfo(String accessToken) throws JsonProcessingException {
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
@@ -157,6 +158,7 @@ public class NaverUserService {
                 .build();
     }
 
+    // 3. "네이버 사용자 정보"로 필요시 회원가입  및 이미 같은 id가 있으면 기존회원으로 로그인
     private User registerNaverOrUpdateNaver(NaverUserInfoDto naverUserInfoDto) {
         Optional<User> sameUser = userRepository.findByNaverId(naverUserInfoDto.getId());
 
@@ -207,7 +209,8 @@ public class NaverUserService {
         }
         return sameUser;
     }
-    
+
+    // 4. 강제 로그인 처리
     private String forceLogin(User kakaoUser) {
         UserDetailsImpl userDetails = UserDetailsImpl.builder()
                 .username(kakaoUser.getUsername())
