@@ -1,8 +1,5 @@
 package com.teamproj.backend.service;
 
-import com.teamproj.backend.Repository.CarouselImageRepository;
-import com.teamproj.backend.Repository.board.BoardCategoryRepository;
-import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainPageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
@@ -28,14 +25,11 @@ public class MainService {
     private final DictService dictService;
     private final RedisService redisService;
 
-    private final CarouselImageRepository carouselImageRepository;
-
-
+    // 메인페이지 데이터 불러오기
     public MainPageResponseDto getMainPageElements(String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = userDetails == null ? null : jwtAuthenticateProcessor.getUser(userDetails);
 
-        List<String> carouselImageUrlList = getSafeCarouselImageUrlList(CAROUSEL_URL_KEY);
         List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = getSafeMainTodayMemeResponseDtoList(TODAY_LIST_KEY);
         List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = getSafeMainMemeImageResponseDtoList(TODAY_MEME_IMAGE_LIST_KEY);
         List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = getSafeMainTodayBoardResponseDtoList(TODAY_BOARD_LIST_KEY);
@@ -43,7 +37,6 @@ public class MainService {
         return MainPageResponseDto.builder()
                 .username(user == null ? null : user.getUsername())
                 .nickname(user == null ? null : user.getNickname())
-                .carousels(carouselImageUrlList)
                 .todayMemes(mainTodayMemeResponseDtoList)
                 .popularBoards(mainTodayBoardResponseDtoList)
                 .popularImages(mainMemeImageResponseDtoList)
@@ -51,22 +44,6 @@ public class MainService {
     }
 
     // get SafeEntity
-    // CarouselImageUrlList
-    private List<String> getSafeCarouselImageUrlList(String key) {
-        List<String> carouselImageUrlList = redisService.getStringList(key);
-
-        if (carouselImageUrlList == null) {
-            redisService.setCarouselImageUrl(key, carouselImageRepository.findAll());
-            carouselImageUrlList = redisService.getStringList(key);
-
-            if (carouselImageUrlList == null) {
-                return new ArrayList<>();
-            }
-        }
-
-        return carouselImageUrlList;
-    }
-
     // MainTodayMemeResponseDtoList
     // 오늘의밈(사전) : 전날 조회수 상위 20개의 목록을 받아 섞은 뒤 7개만 반환 : 사용자는 오늘의 밈 데이터를 정해진 풀 속에서 랜덤하게 받아오는것으로 인지.
     private List<MainTodayMemeResponseDto> getSafeMainTodayMemeResponseDtoList(String key) {
@@ -77,7 +54,7 @@ public class MainService {
         // 2-2. 조회 결과가 20개보다 작을 경우 충분한 랜덤성을 제공하기 어렵다고 판단, 20개가 될 때까지 계속 스캔을 진행하도록 설정.
         //      Q) 아니, 그러면 처음 20회 조회는 무조건 이 불필요한 과정을 거친다는 말인가요 ??!?!?!!
         //      A) 그건 아니다. 전날의 데이터를 기반으로 하기 때문에 전날 20종류 이상의 조회가 있었다면 진행하지 않는 구문이다.
-        //         이건 사람들이 열람한 사전 데이터가 20종륲가 넘지 않을 것을 고려해 넣은 안전장치이다.
+        //         이건 사람들이 열람한 사전 데이터가 20종류가 넘지 않을 것을 고려해 넣은 안전장치이다.
         if (mainTodayMemeResponseDtoList == null || mainTodayMemeResponseDtoList.size() < 20) {
             List<MainTodayMemeResponseDto> setElement = dictService.getTodayMeme(20);
 

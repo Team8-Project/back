@@ -43,7 +43,7 @@ public class QuizService {
         QQuiz qQuiz = new QQuiz("quiz");
         QQuizBank qQuizBank = QQuizBank.quizBank;
 
-        return query.from(qQuiz)
+        return query.from(qQuiz).distinct()
                 .leftJoin(qQuiz.choiceList, qQuizBank)
                 .fetchJoin()
                 .where(qQuiz.category.eq(category))
