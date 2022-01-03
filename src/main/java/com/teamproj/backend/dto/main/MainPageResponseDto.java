@@ -14,7 +14,6 @@ import java.util.List;
 public class MainPageResponseDto {
     private String username;
     private String nickname;
-    private List<String> carousels;
     private List<MainTodayMemeResponseDto> todayMemes;
     private List<MainTodayBoardResponseDto> popularBoards;
     private List<MainMemeImageResponseDto> popularImages;

@@ -40,12 +40,6 @@ public class RedisService {
         redisStringTemplate.expire(key, 1, TimeUnit.HOURS);
     }
 
-    public void setCarouselImageUrl(String key, List<CarouselImage> carouselImageList) {
-        redisTemplate.delete(key);
-        ListOperations<String, String> list = redisStringTemplate.opsForList();
-        list.leftPushAll(key, carouselImageListToStringList(carouselImageList));
-    }
-
     public List<String> getStringList(String key) {
         ListOperations<String, String> list = redisStringTemplate.opsForList();
 
@@ -132,7 +126,6 @@ public class RedisService {
 
     public List<QuizResponseDto> getRandomQuiz(String key) {
         ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
-        redisQuizResponseDtoTemplate.getExpire(key, TimeUnit.SECONDS);
         if(list.size(key) > 0){
             return list.range(key, 0, list.size(key) - 1);
         }

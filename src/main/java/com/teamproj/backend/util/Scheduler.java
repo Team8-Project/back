@@ -41,9 +41,8 @@ public class Scheduler {
     @Scheduled(cron = "0 0 0 * * *")
     public void dayRegularSchedule() {
         System.out.println("자정 정기 스케줄 실시 .....");
-        // 캐러셀이미지, 오늘의밈, 인기게시글, 명예의전당 데이터 교체
+        // 오늘의밈, 인기게시글, 명예의전당 데이터 교체
         System.out.println("메인 페이지 데이터 교체 .....");
-        redisService.setCarouselImageUrl(CAROUSEL_URL_KEY, carouselImageRepository.findAll());
         redisService.setTodayList(TODAY_LIST_KEY, dictService.getTodayMeme(20));
         redisService.setTodayMemeImageList(TODAY_MEME_IMAGE_LIST_KEY, boardService.getTodayImage(5));
         redisService.setTodayBoardList(TODAY_BOARD_LIST_KEY, boardService.getTodayBoard(5));
