@@ -19,6 +19,20 @@ cache:
 
 script: "./gradlew clean build"
 
+# 배포 설정값
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY # Travis-ci 웹 repo settings에서 설정해줘야 함.
+    secret_access_key: $AWS_SECRET_KEY # Travis-ci 웹 repo settings에서 설정해줘야 함.
+    bucket: team8-deploy # 생성한 S3 버킷
+    region: ap-northeast-2
+    skip_cleanup: true
+    acl: public_read
+    wait-until-deployed: true
+    on:
+      repo: Team8-Project/back #Github 주소
+      branch: develop
+
 # CI 실행 완료시 메일로 알람
 notifications:
   email:
