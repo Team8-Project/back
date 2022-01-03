@@ -20,7 +20,7 @@ cache:
 script: "./gradlew clean build"
 
 before_deploy:
-  - zip -r springboot-webservice *
+  - zip -r team8-deploy *
   - mkdir -p deploy
   - mv team8-deploy.zip deploy/team8-deploy.zip
 
