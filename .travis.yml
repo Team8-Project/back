@@ -19,6 +19,11 @@ cache:
 
 script: "./gradlew clean build"
 
+before_deploy:
+  - zip -r springboot-webservice *
+  - mkdir -p deploy
+  - mv team8-deploy.zip deploy/team8-deploy.zip
+
 # 배포 설정값
 deploy:
   - provider: s3
@@ -32,6 +37,7 @@ deploy:
     on:
       repo: Team8-Project/back #Github 주소
       branch: develop
+    local_dir: deploy # before_deploy에서 생성한 디렉토리
 
 # CI 실행 완료시 메일로 알람
 notifications:
