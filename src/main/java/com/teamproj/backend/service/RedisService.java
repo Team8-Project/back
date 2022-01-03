@@ -130,7 +130,7 @@ public class RedisService {
 
     public List<QuizResponseDto> getRandomQuiz(String key) {
         ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
-        redisQuizResponseDtoTemplate.getExpire(key, TimeUnit.SECONDS);
+        System.out.println("list size : " + list.size(key));
         if(list.size(key) > 0){
             return list.range(key, 0, list.size(key) - 1);
         }
