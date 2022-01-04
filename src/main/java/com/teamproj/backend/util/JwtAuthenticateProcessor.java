@@ -36,7 +36,7 @@ public class JwtAuthenticateProcessor {
             양식이 잘못된 토큰 또는 만료된 토큰을 들고 있더라도 일단 비회원으로써 볼 수 있는 기능은 전부 열람 가능하게 해야하기 때문!
             상기 문제를 가진 토큰이 jwtDecoder.decodeUser()의 파라미터로 들어갈 경우 IllegalArgumentException 발생함.
          */
-        try{ 
+        try{
             HashMap<String, String> userInfo = jwtDecoder.decodeUser(token);
             UserDetailsImpl userDetails = UserDetailsImpl.initUserDetails(userInfo);
             Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
