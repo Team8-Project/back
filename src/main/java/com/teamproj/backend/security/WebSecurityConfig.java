@@ -123,6 +123,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         List<String> skipPathList = new ArrayList<>();
 
         skipPathList.add("GET,/health");
+        skipPathList.add("GET,/actuator/health");
         skipPathList.add("GET,/profile");
         skipPathList.add("GET,/h2-console");
 
