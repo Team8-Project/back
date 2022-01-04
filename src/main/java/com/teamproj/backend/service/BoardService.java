@@ -235,6 +235,9 @@ public class BoardService {
                 .likeCnt(boardLikeList.size())
                 .isLike(isLike)
                 .commentList(commentService.getCommentList(board))
+                .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
+                        h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
+                )
                 .build();
     }
 
@@ -574,7 +577,7 @@ public class BoardService {
     public Long getTotalBoardCount(String categoryName) {
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
-        return boardRepository.countByBoardCategory(boardCategory);
+        return boardRepository.countByBoardCategoryAndEnabled(boardCategory, true);
     }
     //endregion
 

@@ -50,7 +50,7 @@ public class UserController {
         return naverUserService.naverLogin(code, state);
     }
 
-    @GetMapping("/api/user/google/callback")
+    @GetMapping("/login/oauth2/code/google")
     public ResponseEntity<String> googleLogin(@RequestParam String code) throws JsonProcessingException {
         System.out.println("요것이 바로 코드" + code);
         return googleUserService.googleLogin(code);
