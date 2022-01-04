@@ -31,11 +31,16 @@ public class BoardController {
     @GetMapping("/api/board/list/{categoryName}")
     public ResponseDto<List<BoardResponseDto>> getBoard(@PathVariable String categoryName,
                                                         @RequestParam("page") int page,
-                                                        @RequestParam("size") int size ){
+                                                        @RequestParam("size") int size,
+                                                        @RequestHeader(value="Authorization", required = false) String token ){
+        if(token == null){
+            token = "";
+        }
+
         return ResponseDto.<List<BoardResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("게시글 목록 불러오기")
-                .data(boardService.getBoard(categoryName, page, size))
+                .data(boardService.getBoard(categoryName, page, size, token))
                 .build();
     }
 

@@ -79,7 +79,6 @@ public class KakaoUserService {
         // https://kauth.kakao.com/oauth/authorize?client_id=your_code&redirect_uri=http://localhost:8080/oauth/kakao/callback&response_type=code
         body.add("code", code);
 
-
         // HTTP 요청 보내기
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest =
                 new HttpEntity<>(body, headers);
@@ -121,8 +120,9 @@ public class KakaoUserService {
         Long id = jsonNode.get("id").asLong();
         String nickname = jsonNode.get("properties")
                 .get("nickname").asText();
+        String profileImage = jsonNode.get("properties").get("profile_image").asText();
 
-        return new KakaoUserInfoDto(id, nickname);
+        return new KakaoUserInfoDto(id, nickname, profileImage);
     }
 
     private User registerKakaoOrUpdateKakao(
@@ -153,6 +153,9 @@ public class KakaoUserService {
             // username: kakao nickname
             String nickname = kakaoUserInfoDto.getNickname();
 
+            // profileImage: kakao profile image
+            String profileImage = kakaoUserInfoDto.getProfileImage();
+
             // password: random UUID
             String password = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
@@ -162,6 +165,7 @@ public class KakaoUserService {
                     .password(encodedPassword)
                     .nickname(nickname)
                     .kakaoId(kakaoId)
+                    .profileImage(profileImage)
                     .build();
             userRepository.save(kakaoUser);
         }

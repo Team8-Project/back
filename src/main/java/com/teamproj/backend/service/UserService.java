@@ -122,9 +122,9 @@ public class UserService {
             throw new IllegalArgumentException(ILLEGAL_USERNAME_FORMAT);
         }
         // nickname
-        if (nickname.length() < 2 || nickname.length() > 16) {
+        if (nickname.length() < 2 || nickname.length() > 10) {
             throw new IllegalArgumentException(ILLEGAL_NICKNAME_LENGTH);
-        } else if (!nickname.matches("^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,16}$")) {
+        } else if (!nickname.matches("^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,10}$")) {
             throw new IllegalArgumentException(ILLEGAL_NICKNAME_FORMAT);
         }
         // password

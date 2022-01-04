@@ -163,6 +163,7 @@ public class DictService {
         // 이전 내용 히스토리에 저장
         dictHistoryRepository.save(dictHistory);
 
+        dict.setRecentModifier(jwtAuthenticateProcessor.getUser(userDetails));
         dict.setSummary(dictPutRequestDto.getSummary());
         dict.setContent(dictPutRequestDto.getContent());
 

@@ -6,6 +6,7 @@ import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryRecentResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.dict.DictHistory;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -124,10 +125,12 @@ public class DictHistoryService {
         List<DictHistoryRecentResponseDto> dictHistoryRecentResponseDtoList = new ArrayList<>();
 
         for (DictHistory dictHistory : dictHistoryList) {
+            User user = dictHistory.getUser();
             dictHistoryRecentResponseDtoList.add(DictHistoryRecentResponseDto.builder()
                     .historyId(dictHistory.getDictHistoryId())
                     .revertFrom(dictHistory.getRevertFrom() == null ? null : dictHistory.getRevertFrom().getDictHistoryId())
-                    .writer(dictHistory.getUser().getNickname())
+                    .writerProfileImage(user.getProfileImage())
+                    .writer(user.getNickname())
                     .createdAt(dictHistory.getCreatedAt())
                     .build());
         }

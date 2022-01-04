@@ -8,4 +8,5 @@ import lombok.Getter;
 public class KakaoUserInfoDto {
     Long id;
     String nickname;
+    String profileImage;
 }
