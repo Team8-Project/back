@@ -23,7 +23,6 @@ import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
-import com.teamproj.backend.util.RedisKey;
 import com.teamproj.backend.util.S3Uploader;
 import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
@@ -70,20 +69,34 @@ public class BoardService {
     private final String S3dirName = "boardImages";
 
     //region 게시글 전체조회
-    public List<BoardResponseDto> getBoard(String categoryName, int page, int size) {
+    public List<BoardResponseDto> getBoard(String categoryName, int page, int size, String token) {
+        UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
         Sort.Direction direction = Sort.Direction.DESC;
         Sort sort = Sort.by(direction, "boardId");
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Optional<Page<Board>> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory, true, pageable);
-        return boardList.map(this::boardListToBoardResponseDtoList).orElseGet(ArrayList::new);
+        Page<Board> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory, true, pageable)
+                .orElse(null);
+
+        return getBoardResponseDtoList(userDetails, boardList);
     }
 
-    private List<BoardResponseDto> boardListToBoardResponseDtoList(Page<Board> boardList) {
+    private List<BoardResponseDto> getBoardResponseDtoList(UserDetailsImpl userDetails, Page<Board> boardList) {
         List<BoardResponseDto> boardResponseDtoList = new ArrayList<>();
-        for (Board board : boardList) {
+        for(Board board : boardList) {
+            boolean isLike = false;
+            if (userDetails != null) {
+                Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(
+                        board, jwtAuthenticateProcessor.getUser(userDetails)
+                );
+
+                if (boardLike.isPresent()) {
+                    isLike = true;
+                }
+            }
+
             boardResponseDtoList.add(BoardResponseDto.builder()
                     .boardId(board.getBoardId())
                     .thumbNail(board.getThumbNail())
@@ -96,12 +109,12 @@ public class BoardService {
                     .views(board.getViews())
                     .likeCnt(board.getLikes().size())
                     .commentCnt(commentService.getCommentList(board).size())
+                    .isLike(isLike)
                     .hashTags(board.getBoardHashTagList().stream().map(
                             e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                     )
                     .build());
         }
-
         return boardResponseDtoList;
     }
     //endregion
@@ -529,7 +542,7 @@ public class BoardService {
                         .and(qBoard.enabled.eq(true)))
                 .groupBy(qBoardLike.board)
                 .orderBy(likeCnt.desc())
-                .limit(5)
+                .limit(3)
                 .fetch();
 
 

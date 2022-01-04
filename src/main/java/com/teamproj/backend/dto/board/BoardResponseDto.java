@@ -22,5 +22,6 @@ public class BoardResponseDto {
     private int views;
     private int likeCnt;
     private int commentCnt;
+    private boolean isLike;
     private List<String> hashTags;
 }

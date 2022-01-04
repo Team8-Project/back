@@ -46,7 +46,7 @@ public class MyPageService {
                         () -> new IllegalArgumentException("로그인이 필요합니다.")
                 );
 
-        List<Board> userBoard = boardRepository.findByUser(user);
+        List<Board> userBoard = boardRepository.findByUserAndEnabled(user, true);
         List<Dict> userDict = dictRepository.findByFirstAuthor(user);
 
         Long userId = user.getId();
