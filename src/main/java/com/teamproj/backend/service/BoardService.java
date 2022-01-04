@@ -158,7 +158,6 @@ public class BoardService {
         boardRepository.save(board);
 
 
-        List<BoardHashTag> boardHashTagList = new ArrayList<>();
         if (boardRequestHashTagList != null) {
             for (String hashTag : boardRequestHashTagList) {
                 BoardHashTag boardHashTag = BoardHashTag.builder()
@@ -166,12 +165,9 @@ public class BoardService {
                         .board(board)
                         .build();
 
-                boardHashTagList.add(boardHashTag);
+                board.getBoardHashTagList().add(boardHashTag);
             }
-
-            boardHashTagRepository.saveAll(boardHashTagList);
-            board.setHashTagList(boardHashTagList);
-            boardRepository.save(board);
+            boardHashTagRepository.saveAll(board.getBoardHashTagList());
         }
 
 
@@ -190,7 +186,7 @@ public class BoardService {
                 .category(board.getBoardCategory().getCategoryName())
                 .thumbNail(board.getThumbNail())
                 .createdAt(board.getCreatedAt() == null ? null : board.getCreatedAt())
-                .hashTags(boardHashTagList.size() == 0 ? null : boardHashTagList.stream().map(
+                .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
                         e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                 )
                 .build();
@@ -235,6 +231,9 @@ public class BoardService {
                 .likeCnt(boardLikeList.size())
                 .isLike(isLike)
                 .commentList(commentService.getCommentList(board))
+                .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
+                        h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
+                )
                 .build();
     }
 
@@ -574,7 +573,7 @@ public class BoardService {
     public Long getTotalBoardCount(String categoryName) {
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
 
-        return boardRepository.countByBoardCategory(boardCategory);
+        return boardRepository.countByBoardCategoryAndEnabled(boardCategory, true);
     }
     //endregion
 

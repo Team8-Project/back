@@ -19,7 +19,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     List<Board> findByUserAndEnabled(User user, boolean enabled);
 
-    Long countByBoardCategory(BoardCategory boardCategory);
+    Long countByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled);
 
     Optional<Page<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled, Pageable pageable);
 
