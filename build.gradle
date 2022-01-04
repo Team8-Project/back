@@ -66,6 +66,9 @@ dependencies {
     // Amazon S3
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.0.1.RELEASE'
 
+    // Health Check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
