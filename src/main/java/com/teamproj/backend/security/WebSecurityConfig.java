@@ -115,6 +115,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private JwtAuthFilter jwtFilter() throws Exception {
         List<String> skipPathList = new ArrayList<>();
 
+        skipPathList.add("GET,/health");
+        skipPathList.add("GET,/profile");
         skipPathList.add("GET,/h2-console");
 
         // 메인 페이지 API 허용
