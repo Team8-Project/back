@@ -76,7 +76,7 @@ public class BoardController {
     public ResponseDto<BoardUpdateResponseDto> updateBoard(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                            @PathVariable Long boardId,
                                                            @RequestPart BoardUpdateRequestDto boardUpdateRequestDto,
-                                                           @RequestPart(required = false) MultipartFile multipartFile
+                                                           @RequestPart(value = "thumbNail", required = false) MultipartFile multipartFile
     ) throws IOException {
         return ResponseDto.<BoardUpdateResponseDto>builder()
                 .status(HttpStatus.OK.toString())
