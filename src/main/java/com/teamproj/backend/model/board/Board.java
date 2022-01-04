@@ -43,12 +43,11 @@ public class Board extends Timestamped {
     @JoinColumn(nullable = false)
     private BoardCategory boardCategory;
 
-
     @Column(columnDefinition = "boolean default true")
     private boolean enabled;
 
     @OneToMany(mappedBy = "board")
-    private List<BoardHashTag> boardHashTagList = new ArrayList<>();
+    private final List<BoardHashTag> boardHashTagList = new ArrayList<>();
 
     @OneToMany(mappedBy = "board")
     private final List<BoardLike> Likes = new ArrayList<>();
@@ -64,9 +63,5 @@ public class Board extends Timestamped {
 
     public void setEnabled(boolean enabled){
         this.enabled = enabled;
-    }
-
-    public void setHashTagList(List<BoardHashTag> boardHashTagList) {
-        this.boardHashTagList = boardHashTagList;
     }
 }
