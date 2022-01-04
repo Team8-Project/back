@@ -14,6 +14,7 @@ import java.util.List;
 public class BoardDetailResponseDto {
     private Long boardId;
     private String title;
+    private String username;
     private String content;
     private String writer;
     private String profileImageUrl;

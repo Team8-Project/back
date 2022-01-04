@@ -18,7 +18,6 @@ import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
-import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -44,8 +43,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.teamproj.backend.exception.ExceptionMessages.*;
 import static com.teamproj.backend.model.board.QBoardLike.boardLike;
-import static com.teamproj.backend.util.RedisKey.*;
+import static com.teamproj.backend.util.RedisKey.BEST_MEME_JJAL_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -78,7 +78,9 @@ public class BoardService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<Board> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory, true, pageable)
-                .orElse(null);
+                .orElseThrow(
+                        () -> new NullPointerException(BOARD_IS_EMPTY)
+                );
 
         return getBoardResponseDtoList(userDetails, boardList);
     }
@@ -130,10 +132,10 @@ public class BoardService {
         List<String> boardRequestHashTagList = boardUploadRequestDto.getHashTags();
 
         if (boardTitle.isEmpty()) {
-            throw new IllegalArgumentException(ExceptionMessages.TITLE_IS_EMPTY);
+            throw new IllegalArgumentException(TITLE_IS_EMPTY);
         }
         if (boardContent.isEmpty()) {
-            throw new IllegalArgumentException(ExceptionMessages.CONTENT_IS_EMPTY);
+            throw new IllegalArgumentException(CONTENT_IS_EMPTY);
         }
 
         // 입력된 해시태그가 5개 넘는지 체크
@@ -222,6 +224,7 @@ public class BoardService {
         return BoardDetailResponseDto.builder()
                 .boardId(board.getBoardId())
                 .title(board.getTitle())
+                .username(board.getUser().getUsername())
                 .content(board.getContent())
                 .writer(board.getUser().getNickname())
                 .profileImageUrl(board.getUser().getProfileImage())
@@ -380,7 +383,7 @@ public class BoardService {
     //region 게시글 검색
     public List<BoardSearchResponseDto> boardSearch(String q) {
         if (q == null || q.isEmpty()) {
-            throw new NullPointerException(ExceptionMessages.SEARCH_IS_EMPTY);
+            throw new NullPointerException(SEARCH_IS_EMPTY);
         }
 
 //        RecentSearch recentSearch = RecentSearch.builder()
@@ -394,7 +397,7 @@ public class BoardService {
 
         List<Board> boardList = findBoardList.get();
         if (boardList.size() == 0) {
-            throw new NullPointerException(ExceptionMessages.SEARCH_BOARD_IS_EMPTY);
+            throw new NullPointerException(SEARCH_BOARD_IS_EMPTY);
         }
 
 
@@ -581,28 +584,28 @@ public class BoardService {
     private Board getSafeBoard(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(
-                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_BOARD)
+                        () -> new NullPointerException(NOT_EXIST_BOARD)
                 );
     }
 
     private BoardCategory getSafeBoardCategory(String categoryName) {
         BoardCategory boardCategory = boardCategoryRepository.findById(categoryName.toUpperCase())
                 .orElseThrow(
-                        () -> new NullPointerException(ExceptionMessages.NOT_EXIST_CATEGORY)
+                        () -> new NullPointerException(NOT_EXIST_CATEGORY)
                 );
         return boardCategory;
     }
 
     private void checkPermissionToBoard(UserDetailsImpl userDetails, Board board) {
         if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_MY_BOARD);
+            throw new IllegalArgumentException(NOT_MY_BOARD);
         }
     }
 
 
     private void HashTagIsMaxFiveCheck(List<String> inputHashTagStrList) {
         if (inputHashTagStrList != null && inputHashTagStrList.size() > 5) {
-            throw new IllegalArgumentException(ExceptionMessages.HASHTAG_MAX_FIVE);
+            throw new IllegalArgumentException(HASHTAG_MAX_FIVE);
         }
     }
     //endregion

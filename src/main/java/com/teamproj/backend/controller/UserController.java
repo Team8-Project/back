@@ -2,16 +2,15 @@ package com.teamproj.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.teamproj.backend.dto.ResponseDto;
-import com.teamproj.backend.dto.user.social.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpCheckResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
+import com.teamproj.backend.dto.user.social.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.dto.user.social.naver.NaverUserResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserInfoResponseDto;
 import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyRequestDto;
 import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.GoogleUserService;
 import com.teamproj.backend.service.KakaoUserService;
 import com.teamproj.backend.service.NaverUserService;
 import com.teamproj.backend.service.UserService;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final KakaoUserService kakaoUserService;
     private final NaverUserService naverUserService;
-    private final GoogleUserService googleUserService;
     private final UserService userService;
 
     @PostMapping("/api/signup")
@@ -50,11 +48,6 @@ public class UserController {
         return naverUserService.naverLogin(code, state);
     }
 
-    @GetMapping("/login/oauth2/code/google")
-    public ResponseEntity<String> googleLogin(@RequestParam String code) throws JsonProcessingException {
-        System.out.println("요것이 바로 코드" + code);
-        return googleUserService.googleLogin(code);
-    }
 
     @GetMapping("/api/userInfo")
     public ResponseDto<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
