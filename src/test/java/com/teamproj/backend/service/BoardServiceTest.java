@@ -623,8 +623,6 @@ class BoardServiceTest {
         void boardSearch_success() {
             // given
             List<BoardHashTag> boardHashTagList = new ArrayList<>();
-            BoardHashTag boardHashTag = new BoardHashTag();
-            boardHashTagList.add(boardHashTag);
 
             BoardCategory boardCategory = new BoardCategory("카테고리");
             Board board = Board.builder()
@@ -633,7 +631,6 @@ class BoardServiceTest {
                     .user(user)
                     .boardCategory(boardCategory)
                     .thumbNail("썸네일URL")
-                    .boardHashTagList(boardHashTagList)
                     .build();
 
             boardCategoryRepository.save(boardCategory);
