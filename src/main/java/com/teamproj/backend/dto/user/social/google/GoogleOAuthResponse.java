@@ -8,10 +8,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoogleOAuthResponse {
-    private String accessToken;
-    private String expiresIn;
-    private String refreshToken;
+    private String access_token;
+    private String expires_in;
+    private String refresh_token;
     private String scope;
-    private String tokenType;
-    private String idToken;
+    private String token_type;
+    private String id_token;
 }
