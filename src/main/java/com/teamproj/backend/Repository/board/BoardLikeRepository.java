@@ -14,9 +14,8 @@ import java.util.Optional;
 
 public interface BoardLikeRepository extends JpaRepository<BoardLike, Long>  {
     List<BoardLike> findAllByBoard(Board board);
-//    List<BoardLike> findAllByBoardAndCreatedAtIsBetweenAndCreatedAt(LocalDateTime dateAgo, LocalDateTime dateNow);
 
     Optional<BoardLike> findByBoardAndUser(Board board, User user);
 
-    Optional<BoardLike> findByBoard_BoardIdAndUser(Long boardId, User user);
+    Boolean existsByBoard_BoardIdAndUser(Long boardId, User user);
 }

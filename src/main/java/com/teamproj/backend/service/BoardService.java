@@ -527,12 +527,8 @@ public class BoardService {
             for(BoardMemeBestResponseDto boardMemeBestResponseDto : boardMemeBestResponseDtoList) {
                 Long boardId = boardMemeBestResponseDto.getBoardId();
 
-                Optional<BoardLike> boardLike = boardLikeRepository.findByBoard_BoardIdAndUser(boardId, user);
-                if(!boardLike.isPresent()) {
-                    boardMemeBestResponseDto.updateIsLike(false);
-                } else {
-                    boardMemeBestResponseDto.updateIsLike(true);
-                }
+                Boolean boardLike = boardLikeRepository.existsByBoard_BoardIdAndUser(boardId, user);
+                boardMemeBestResponseDto.setIsLike(boardLike);
             }
         }
         return boardMemeBestResponseDtoList;
