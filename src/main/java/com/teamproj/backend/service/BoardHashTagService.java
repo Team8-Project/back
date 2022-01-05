@@ -41,7 +41,7 @@ public class BoardHashTagService {
 
         Collections.shuffle(recommendHashTagStrList);
         return BoardHashTagResponseDto.builder()
-                .hashTags(recommendHashTagStrList.subList(0, returnSize))
+                .hashTags(recommendHashTagStrList)
                 .build();
     }
     //endregion
