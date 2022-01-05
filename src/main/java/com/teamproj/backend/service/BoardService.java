@@ -525,13 +525,19 @@ public class BoardService {
 
         if(userDetails != null) {
             User user = jwtAuthenticateProcessor.getUser(userDetails);
+
+            List<BoardMemeBestResponseDto> resultList = new ArrayList<>();
+
             for(BoardMemeBestResponseDto boardMemeBestResponseDto : boardMemeBestResponseDtoList) {
+                Board board = boardRepository.findById(boardMemeBestResponseDto.getBoardId()).orElse(null);
                 Long boardId = boardMemeBestResponseDto.getBoardId();
-
                 Boolean boardLike = boardLikeRepository.existsByBoard_BoardIdAndUser(boardId, user);
+                resultList.add(new BoardMemeBestResponseDto(boardMemeBestResponseDto, (long)board.getLikes().size(), boardLike));
 
-                boardMemeBestResponseDto.setIsLike(boardLike.booleanValue());
+                boardMemeBestResponseDto.setIsLike(boardLike);
             }
+
+            return resultList;
         }
 
         return boardMemeBestResponseDtoList;
