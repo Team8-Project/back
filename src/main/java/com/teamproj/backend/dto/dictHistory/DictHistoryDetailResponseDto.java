@@ -22,6 +22,7 @@ public class DictHistoryDetailResponseDto {
     private String firstWriterProfileImage;
     private LocalDateTime firstCreatedAt;
     private String modifier;
+    private String modifierProfileImage;
     private String summary;
     private String content;
     private LocalDateTime createdAt;
