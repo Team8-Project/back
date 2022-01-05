@@ -1,4 +1,5 @@
 package com.teamproj.backend.service;
+
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
@@ -8,10 +9,13 @@ import com.teamproj.backend.util.MySqlJpaTemplates;
 import com.teamproj.backend.util.RedisKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import javax.persistence.EntityManager;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static com.teamproj.backend.util.RedisKey.*;
+
 @Service
 @RequiredArgsConstructor
 public class BoardHashTagService {
@@ -19,9 +23,8 @@ public class BoardHashTagService {
     private final EntityManager entityManager;
     //region 해시태그 추천
     public BoardHashTagResponseDto getRecommendHashTag() {
-        List<String> recommendHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
+        List<String> recommendHashTagStrList = redisService.getRecommendHashTag(HASHTAG_RECOMMEND_KEY);
 
-        List<String> resultHashTagStrList = new ArrayList<>();
         if (recommendHashTagStrList.size() == 0) {
             JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
             QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
@@ -30,16 +33,15 @@ public class BoardHashTagService {
                     .orderBy(NumberExpression.random().asc())
                     .limit(20)
                     .fetch();
-            redisService.setRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY, boardHashTagList);
-            resultHashTagStrList = redisService.getRecommendHashTag(RedisKey.HASHTAG_RECOMMEND_KEY);
+            redisService.setRecommendHashTag(HASHTAG_RECOMMEND_KEY, boardHashTagList);
+            recommendHashTagStrList = redisService.getRecommendHashTag(HASHTAG_RECOMMEND_KEY);
         }
 
-
-        int returnSize = Math.min(resultHashTagStrList.size(), 6);
+        int returnSize = Math.min(recommendHashTagStrList.size(), 6);
 
         Collections.shuffle(recommendHashTagStrList);
         return BoardHashTagResponseDto.builder()
-                .hashTags(resultHashTagStrList.subList(0, returnSize))
+                .hashTags(recommendHashTagStrList.subList(0, returnSize))
                 .build();
     }
     //endregion
