@@ -5,11 +5,11 @@ files:
     destination: /home/ec2-user/app/nonstop/springboot-webservice/
 
 # 파일 권한 추가
-permission:
-  - object: /
-    pattern: "**"
-    owner: ec2-user
-    group: ec2-user
+#permission:
+#  - object: /
+#    pattern: "**"
+#    owner: ec2-user
+#    group: ec2-user
 
 hooks:
   AfterInstall: # 배포가 끝나면 아래 명령어를 실행
