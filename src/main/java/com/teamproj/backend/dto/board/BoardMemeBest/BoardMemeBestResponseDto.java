@@ -6,7 +6,6 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class BoardMemeBestResponseDto {
     private Long boardId;
     private String thumbNail;
