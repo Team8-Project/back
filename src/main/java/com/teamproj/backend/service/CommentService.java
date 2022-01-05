@@ -58,7 +58,7 @@ public class CommentService {
         // Comment to CommentPostResponseDto
         return CommentPostResponseDto.builder()
                 .commentId(comment.getCommentId())
-                .profileImageUrl("")
+                .profileImageUrl(user.getProfileImage())
                 .commentWriterId(user.getUsername())
                 .commentWriter(user.getNickname())
                 .commentContent(comment.getContent())
