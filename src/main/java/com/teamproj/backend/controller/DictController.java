@@ -36,6 +36,15 @@ public class DictController {
                 .build();
     }
 
+    @GetMapping("/api/check/dict/{dictName}")
+    public ResponseDto<DictNameCheckResponseDto> checkDictName(@PathVariable String dictName){
+        return ResponseDto.<DictNameCheckResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("사전 이름 중복체크")
+                .data(dictService.checkDictName(dictName))
+                .build();
+    }
+
     @GetMapping("/api/count/dict")
     public ResponseDto<Long> getDictTotalCount(@RequestParam(required = false) String q) {
         return ResponseDto.<Long>builder()

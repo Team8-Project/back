@@ -57,6 +57,13 @@ public class DictService {
         return dictListToDictResponseDtoList(dictList, user);
     }
 
+    // 사전 중복검사
+    public DictNameCheckResponseDto checkDictName(String dictName) {
+        return DictNameCheckResponseDto.builder()
+                .result(!dictRepository.existsByDictName(dictName))
+                .build();
+    }
+
     // 베스트 용어 사전 가져오기
     public List<DictBestResponseDto> getBestDict(String token) {
         // 1. 회원 정보가 존재할 시 로그인 처리
