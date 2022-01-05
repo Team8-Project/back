@@ -58,9 +58,9 @@ public class DictService {
     }
 
     // 사전 이름 중복검사
-    public DictNameCheckResponseDto checkDictName(String dictName) {
+    public DictNameCheckResponseDto checkDictName(DictNameCheckRequestDto dictName) {
         return DictNameCheckResponseDto.builder()
-                .result(!dictRepository.existsByDictName(dictName))
+                .result(!dictRepository.existsByDictName(dictName.getDictName()))
                 .build();
     }
 

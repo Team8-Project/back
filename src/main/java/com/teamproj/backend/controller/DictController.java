@@ -36,12 +36,12 @@ public class DictController {
                 .build();
     }
 
-    @GetMapping("/api/check/dict/{dictName}")
-    public ResponseDto<DictNameCheckResponseDto> checkDictName(@PathVariable String dictName){
+    @PostMapping("/api/check/dict")
+    public ResponseDto<DictNameCheckResponseDto> checkDictName(@RequestBody DictNameCheckRequestDto dictNameCheckRequestDto){
         return ResponseDto.<DictNameCheckResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 이름 중복체크")
-                .data(dictService.checkDictName(dictName))
+                .data(dictService.checkDictName(dictNameCheckRequestDto))
                 .build();
     }
 
