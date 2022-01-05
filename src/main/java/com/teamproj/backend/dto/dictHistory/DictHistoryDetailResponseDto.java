@@ -19,6 +19,8 @@ public class DictHistoryDetailResponseDto {
     private Long revertFrom;
     private String title;
     private String firstWriter;
+    private String firstWriterProfileImage;
+    private LocalDateTime firstCreatedAt;
     private String modifier;
     private String summary;
     private String content;
