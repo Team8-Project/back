@@ -33,10 +33,13 @@ public class DictHistoryService {
         Dict dict = getSafeDict(dictId);
         List<DictHistory> dictHistoryList = getSafeDictHistoryList(dict);
 
+        User firstWriter = dict.getFirstAuthor();
         return DictHistoryResponseDto.builder()
                 .dictId(dict.getDictId())
                 .title(dict.getDictName())
-                .firstWriter(dict.getFirstAuthor().getNickname())
+                .firstWriter(firstWriter.getNickname())
+                .firstWriterProfileImage(firstWriter.getProfileImage())
+                .firstCreatedAt(dict.getCreatedAt())
                 .history(dictHistoryListToDictHistoryRecentResponseDtoList(dictHistoryList))
                 .build();
     }
@@ -44,13 +47,17 @@ public class DictHistoryService {
     // 용어 사전 수정내역 상세
     public DictHistoryDetailResponseDto getDictHistoryDetail(Long historyId) {
         DictHistory dictHistory = getSafeDictHistory(historyId);
+        Dict dict = dictHistory.getDict();
 
         return DictHistoryDetailResponseDto.builder()
                 .dictId(dictHistory.getDict().getDictId())
                 .revertFrom(dictHistory.getRevertFrom() == null ? null : dictHistory.getRevertFrom().getDictHistoryId())
-                .title(dictHistory.getDict().getDictName())
-                .firstWriter(dictHistory.getDict().getFirstAuthor().getNickname())
+                .title(dict.getDictName())
+                .firstWriter(dict.getFirstAuthor().getNickname())
+                .firstWriterProfileImage(dict.getFirstAuthor().getProfileImage())
+                .firstCreatedAt(dict.getCreatedAt())
                 .modifier(dictHistory.getUser().getNickname())
+                .modifierProfileImage(dictHistory.getUser().getProfileImage())
                 .summary(dictHistory.getPrevSummary())
                 .content(dictHistory.getPrevContent())
                 .createdAt(dictHistory.getCreatedAt())

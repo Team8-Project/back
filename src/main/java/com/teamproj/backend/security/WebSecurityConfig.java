@@ -1,5 +1,6 @@
 package com.teamproj.backend.security;
 
+import com.teamproj.backend.OAuth2.google.CustomOAuth2UserService;
 import com.teamproj.backend.security.filter.FormLoginFilter;
 import com.teamproj.backend.security.filter.JwtAuthFilter;
 import com.teamproj.backend.security.jwt.HeaderTokenExtractor;
@@ -30,15 +31,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    private final JwtTokenProvider jwtTokenProvider;
     private final JWTAuthProvider jwtAuthProvider;
     private final HeaderTokenExtractor headerTokenExtractor;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     public WebSecurityConfig(
             JWTAuthProvider jwtAuthProvider,
-            HeaderTokenExtractor headerTokenExtractor
+            HeaderTokenExtractor headerTokenExtractor,
 //            JwtTokenProvider jwtTokenProvider
-    ) {
+            CustomOAuth2UserService customOAuth2UserService, CustomOAuth2UserService customOAuth2UserService1) {
         this.jwtAuthProvider = jwtAuthProvider;
         this.headerTokenExtractor = headerTokenExtractor;
 //        this.jwtTokenProvider = jwtTokenProvider;
+        this.customOAuth2UserService = customOAuth2UserService1;
     }
     //JWT부분 종료
 
@@ -56,7 +59,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
-    // h2-console 사용에 대한 허용 (CSRF, FrameOptions 무시)
+        // h2-console 사용에 대한 허용 (CSRF, FrameOptions 무시)
         web
                 .ignoring()
                 .antMatchers("/h2-console/**");
@@ -90,7 +93,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/user").permitAll()
                 // 그 외 어떤 요청이든 '인증'
                 .anyRequest()
-                .permitAll();
+                .permitAll()
+                .and()
+                .oauth2Login()
+                .userInfoEndpoint()
+                .userService(customOAuth2UserService);
     }
 
     @Bean
@@ -115,6 +122,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private JwtAuthFilter jwtFilter() throws Exception {
         List<String> skipPathList = new ArrayList<>();
 
+        skipPathList.add("GET,/health");
+        skipPathList.add("GET,/actuator/health");
+        skipPathList.add("GET,/profile");
         skipPathList.add("GET,/h2-console");
 
         // 메인 페이지 API 허용
@@ -173,4 +183,3 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 }
-

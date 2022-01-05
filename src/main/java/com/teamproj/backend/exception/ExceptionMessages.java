@@ -21,6 +21,7 @@ public final class ExceptionMessages {
 
     // Board
     public static final String NOT_EXIST_BOARD = "유효하지 않은 게시글입니다.";
+    public static final String BOARD_IS_EMPTY = "조회 할 게시글이 없습니다.";
     public static final String NOT_EXIST_CATEGORY = "유효한 카테고리가 아닙니다.";
     public static final String NOT_MY_BOARD = "권한이 없습니다.";
 
