@@ -59,7 +59,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
-    // h2-console 사용에 대한 허용 (CSRF, FrameOptions 무시)
+        // h2-console 사용에 대한 허용 (CSRF, FrameOptions 무시)
         web
                 .ignoring()
                 .antMatchers("/h2-console/**");
@@ -123,6 +123,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         List<String> skipPathList = new ArrayList<>();
 
         skipPathList.add("GET,/health");
+        skipPathList.add("GET,/actuator/health");
         skipPathList.add("GET,/profile");
         skipPathList.add("GET,/h2-console");
 
@@ -182,4 +183,3 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 }
-
