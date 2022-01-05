@@ -25,7 +25,7 @@ public class BoardHashTagService {
     public BoardHashTagResponseDto getRecommendHashTag() {
         List<String> recommendHashTagStrList = redisService.getRecommendHashTag(HASHTAG_RECOMMEND_KEY);
 
-        if (recommendHashTagStrList.size() == 0) {
+        if (recommendHashTagStrList == null || recommendHashTagStrList.size() <= 6) {
             JPAQuery<BoardHashTag> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
             QBoardHashTag qBoardHashTag = new QBoardHashTag("boardHashTag");
 
@@ -41,7 +41,7 @@ public class BoardHashTagService {
 
         Collections.shuffle(recommendHashTagStrList);
         return BoardHashTagResponseDto.builder()
-                .hashTags(recommendHashTagStrList)
+                .hashTags(recommendHashTagStrList.subList(0, returnSize))
                 .build();
     }
     //endregion
