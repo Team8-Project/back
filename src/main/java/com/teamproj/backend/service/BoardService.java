@@ -533,6 +533,7 @@ public class BoardService {
                 boardMemeBestResponseDto.setIsLike(boardLike.booleanValue());
             }
         }
+
         return boardMemeBestResponseDtoList;
     }
 
