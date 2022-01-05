@@ -17,4 +17,6 @@ public interface BoardLikeRepository extends JpaRepository<BoardLike, Long>  {
 //    List<BoardLike> findAllByBoardAndCreatedAtIsBetweenAndCreatedAt(LocalDateTime dateAgo, LocalDateTime dateNow);
 
     Optional<BoardLike> findByBoardAndUser(Board board, User user);
+
+    Optional<BoardLike> findByBoard_BoardIdAndUser(Long boardId, User user);
 }

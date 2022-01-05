@@ -30,11 +30,4 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Query("update Board b set b.views = b.views + 1 where b.boardId = :id")
     int updateView(Long id);
 
-    // 미사용 코드들(삭제 예정)
-    List<Board> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean b);
-
-    List<Board> findAllByBoardIdInAndBoardCategory(List<Long> rankIdx, BoardCategory boardCategory);
-
-    Page<Board> findAllByBoardCategoryOrderByViews(BoardCategory boardCategory, Pageable pageable);
-
 }

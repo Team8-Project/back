@@ -118,12 +118,16 @@ public class BoardController {
     }
 
     @GetMapping("/api/board/{categoryName}/best")
-    public ResponseDto<List<BoardMemeBestResponseDto>> getBestMeme(@PathVariable String categoryName) {
+    public ResponseDto<List<BoardMemeBestResponseDto>> getBestMeme(@RequestHeader(value="Authorization", required = false) String token,
+                                                                   @PathVariable String categoryName) {
+        if(token == null){
+            token = "";
+        }
 
         return ResponseDto.<List<BoardMemeBestResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("명예의 밈짤 받기 요청")
-                .data(boardService.getBestMemeImg(categoryName))
+                .data(boardService.getBestMemeImg(categoryName, token))
                 .build();
     }
 
