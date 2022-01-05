@@ -522,13 +522,15 @@ public class BoardService {
             }
         }
 
+
         if(userDetails != null) {
             User user = jwtAuthenticateProcessor.getUser(userDetails);
             for(BoardMemeBestResponseDto boardMemeBestResponseDto : boardMemeBestResponseDtoList) {
                 Long boardId = boardMemeBestResponseDto.getBoardId();
 
                 Boolean boardLike = boardLikeRepository.existsByBoard_BoardIdAndUser(boardId, user);
-                boardMemeBestResponseDto.setIsLike(boardLike);
+
+                boardMemeBestResponseDto.setIsLike(boardLike.booleanValue());
             }
         }
         return boardMemeBestResponseDtoList;
