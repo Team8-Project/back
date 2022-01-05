@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
 import static com.teamproj.backend.model.board.QBoardLike.boardLike;
-import static com.teamproj.backend.util.RedisKey.BEST_MEME_JJAL_KEY;
+import static com.teamproj.backend.util.RedisKey.*;
 
 @Service
 @RequiredArgsConstructor
