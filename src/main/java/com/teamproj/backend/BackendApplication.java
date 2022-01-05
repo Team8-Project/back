@@ -12,17 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableJpaAuditing
 @SpringBootApplication
 public class BackendApplication {
-//    public static void main(String[] args) {
-//        SpringApplication.run(BackendApplication.class, args);
-//    }
-
-    public static final String APPLICATION_LOCATIONS = "spring.config.location="
-            + "/home/ec2-user/app/nonstop/application.properties,"
-            + "/home/ec2-user/app/nonstop/real-application.yml";
-
     public static void main(String[] args) {
-        new SpringApplicationBuilder(BackendApplication.class)
-                .properties(APPLICATION_LOCATIONS)
-                .run(args);
+        SpringApplication.run(BackendApplication.class, args);
     }
 }
