@@ -57,6 +57,7 @@ public class DictHistoryService {
                 .firstWriterProfileImage(dict.getFirstAuthor().getProfileImage())
                 .firstCreatedAt(dict.getCreatedAt())
                 .modifier(dictHistory.getUser().getNickname())
+                .modifierProfileImage(dictHistory.getUser().getProfileImage())
                 .summary(dictHistory.getPrevSummary())
                 .content(dictHistory.getPrevContent())
                 .createdAt(dictHistory.getCreatedAt())
