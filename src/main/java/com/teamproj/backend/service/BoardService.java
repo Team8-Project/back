@@ -19,6 +19,7 @@ import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.model.QUser;
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
@@ -504,7 +505,8 @@ public class BoardService {
     // endregion
 
     //region 명예의 밈짤 받기
-    public List<BoardMemeBestResponseDto> getBestMemeImg(String categoryName) {
+    public List<BoardMemeBestResponseDto> getBestMemeImg(String categoryName, String token) {
+        UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
 
         List<BoardMemeBestResponseDto> boardMemeBestResponseDtoList = redisService.getBestMemeImgList(BEST_MEME_JJAL_KEY);
 
@@ -520,6 +522,19 @@ public class BoardService {
             }
         }
 
+        if(userDetails != null) {
+            User user = jwtAuthenticateProcessor.getUser(userDetails);
+            for(BoardMemeBestResponseDto boardMemeBestResponseDto : boardMemeBestResponseDtoList) {
+                Long boardId = boardMemeBestResponseDto.getBoardId();
+
+                Optional<BoardLike> boardLike = boardLikeRepository.findByBoard_BoardIdAndUser(boardId, user);
+                if(!boardLike.isPresent()) {
+                    boardMemeBestResponseDto.updateIsLike(false);
+                } else {
+                    boardMemeBestResponseDto.updateIsLike(true);
+                }
+            }
+        }
         return boardMemeBestResponseDtoList;
     }
 
