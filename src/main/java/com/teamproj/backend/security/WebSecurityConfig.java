@@ -1,11 +1,14 @@
 package com.teamproj.backend.security;
 
 import com.teamproj.backend.OAuth2.google.CustomOAuth2UserService;
+import com.teamproj.backend.OAuth2.google.handler.CustomAuthenticationFailureHandler;
+import com.teamproj.backend.OAuth2.google.handler.CustomAuthenticationSuccessHandler;
 import com.teamproj.backend.security.filter.FormLoginFilter;
 import com.teamproj.backend.security.filter.JwtAuthFilter;
 import com.teamproj.backend.security.jwt.HeaderTokenExtractor;
 import com.teamproj.backend.security.provider.FormLoginAuthProvider;
 import com.teamproj.backend.security.provider.JWTAuthProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +27,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity // 스프링 Security 지원을 가능하게 함
+@RequiredArgsConstructor
 @EnableGlobalMethodSecurity(securedEnabled = true) // @Secured 어노테이션 활성화
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -31,18 +35,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    private final JwtTokenProvider jwtTokenProvider;
     private final JWTAuthProvider jwtAuthProvider;
     private final HeaderTokenExtractor headerTokenExtractor;
-    private final CustomOAuth2UserService customOAuth2UserService;
 
-    public WebSecurityConfig(
-            JWTAuthProvider jwtAuthProvider,
-            HeaderTokenExtractor headerTokenExtractor,
-//            JwtTokenProvider jwtTokenProvider
-            CustomOAuth2UserService customOAuth2UserService, CustomOAuth2UserService customOAuth2UserService1) {
-        this.jwtAuthProvider = jwtAuthProvider;
-        this.headerTokenExtractor = headerTokenExtractor;
-//        this.jwtTokenProvider = jwtTokenProvider;
-        this.customOAuth2UserService = customOAuth2UserService1;
-    }
+    private final CustomOAuth2UserService principalOauth2UserService;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+
     //JWT부분 종료
 
     @Bean
@@ -96,8 +93,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .and()
                 .oauth2Login()
-                .userInfoEndpoint()
-                .userService(customOAuth2UserService);
+                .successHandler(customAuthenticationSuccessHandler)
+                .failureHandler(customAuthenticationFailureHandler)
+                .userInfoEndpoint().userService(principalOauth2UserService);;
     }
 
     @Bean
