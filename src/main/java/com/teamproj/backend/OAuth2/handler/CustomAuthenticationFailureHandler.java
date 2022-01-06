@@ -1,16 +1,12 @@
-package com.teamproj.backend.OAuth2.google.handler;
+package com.teamproj.backend.OAuth2.handler;
 
-import lombok.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Component
 public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {

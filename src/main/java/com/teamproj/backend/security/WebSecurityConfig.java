@@ -1,8 +1,8 @@
 package com.teamproj.backend.security;
 
-import com.teamproj.backend.OAuth2.google.CustomOAuth2UserService;
-import com.teamproj.backend.OAuth2.google.handler.CustomAuthenticationFailureHandler;
-import com.teamproj.backend.OAuth2.google.handler.CustomAuthenticationSuccessHandler;
+import com.teamproj.backend.OAuth2.CustomOAuth2UserService;
+import com.teamproj.backend.OAuth2.handler.CustomAuthenticationFailureHandler;
+import com.teamproj.backend.OAuth2.handler.CustomAuthenticationSuccessHandler;
 import com.teamproj.backend.security.filter.FormLoginFilter;
 import com.teamproj.backend.security.filter.JwtAuthFilter;
 import com.teamproj.backend.security.jwt.HeaderTokenExtractor;
