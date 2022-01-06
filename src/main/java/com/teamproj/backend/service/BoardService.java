@@ -1,5 +1,7 @@
 package com.teamproj.backend.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
@@ -526,15 +528,15 @@ public class BoardService {
         if(userDetails != null) {
             User user = jwtAuthenticateProcessor.getUser(userDetails);
 
-            List<BoardMemeBestResponseDto> resultList = new ArrayList<>();
+            ObjectMapper mapper = new ObjectMapper();
+            List<BoardMemeBestResponseDto> mappedList = mapper.convertValue(boardMemeBestResponseDtoList, new TypeReference<List<BoardMemeBestResponseDto>>(){});
 
-            for(BoardMemeBestResponseDto boardMemeBestResponseDto : boardMemeBestResponseDtoList) {
+            List<BoardMemeBestResponseDto> resultList = new ArrayList<>();
+            for(BoardMemeBestResponseDto boardMemeBestResponseDto : mappedList) {
                 Board board = boardRepository.findById(boardMemeBestResponseDto.getBoardId()).orElse(null);
                 Long boardId = boardMemeBestResponseDto.getBoardId();
                 Boolean boardLike = boardLikeRepository.existsByBoard_BoardIdAndUser(boardId, user);
                 resultList.add(new BoardMemeBestResponseDto(boardMemeBestResponseDto, (long)board.getLikes().size(), boardLike));
-
-                boardMemeBestResponseDto.setIsLike(boardLike);
             }
 
             return resultList;
