@@ -10,6 +10,9 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
@@ -27,30 +30,34 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         saveOrUpdate(refactoredOAuth2User);
 
-        System.out.println("email: " + refactoredOAuth2User.email);     // 이메일
-        System.out.println("OAuthProvider: " + refactoredOAuth2User.OAuthProvider); // google
-        System.out.println("name: " + refactoredOAuth2User.name);                   // nickname : 공부하는 개미
-        System.out.println("profileImg: " + refactoredOAuth2User.profileImg);       // 프로필 이미지
-        System.out.println("socialProviderKey: " + refactoredOAuth2User.socialProviderKey);  // sub 키
-        System.out.println("authorities: " + refactoredOAuth2User.authorities);             // {sub=1231313, name=공부하는 개미 ...}
-
+//        System.out.println("email: " + refactoredOAuth2User.email);     // 이메일
+//        System.out.println("OAuthProvider: " + refactoredOAuth2User.OAuthProvider); // google
+//        System.out.println("name: " + refactoredOAuth2User.name);                   // nickname : 공부하는 개미
+//        System.out.println("profileImg: " + refactoredOAuth2User.profileImg);       // 프로필 이미지
+//        System.out.println("socialProviderKey: " + refactoredOAuth2User.socialProviderKey);  // sub 키
+//        System.out.println("authorities: " + refactoredOAuth2User.authorities);             // {sub=1231313, name=공부하는 개미 ...}
 
         return refactoredOAuth2User;
     }
 
-    private void saveOrUpdate(OAuth2User refactoredOAuth2User) {
-//        User user = userRepository.findBySocialProviderKey(OAuth2UserProvider.getSocialProviderKey())
-//                .map(savedUser -> savedUser.update(OAuth2UserProvider.getName(), OAuth2UserProvider.getEmail(), OAuth2UserProvider.getProfileImg()))
-//                .orElse(OAuth2UserProvider.toUser());
+    private void saveOrUpdate(OAuth2UserProvider refactoredOAuth2User) {
+        String email = refactoredOAuth2User.email;
 
         // To Do: findByGoogleId 로 변경 되어야 함
-        User user = userRepository.findByUsername("dlawjsgurk@gmail.com")
-                .orElseThrow(
-                        () -> new NullPointerException("구글 계정이 없습니다.")
-                );
+        Optional<User> findUser = userRepository.findByUsername(email);
+        if(!findUser.isPresent()) {
+            String nickname = refactoredOAuth2User.name;
+            String profileImg = refactoredOAuth2User.profileImg;
+            String password = UUID.randomUUID() + refactoredOAuth2User.socialProviderKey;
 
+            User user = User.builder()
+                    .username(email)
+                    .profileImage(profileImg)
+                    .nickname(nickname)
+                    .password(password)
+                    .build();
 
-
-//        userRepository.save(user);
+            userRepository.save(user);
+        }
     }
 }
