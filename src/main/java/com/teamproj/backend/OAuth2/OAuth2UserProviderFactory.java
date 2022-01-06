@@ -1,10 +1,9 @@
-package com.teamproj.backend.OAuth2.google;
+package com.teamproj.backend.OAuth2;
 
+import com.teamproj.backend.OAuth2.google.GoogleOAuth2UserProvider;
 import com.teamproj.backend.util.Social;
 
 import java.util.Map;
-
-import static org.springframework.security.config.oauth2.client.CommonOAuth2Provider.GOOGLE;
 
 public class OAuth2UserProviderFactory {
 
