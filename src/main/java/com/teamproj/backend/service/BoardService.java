@@ -400,7 +400,7 @@ public class BoardService {
 
         List<Board> boardList = findBoardList.get();
         if (boardList.size() == 0) {
-            throw new NullPointerException(SEARCH_BOARD_IS_EMPTY);
+            return new ArrayList<>();
         }
 
 
