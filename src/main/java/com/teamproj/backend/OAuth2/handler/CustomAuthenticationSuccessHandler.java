@@ -1,9 +1,8 @@
-package com.teamproj.backend.OAuth2.google.handler;
+package com.teamproj.backend.OAuth2.handler;
 
 
-import com.teamproj.backend.OAuth2.google.OAuth2UserProvider;
+import com.teamproj.backend.OAuth2.OAuth2UserProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;

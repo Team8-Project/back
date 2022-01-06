@@ -1,4 +1,4 @@
-package com.teamproj.backend.OAuth2.google;
+package com.teamproj.backend.OAuth2;
 
 import com.teamproj.backend.model.User;
 import lombok.AccessLevel;

@@ -1,6 +1,7 @@
 package com.teamproj.backend.OAuth2.google;
 
-import java.util.List;
+import com.teamproj.backend.OAuth2.OAuth2UserProvider;
+
 import java.util.Map;
 
 public class GoogleOAuth2UserProvider extends OAuth2UserProvider {
