@@ -412,6 +412,7 @@ public class BoardService {
                             .thumbNail(board.getThumbNail())
                             .title(board.getTitle())
                             .username(board.getUser().getUsername())
+                            .profileImageUrl(board.getUser().getProfileImage())
                             .writer(board.getUser().getNickname())
                             .content(board.getContent())
                             .createdAt(board.getCreatedAt())
