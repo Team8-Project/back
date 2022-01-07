@@ -1,9 +1,9 @@
 package com.teamproj.backend.controller;
 
 
-import com.teamproj.backend.dto.MyPage.MyPageResponseDto;
+import com.teamproj.backend.dto.mypage.MyPageResponseDto;
 import com.teamproj.backend.dto.ResponseDto;
-import com.teamproj.backend.dto.MyPage.MyPageProfileImageModifyResponseDto;
+import com.teamproj.backend.dto.mypage.MyPageProfileImageModifyResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.MyPageService;
 import lombok.RequiredArgsConstructor;

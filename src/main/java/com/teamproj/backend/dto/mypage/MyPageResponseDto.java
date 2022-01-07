@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.MyPage;
+package com.teamproj.backend.dto.mypage;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +15,6 @@ public class MyPageResponseDto {
     private String profileImageUrl;
     private int postCount;
     private int dictCount;
-    private List<MyPagePostBoard> postBoards;
+    private List<MyPagePostBoardResponseDto> postBoards;
     private List<MyPageDictResponseDto> dict;
 }
