@@ -31,7 +31,7 @@ public class DictHistory extends Timestamped {
     @JoinColumn
     private DictHistory revertFrom;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String prevContent;
 
     @Column(nullable = false)
