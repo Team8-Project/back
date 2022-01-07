@@ -6,7 +6,6 @@ import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.dto.quiz.QuizResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
-import com.teamproj.backend.model.main.CarouselImage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -134,16 +133,6 @@ public class RedisService {
     }
 
     // Utils
-    // CarouselImageList to StringList
-    public List<String> carouselImageListToStringList(List<CarouselImage> carouselImageList) {
-        List<String> result = new ArrayList<>();
-
-        for (CarouselImage carouselImage : carouselImageList) {
-            result.add(carouselImage.getImageUrl());
-        }
-
-        return result;
-    }
 
 
     public List<String> hashTagListToStringList(List<BoardHashTag> boardHashTagList) {
