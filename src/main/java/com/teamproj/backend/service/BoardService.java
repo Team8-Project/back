@@ -51,7 +51,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
-import static com.teamproj.backend.model.board.QBoardLike.boardLike;
 import static com.teamproj.backend.util.RedisKey.*;
 
 @Service
@@ -523,7 +522,7 @@ public class BoardService {
     }
 
     private List<Tuple> getYesterdayLikeCountRankTuple(BoardCategory boardCategory, int count) {
-        QBoardLike qBoardLike = boardLike;
+        QBoardLike qBoardLike = QBoardLike.boardLike;
         QBoard qBoard = QBoard.board;
         QUser qUser = QUser.user;
 
@@ -534,11 +533,11 @@ public class BoardService {
         return queryFactory.select(qBoard.boardId, qBoard.thumbNail, qBoard.title, qUser.nickname, qBoardLike.board.count().as(likeCnt))
                 .from(qBoardLike)
                 .leftJoin(qBoardLike.board, qBoard)
-                .leftJoin(qBoardLike.user, qUser)
+                .leftJoin(qBoard.user, qUser)
                 .where(qBoard.boardCategory.eq(boardCategory)
                         .and(qBoardLike.createdAt.between(startDatetime, endDatetime))
                         .and(qBoard.enabled.eq(true)))
-                .groupBy(qBoardLike.board)
+                .groupBy(qBoard.boardId)
                 .orderBy(likeCnt.desc())
                 .limit(count)
                 .fetch();
@@ -596,7 +595,7 @@ public class BoardService {
         NumberPath<Long> likeCnt = Expressions.numberPath(Long.class, "c");
 
         QBoard qBoard = QBoard.board;
-        QBoardLike qBoardLike = boardLike;
+        QBoardLike qBoardLike = QBoardLike.boardLike;
         QUser qUser = QUser.user;
 
         List<Tuple> tupleList = queryFactory
