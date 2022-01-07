@@ -1,6 +1,7 @@
 package com.teamproj.backend.model.board;
 
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
+import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,7 @@ public class Board extends Timestamped {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @ColumnDefault("0")
@@ -46,11 +47,23 @@ public class Board extends Timestamped {
     @Column(columnDefinition = "boolean default true")
     private boolean enabled;
 
-    @OneToMany(mappedBy = "board")
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    private final List<BoardImage> boardImageList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    private final List<Comment> commentList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     private final List<BoardHashTag> boardHashTagList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "board")
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     private final List<BoardLike> Likes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    private final List<BoardTodayLike> boardTodayLikeList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    private final List<BoardViewers> boardViewersList = new ArrayList<>();
 
     public void update(BoardUpdateRequestDto boardUpdateRequestDto, String imageUrl) {
         this.title = boardUpdateRequestDto.getTitle();

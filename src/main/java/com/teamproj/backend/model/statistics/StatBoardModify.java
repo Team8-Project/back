@@ -1,6 +1,5 @@
 package com.teamproj.backend.model.statistics;
 
-import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.util.Timestamped;
 import lombok.*;
 
@@ -17,6 +16,6 @@ public class StatBoardModify extends Timestamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long modifyId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Board board;
+    @Column(nullable = false)
+    private Long boardId;
 }
