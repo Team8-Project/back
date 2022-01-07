@@ -18,8 +18,10 @@ import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
+import com.teamproj.backend.dto.comment.CommentResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
+import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.*;
@@ -239,6 +241,8 @@ public class BoardService {
         // 5. 게시글 좋아요 리스트 조회
         List<BoardLike> boardLikeList = boardLikeRepository.findAllByBoard(board);
 
+        List<CommentResponseDto> commentList = commentService.getCommentList(board);
+
         // 6. 조회한 게시글 Response 전송
         // (게시글 아이디, 제목, 작성자 아이디, 내용, 작성자 닉네임,
         // 게시글 작성자 프로필Img, 이미지URL, 생성날짜, 조회수, 좋아요 수, 좋아요)
@@ -254,7 +258,8 @@ public class BoardService {
                 .views(board.getViews())                                // 조회수
                 .likeCnt(boardLikeList.size())                          // 좋아요수
                 .isLike(isLike)                                         // 로그인한 유저 게시글 좋아요 여부
-                .commentList(commentService.getCommentList(board))      // 댓글 리스트
+                .commentList(commentList)                               // 댓글 리스트
+                .commentCnt(commentList.size())                         // 댓글 갯수
                 .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
                         h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                 )                                                       // 게시글 해시태그 리스트
@@ -440,6 +445,7 @@ public class BoardService {
                             .createdAt(board.getCreatedAt())
                             .views(board.getViews())
                             .likeCnt(board.getLikes().size())
+                            .commentCnt(commentService.getCommentList(board).size())
                             .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
                                     h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
                             )
