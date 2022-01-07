@@ -146,9 +146,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         skipPathList.add("GET,/api/bestDict/dict");
         skipPathList.add("GET,/api/dict/search*");
         // 게시판 목록 API 허용
-        skipPathList.add("GET,/api/board/subject");
-        skipPathList.add("GET,/api/board/**");
-        skipPathList.add("GET,/api/board/list/**");
+        skipPathList.add("GET,/api/board/*"); // 게시글 상세보기, 검색
+        skipPathList.add("GET,/api/board/list/*"); // 게시글 조회
+        skipPathList.add("GET,/api/board/*/best"); // 명예의 밈짤
+        skipPathList.add("GET,/api/board/count/*"); // 게시글 총 개수 출력
+
         // 퀴즈 API 허용
         skipPathList.add("GET,/api/quiz/**");
         // 통계 API 허용
