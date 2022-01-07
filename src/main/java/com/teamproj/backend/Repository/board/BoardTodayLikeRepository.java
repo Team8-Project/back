@@ -14,13 +14,5 @@ import java.util.Optional;
 
 
 public interface BoardTodayLikeRepository extends JpaRepository<BoardTodayLike, Long> {
-
-    Page<BoardTodayLike> findAllByBoardCategoryOrderByLikeCountDesc(BoardCategory boardCategory, Pageable pageable);
-
     Optional<BoardTodayLike> findByBoard(Board board);
-
-    @Modifying
-    @Transactional
-    @Query("update BoardTodayLike b set b.likeCount = 0")
-    void resetAll();
 }

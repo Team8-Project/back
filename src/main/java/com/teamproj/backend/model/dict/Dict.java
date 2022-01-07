@@ -32,10 +32,10 @@ public class Dict extends Timestamped {
     @Column(nullable = false, unique = true)
     private String dictName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private String summary;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @ColumnDefault("0")
@@ -49,4 +49,7 @@ public class Dict extends Timestamped {
 
     @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
     private final List<DictLike> dictLikeList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
+    private final List<DictViewers> dictViewersList = new ArrayList<>();
 }

@@ -1,4 +1,4 @@
-package com.teamproj.backend.util;
+package com.teamproj.backend.OAuth2;
 
 import lombok.Getter;
 

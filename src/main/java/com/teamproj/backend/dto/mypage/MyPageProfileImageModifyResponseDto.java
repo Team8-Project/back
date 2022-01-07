@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.MyPage;
+package com.teamproj.backend.dto.mypage;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

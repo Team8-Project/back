@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.MyPage;
+package com.teamproj.backend.dto.mypage;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Builder
 @AllArgsConstructor
-public class MyPagePostBoard {
+public class MyPagePostBoardResponseDto {
     private Long boardId;
     private String title;
     private String username;
