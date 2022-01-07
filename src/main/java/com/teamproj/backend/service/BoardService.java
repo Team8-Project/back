@@ -40,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -302,19 +303,15 @@ public class BoardService {
         boardHashTagRepository.saveAll(boardHashTagList);
 
         // 6. multipartFile로 넘어온 이미지 파일 저장
-        // - 기존에 S3에 저장되어 있는 이미지 삭제 후 저장
+        // - 기존에 S3에 저장되어 있는 이미지 삭제 후
         String imageUrl = "";
-        if (!(multipartFile.getSize() == 0)) {
+        if(!multipartFile.isEmpty()) {
             imageUrl = s3Uploader.upload(multipartFile, S3dirName);
-            String oldImageUrl = URLDecoder.decode(
-                    board.getThumbNail().replace(
-                            "https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/", ""
-                    ),
-                    "UTF-8"
-            );
-
-            s3Uploader.deleteFromS3(oldImageUrl);
+            deleteImg(board);
+        } else {
+            deleteImg(board);
         }
+
         board.update(boardUpdateRequestDto, imageUrl);
 
         // 7. 게시글 저장 및 Response 전송
@@ -322,6 +319,19 @@ public class BoardService {
         return BoardUpdateResponseDto.builder()
                 .result("게시글 수정 완료")
                 .build();
+    }
+
+    private void deleteImg(Board board) {
+        try {
+            String oldImageUrl = URLDecoder.decode(
+                    board.getThumbNail().replace(
+                            "https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/", ""
+                    ),
+                    "UTF-8"
+            );
+            s3Uploader.deleteFromS3(oldImageUrl);
+        } catch (Exception e) {
+        }
     }
     //endregion
 
