@@ -68,10 +68,7 @@ public class Board extends Timestamped {
     public void update(BoardUpdateRequestDto boardUpdateRequestDto, String imageUrl) {
         this.title = boardUpdateRequestDto.getTitle();
         this.content = boardUpdateRequestDto.getContent();
-
-        if (!imageUrl.isEmpty()) {
-            this.thumbNail = imageUrl;
-        }
+        this.thumbNail = imageUrl;
     }
 
     public void setEnabled(boolean enabled){
