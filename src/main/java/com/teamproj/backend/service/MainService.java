@@ -29,9 +29,10 @@ public class MainService {
     public MainPageResponseDto getMainPageElements(String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = userDetails == null ? null : jwtAuthenticateProcessor.getUser(userDetails);
-        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = getSafeMainTodayBoardResponseDtoList(TODAY_BOARD_LIST_KEY);
+
         List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = getSafeMainTodayMemeResponseDtoList(TODAY_LIST_KEY);
         List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = getSafeMainMemeImageResponseDtoList(TODAY_MEME_IMAGE_LIST_KEY);
+        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = getSafeMainTodayBoardResponseDtoList(TODAY_BOARD_LIST_KEY);
 
 
         return MainPageResponseDto.builder()
@@ -95,10 +96,6 @@ public class MainService {
     // MainTodayBoardResponseDtoList
     // 인기게시글(게시판)
     private List<MainTodayBoardResponseDto> getSafeMainTodayBoardResponseDtoList(String key) {
-        List<MainTodayBoardResponseDto> element = boardService.getTodayBoard(5);
-        for(MainTodayBoardResponseDto dto : element){
-            System.out.println(dto.getTitle() + " / " + dto.getWriter());
-        }
         List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
 
         // getSafeMainTodayMemeResponseDtoList 기능과 동일함.

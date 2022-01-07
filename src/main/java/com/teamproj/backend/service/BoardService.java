@@ -21,7 +21,6 @@ import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.dto.comment.CommentResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
-import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.*;
@@ -40,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,7 +49,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
-import static com.teamproj.backend.util.RedisKey.*;
+import static com.teamproj.backend.util.RedisKey.BEST_MEME_JJAL_KEY;
 
 @Service
 @RequiredArgsConstructor
