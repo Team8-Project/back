@@ -4,8 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -14,4 +18,10 @@ import javax.persistence.Id;
 public class BoardCategory {
     @Id
     private String categoryName;
+
+    @OneToMany(mappedBy = "boardCategory", cascade = CascadeType.ALL)
+    private final List<Board> boardList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "boardCategory", cascade = CascadeType.ALL)
+    private final List<BoardTodayLike> boardTodayLikeList = new ArrayList<>();
 }

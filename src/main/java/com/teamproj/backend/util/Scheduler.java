@@ -46,7 +46,7 @@ public class Scheduler {
         redisService.setTodayList(TODAY_LIST_KEY, dictService.getTodayMeme(20));
         redisService.setTodayMemeImageList(TODAY_MEME_IMAGE_LIST_KEY, boardService.getTodayImage(5));
         redisService.setTodayBoardList(TODAY_BOARD_LIST_KEY, boardService.getTodayBoard(5));
-        boardTodayLikeRepository.resetAll();
+        boardTodayLikeRepository.deleteAll();
 
         System.out.println("조회수 및 방문자 정보 초기화 .....");
         statService.statVisitorToNumericData(statVisitorRepository.count(), statNumericdataRepository.findByName("VISITOR"));
