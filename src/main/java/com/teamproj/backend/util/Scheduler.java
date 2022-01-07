@@ -1,6 +1,5 @@
 package com.teamproj.backend.util;
 
-import com.teamproj.backend.Repository.CarouselImageRepository;
 import com.teamproj.backend.Repository.board.BoardTodayLikeRepository;
 import com.teamproj.backend.Repository.board.BoardViewersRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
@@ -15,8 +14,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-
 import static com.teamproj.backend.util.RedisKey.*;
 
 @Component
@@ -26,7 +23,6 @@ public class Scheduler {
     private final StatService statService;
     private final BoardService boardService;
 
-    private final CarouselImageRepository carouselImageRepository;
     private final StatVisitorRepository statVisitorRepository;
     private final StatNumericDataRepository statNumericdataRepository;
     private final BoardViewersRepository boardViewersRepository;
