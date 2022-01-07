@@ -32,7 +32,7 @@ public class Dict extends Timestamped {
     @Column(nullable = false, unique = true)
     private String dictName;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 25)
     private String summary;
 
     @Column(nullable = false, columnDefinition = "TEXT")

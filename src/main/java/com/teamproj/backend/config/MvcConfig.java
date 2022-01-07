@@ -14,7 +14,8 @@ class MvcConfig implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:3000",
                                 "http://localhost:8080",
                                 "https://kauth.kakao.com/oauth/authorize/**",
-                                "https://accounts.kakao.com/**")
+                                "https://accounts.kakao.com/**",
+                                "http://memeglememegle.s3-website.ap-northeast-2.amazonaws.com")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .exposedHeaders(HttpHeaders.AUTHORIZATION);

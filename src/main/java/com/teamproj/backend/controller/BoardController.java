@@ -33,10 +33,6 @@ public class BoardController {
                                                         @RequestParam("page") int page,
                                                         @RequestParam("size") int size,
                                                         @RequestHeader(value="Authorization", required = false) String token ){
-        if(token == null){
-            token = "";
-        }
-
         return ResponseDto.<List<BoardResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("게시글 목록 불러오기")
@@ -50,7 +46,6 @@ public class BoardController {
                                                            @RequestPart BoardUploadRequestDto boardUploadRequestDto,
                                                            @RequestPart(value = "thumbNail", required = false) MultipartFile multipartFile
                                                             ) throws IOException {
-
         return ResponseDto.<BoardUploadResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("게시글 작성")
@@ -61,10 +56,6 @@ public class BoardController {
     @GetMapping("/api/board/{boardId}")
     public ResponseDto<BoardDetailResponseDto> getBoardDetail(@RequestHeader(value="Authorization", required = false) String token,
                                                               @PathVariable Long boardId) {
-        if(token == null){
-            token = "";
-        }
-
         return ResponseDto.<BoardDetailResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("게시글 상세보기")
@@ -96,10 +87,9 @@ public class BoardController {
                 .build();
     }
 
-    @PostMapping("/api/board/{boardId}/like")
+    @GetMapping("/api/board/{boardId}/like")
     public ResponseDto<BoardLikeResponseDto> boardLike(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                        @PathVariable Long boardId) {
-
         return ResponseDto.<BoardLikeResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("게시글 좋아요")
@@ -120,10 +110,6 @@ public class BoardController {
     @GetMapping("/api/board/{categoryName}/best")
     public ResponseDto<List<BoardMemeBestResponseDto>> getBestMeme(@RequestHeader(value="Authorization", required = false) String token,
                                                                    @PathVariable String categoryName) {
-        if(token == null){
-            token = "";
-        }
-
         return ResponseDto.<List<BoardMemeBestResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("명예의 밈짤 받기 요청")
@@ -133,7 +119,6 @@ public class BoardController {
 
     @GetMapping("/api/board/count/{categoryName}")
     public ResponseDto<Long> getTotalBoardCount(@PathVariable String categoryName) {
-
         return ResponseDto.<Long>builder()
                 .status(HttpStatus.OK.toString())
                 .message("게시글 총 개수 출력 요청")

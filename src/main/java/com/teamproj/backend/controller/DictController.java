@@ -8,6 +8,7 @@ import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.DictHistoryService;
 import com.teamproj.backend.service.DictService;
+import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,10 +26,6 @@ public class DictController {
     public ResponseDto<List<DictResponseDto>> getDictList(@RequestHeader(value = "Authorization", required = false) String token,
                                                           @RequestParam int page,
                                                           @RequestParam int size) {
-        if (token == null) {
-            token = "";
-        }
-        System.out.println("token : " + token);
         return ResponseDto.<List<DictResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 목록 요청")
@@ -57,9 +54,6 @@ public class DictController {
     @GetMapping("/api/dict/{dictId}")
     public ResponseDto<DictDetailResponseDto> getDictDetail(@RequestHeader(value = "Authorization", required = false) String token,
                                                             @PathVariable Long dictId) {
-        if (token == null) {
-            token = "";
-        }
         return ResponseDto.<DictDetailResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 상세")
@@ -137,9 +131,6 @@ public class DictController {
 
     @GetMapping("/api/bestDict/dict")
     public ResponseDto<List<DictBestResponseDto>> getBestDict(@RequestHeader(value = "Authorization", required = false) String token) {
-        if (token == null) {
-            token = "";
-        }
         return ResponseDto.<List<DictBestResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("오늘의 밈 카드 요청")
