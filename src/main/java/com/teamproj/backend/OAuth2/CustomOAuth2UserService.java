@@ -30,13 +30,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         saveOrUpdate(refactoredOAuth2User);
 
-//        System.out.println("email: " + refactoredOAuth2User.email);     // 이메일
-//        System.out.println("OAuthProvider: " + refactoredOAuth2User.OAuthProvider); // google
-//        System.out.println("name: " + refactoredOAuth2User.name);                   // nickname : 공부하는 개미
-//        System.out.println("profileImg: " + refactoredOAuth2User.profileImg);       // 프로필 이미지
-//        System.out.println("socialProviderKey: " + refactoredOAuth2User.socialProviderKey);  // sub 키
-//        System.out.println("authorities: " + refactoredOAuth2User.authorities);             // {sub=1231313, name=공부하는 개미 ...}
-
         return refactoredOAuth2User;
     }
 

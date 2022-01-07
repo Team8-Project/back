@@ -1,7 +1,6 @@
 package com.teamproj.backend.OAuth2;
 
 import com.teamproj.backend.OAuth2.google.GoogleOAuth2UserProvider;
-import com.teamproj.backend.util.Social;
 
 import java.util.Map;
 
