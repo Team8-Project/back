@@ -24,5 +24,6 @@ public class BoardDetailResponseDto {
     private int likeCnt;
     private Boolean isLike;
     private List<CommentResponseDto> commentList;
+    private int commentCnt;
     private List<String> hashTags;
 }

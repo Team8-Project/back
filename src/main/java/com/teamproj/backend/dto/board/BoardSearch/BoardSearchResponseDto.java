@@ -1,5 +1,6 @@
 package com.teamproj.backend.dto.board.BoardSearch;
 
+import com.teamproj.backend.dto.comment.CommentResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,5 +22,6 @@ public class BoardSearchResponseDto {
     private LocalDateTime createdAt;
     private int views;
     private int likeCnt;
+    private int commentCnt;
     private List<String> hashTags;
 }
