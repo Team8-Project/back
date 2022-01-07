@@ -3,7 +3,10 @@ package com.teamproj.backend.service;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.teamproj.backend.dto.quiz.QuizResponseDto;
-import com.teamproj.backend.model.quiz.*;
+import com.teamproj.backend.model.quiz.QQuiz;
+import com.teamproj.backend.model.quiz.QQuizBank;
+import com.teamproj.backend.model.quiz.Quiz;
+import com.teamproj.backend.model.quiz.QuizBank;
 import com.teamproj.backend.util.MySqlJpaTemplates;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,8 +16,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.teamproj.backend.util.RedisKey.*;
-import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_CATEGORY;
+import static com.teamproj.backend.util.RedisKey.RANDOM_QUIZ_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -67,14 +70,14 @@ public class QuizService {
     private List<QuizResponseDto> getSafeQuizResponseDtoList(String key, int count, String category) {
         List<QuizResponseDto> quizResponseDtoList = redisService.getRandomQuiz(key + category);
 
-        if(quizResponseDtoList == null){
+        if (quizResponseDtoList == null) {
             // QueryDSL 적용 구문
             List<Quiz> quizList = randomQuizPick(category);
             // DtoList 로 반환하는 과정에서 문제 속의 선택지 순서도 섞임
             redisService.setRandomQuiz(key + category, quizListToQuizResponseDtoList(quizList));
             quizResponseDtoList = redisService.getRandomQuiz(key + category);
 
-            if(quizResponseDtoList == null){
+            if (quizResponseDtoList == null) {
                 throw new NullPointerException(NOT_EXIST_CATEGORY);
             }
         }
@@ -95,6 +98,7 @@ public class QuizService {
             quizResponseDtoList.add(QuizResponseDto.builder()
                     .question(quiz.getQuestion())
                     .solution(quiz.getSolution().getChoice())
+                    .quizImage(quiz.getQuizImage())
                     .choice(choiceList)
                     .build());
         }
