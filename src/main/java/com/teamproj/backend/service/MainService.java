@@ -34,6 +34,7 @@ public class MainService {
         List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = getSafeMainMemeImageResponseDtoList(TODAY_MEME_IMAGE_LIST_KEY);
         List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = getSafeMainTodayBoardResponseDtoList(TODAY_BOARD_LIST_KEY);
 
+
         return MainPageResponseDto.builder()
                 .username(user == null ? null : user.getUsername())
                 .nickname(user == null ? null : user.getNickname())

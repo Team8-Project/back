@@ -65,6 +65,9 @@ public class Board extends Timestamped {
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     private final List<BoardViewers> boardViewersList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    private final List<BoardLike> boardLikeList = new ArrayList<>();
+
     public void update(BoardUpdateRequestDto boardUpdateRequestDto, String imageUrl) {
         this.title = boardUpdateRequestDto.getTitle();
         this.content = boardUpdateRequestDto.getContent();
