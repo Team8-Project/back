@@ -17,9 +17,7 @@ import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -35,6 +33,8 @@ import static com.teamproj.backend.util.RedisKey.DICT_RECOMMEND_SEARCH_KEY;
 @Service
 @RequiredArgsConstructor
 public class DictService {
+
+    private final DictHistoryService dictHistoryService;
 
     private final DictRepository dictRepository;
     private final DictHistoryRepository dictHistoryRepository;
@@ -84,8 +84,9 @@ public class DictService {
             return dictRepository.count();
         }
         // 2. 쿼리가 있을 경우 : 쿼리의 검색결과의 개수 출력
-        String likeQuery = "%" + q + "%";
-        return dictRepository.countByDictNameLikeOrContentLike(likeQuery, likeQuery);
+        String query = q + "*";
+//        return dictRepository.countByDictNameOrContentByFullText(query);
+        return dictRepository.count();
     }
 
     // 사전 상세 정보 가져오기
@@ -127,6 +128,7 @@ public class DictService {
     }
 
     // 사전 작성하기
+    @Transactional
     public DictPostResponseDto postDict(UserDetailsImpl userDetails, DictPostRequestDto dictPostRequestDto) {
         // 비회원이 함수로 요청하는지 확인(JWT 토큰의 유효성으로 확인)
         ValidChecker.loginCheck(userDetails);
@@ -146,7 +148,16 @@ public class DictService {
                 .summary(dictPostRequestDto.getSummary())
                 .build();
 
-        dictRepository.save(dict);
+        dict = dictRepository.save(dict);
+
+        DictHistory dictHistory = DictHistory.builder()
+                .dict(dict)
+                .user(user)
+                .prevContent(dict.getContent())
+                .prevSummary(dict.getSummary())
+                .build();
+
+        dictHistoryService.postDictHistory(dict, user);
 
         return DictPostResponseDto.builder()
                 .result("작성 성공")
@@ -159,18 +170,12 @@ public class DictService {
         ValidChecker.loginCheck(userDetails);
 
         Dict dict = getSafeDict(dictId);
-
-        DictHistory dictHistory = DictHistory.builder()
-                .prevSummary(dict.getSummary())
-                .prevContent(dict.getContent())
-                .user(dict.getRecentModifier())
-                .dict(dict)
-                .build();
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
 
         // 이전 내용 히스토리에 저장
-        dictHistoryRepository.save(dictHistory);
+        dictHistoryService.postDictHistory(dict, user);
 
-        dict.setRecentModifier(jwtAuthenticateProcessor.getUser(userDetails));
+        dict.setRecentModifier(user);
         dict.setSummary(dictPutRequestDto.getSummary());
         dict.setContent(dictPutRequestDto.getContent());
 
@@ -180,6 +185,7 @@ public class DictService {
     }
 
     // 사전 좋아요 / 좋아요 취소
+    @Transactional
     public DictLikeResponseDto likeDict(UserDetailsImpl userDetails, Long dictId) {
         // 로그인 체크
         ValidChecker.loginCheck(userDetails);
@@ -393,9 +399,13 @@ public class DictService {
     // DictList 검색결과
     // ElasticSearch 로 변경 고려 중.
     private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
-        String queryString = "%" + q + "%";
-        Optional<Page<Dict>> searchResult = dictRepository.findAllByDictNameLikeOrContentLike(queryString, queryString, PageRequest.of(page, size));
-        return searchResult.map(Streamable::toList).orElseGet(ArrayList::new);
+        if(q.length() < 2){
+            throw new IllegalArgumentException(SEARCH_MIN_SIZE_IS_TWO);
+        }
+
+        String newQ = q;
+        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(newQ, page*size, size);
+        return searchResult.orElseGet(ArrayList::new);
     }
 
     // Entity To Dto

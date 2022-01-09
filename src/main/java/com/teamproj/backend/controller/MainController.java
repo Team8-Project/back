@@ -1,10 +1,8 @@
 package com.teamproj.backend.controller;
 
-import com.teamproj.backend.Repository.board.BoardTodayLikeRepository;
 import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.main.MainPageResponseDto;
 import com.teamproj.backend.service.MainService;
-import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
