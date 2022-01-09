@@ -1,6 +1,5 @@
 package com.teamproj.backend.OAuth2;
 
-import com.teamproj.backend.model.User;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,22 +25,6 @@ public class OAuth2UserProvider implements OAuth2User {
     protected String OAuthProvider;
     protected Collection<? extends GrantedAuthority> authorities = new ArrayList<>();
     protected Map<String, Object> attributes = new HashMap<>();
-
-    public OAuth2UserProvider(User user) {
-        this.id = user.getId();
-        this.name = user.getNickname();
-        this.email = user.getUsername();
-        this.profileImg = user.getProfileImage();
-    }
-
-    public User toUser() {
-        return User.builder()
-                .id(id)
-                .nickname(name)
-                .username(email)
-                .profileImage(profileImg)
-                .build();
-    }
 
 
     @Override
