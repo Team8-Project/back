@@ -28,6 +28,16 @@ public class DictHistoryService {
     private final DictRepository dictRepository;
     private final DictHistoryRepository dictHistoryRepository;
 
+    // 용어 사전 수정내역 생성
+    public void postDictHistory(Dict dict, User user) {
+        dictHistoryRepository.save(DictHistory.builder()
+                .prevSummary(dict.getSummary())
+                .prevContent(dict.getContent())
+                .user(user)
+                .dict(dict)
+                .build());
+    }
+
     // 용어 사전 수정내역 목록
     public DictHistoryResponseDto getDictHistory(Long dictId) {
         Dict dict = getSafeDict(dictId);
@@ -144,5 +154,6 @@ public class DictHistoryService {
 
         return dictHistoryRecentResponseDtoList;
     }
+
     // endregion
 }

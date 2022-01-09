@@ -96,7 +96,7 @@ public class BoardService {
     private List<BoardResponseDto> getBoardResponseDtoList(UserDetailsImpl userDetails, Page<Board> boardList) {
         // 5. DB에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
         List<BoardResponseDto> boardResponseDtoList = new ArrayList<>();
-        for(Board board : boardList) {
+        for (Board board : boardList) {
             // 6. 게시글 좋아요 여부 확인(로그인한 유저만)
             boolean isLike = false;
             if (userDetails != null) {
@@ -133,6 +133,7 @@ public class BoardService {
     //endregion
 
     //region 게시글 작성
+    @Transactional
     public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails,
                                               BoardUploadRequestDto boardUploadRequestDto,
                                               String categoryName,
@@ -302,7 +303,7 @@ public class BoardService {
         // 6. multipartFile로 넘어온 이미지 파일 저장
         // - 기존에 S3에 저장되어 있는 이미지 삭제 후
         String imageUrl = "";
-        if(!multipartFile.isEmpty()) {
+        if (!multipartFile.isEmpty()) {
             imageUrl = s3Uploader.upload(multipartFile, S3dirName);
             deleteImg(board);
         } else {
@@ -388,6 +389,7 @@ public class BoardService {
                 .result(true)
                 .build();
     }
+
     // 게시판 오늘의 좋아요 카운트 - 1
     private void todayLikeCancelProc(Board board) {
         Optional<BoardTodayLike> boardTodayLike = boardTodayLikeRepository.findByBoard(board);
@@ -399,6 +401,7 @@ public class BoardService {
             }
         }
     }
+
     // 게시판 오늘의 좋아요 카운트 + 1
     private void todayLikeProc(Board board, BoardCategory boardCategory) {
         Optional<BoardTodayLike> boardTodayLike = boardTodayLikeRepository.findByBoard(board);
@@ -429,13 +432,12 @@ public class BoardService {
 //                .type(QueryTypeEnum.BOARD)
 //                .build();
 //        recentSearchRepository.save(recentSearch);
+
         // 2. 제목에 검색어가 포함되어 있는 게시글 리스트 조회
-        Optional<List<Board>> findBoardList = boardRepository.findByTitleContaining(q);
-        // 3. 게시글 검색 결과가 없으면 빈 ArrayList 리턴
-        List<Board> boardList = findBoardList.get();
-        if (boardList.size() == 0) {
-            return new ArrayList<>();
-        }
+        int page = 0;
+        int size = 1000;
+        String category = "FREEBOARD";
+        List<Board> boardList = getSaveSearchResult(q, category, page * size, size);
 
         // 3. 검색 결과가 있으면 해당 게시글들 Response
         List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
@@ -461,6 +463,19 @@ public class BoardService {
         }
 
         return boardSearchResponseDtoList;
+    }
+
+    private List<Board> getSaveSearchResult(String q, String category, int page, int size) {
+        if (q.length() < 2) {
+            throw new IllegalArgumentException(SEARCH_MIN_SIZE_IS_TWO);
+        }
+
+        // 전문검색 쿼리 뒤의 글자도 검색 되도록.
+        String newQ = q + "*";
+        Optional<List<Board>> result = boardRepository.findAllByTitleAndContentByFullText(newQ, category, true, page, size);
+
+        // 검색결과가 존재하지 않을 시 빈 리스트 return.
+        return result.orElseGet(ArrayList::new);
     }
     //endregion
 
@@ -566,18 +581,19 @@ public class BoardService {
 
         // 4. 로그인한 유저라면
         // - 로그인한 유저가 명예의 밈짤 이미지들에 좋아요 눌렀는지 여부
-        if(userDetails != null) {
+        if (userDetails != null) {
             User user = jwtAuthenticateProcessor.getUser(userDetails);
 
             ObjectMapper mapper = new ObjectMapper();
-            List<BoardMemeBestResponseDto> mappedList = mapper.convertValue(boardMemeBestResponseDtoList, new TypeReference<List<BoardMemeBestResponseDto>>(){});
+            List<BoardMemeBestResponseDto> mappedList = mapper.convertValue(boardMemeBestResponseDtoList, new TypeReference<List<BoardMemeBestResponseDto>>() {
+            });
 
             List<BoardMemeBestResponseDto> resultList = new ArrayList<>();
-            for(BoardMemeBestResponseDto boardMemeBestResponseDto : mappedList) {
+            for (BoardMemeBestResponseDto boardMemeBestResponseDto : mappedList) {
                 Board board = boardRepository.findById(boardMemeBestResponseDto.getBoardId()).orElse(null);
                 Long boardId = boardMemeBestResponseDto.getBoardId();
                 Boolean boardLike = boardLikeRepository.existsByBoard_BoardIdAndUser(boardId, user);
-                resultList.add(new BoardMemeBestResponseDto(boardMemeBestResponseDto, (long)board.getLikes().size(), boardLike));
+                resultList.add(new BoardMemeBestResponseDto(boardMemeBestResponseDto, (long) board.getLikes().size(), boardLike));
             }
 
             return resultList;
@@ -618,7 +634,7 @@ public class BoardService {
             boardMemeBestResponseDtoList.add(
                     BoardMemeBestResponseDto.builder()
                             .boardId(tuple.get(0, Long.class))
-                            .thumbNail(tuple.get(1,String.class))
+                            .thumbNail(tuple.get(1, String.class))
                             .title(tuple.get(2, String.class))
                             .username(tuple.get(3, String.class))
                             .profileImageUrl(tuple.get(4, String.class))
