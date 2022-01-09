@@ -132,12 +132,9 @@ public class CommentService {
         }
 
         QComment qComment = QComment.comment;
-        QBoard qBoard = QBoard.board;
         QUser qUser = QUser.user;
 
         return queryFactory.selectFrom(qComment).distinct()
-                .leftJoin(qComment.board, qBoard)
-                .fetchJoin()
                 .leftJoin(qComment.user, qUser)
                 .fetchJoin()
                 .where(qComment.board.eq(board)
