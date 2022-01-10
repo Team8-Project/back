@@ -157,7 +157,7 @@ public class BoardService {
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
         // 5. multipartFile로 넘어온 이미지 데이터 null 체크 => null이 아니면 S3 버킷에 저장
         String imageUrl = "";
-        if (multipartFile != null) {
+        if (!multipartFile.isEmpty()) {
             imageUrl = s3Uploader.upload(multipartFile, S3dirName);
         }
 
