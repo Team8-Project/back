@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class StatController {
     private final StatService statService;
 
-    @GetMapping("/stat/visitor")
+    @GetMapping("/api/stat/visitor")
     public ResponseDto<Long> statVisitor(){
         return ResponseDto.<Long>builder()
                 .status(HttpStatus.OK.toString())
@@ -23,7 +23,7 @@ public class StatController {
                 .build();
     }
 
-    @GetMapping("/stat/quiz/{category}")
+    @GetMapping("/api/stat/quiz/{category}")
     public ResponseDto<Object> statQuizSolver(@PathVariable String category,
                                               @RequestParam int score){
         statService.statQuizSolver(category, score);
