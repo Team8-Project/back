@@ -4,7 +4,6 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.teamproj.backend.Repository.dict.DictHistoryRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
@@ -21,10 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
 import static com.teamproj.backend.util.RedisKey.BEST_DICT_KEY;
@@ -37,7 +33,6 @@ public class DictService {
     private final DictHistoryService dictHistoryService;
 
     private final DictRepository dictRepository;
-    private final DictHistoryRepository dictHistoryRepository;
     private final DictLikeRepository dictLikeRepository;
     private final DictViewersRepository dictViewersRepository;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
@@ -84,7 +79,7 @@ public class DictService {
             return dictRepository.count();
         }
         // 2. 쿼리가 있을 경우 : 쿼리의 검색결과의 개수 출력
-        String query = q + "*";
+//        String query = q + "*";
 //        return dictRepository.countByDictNameOrContentByFullText(query);
         return dictRepository.count();
     }
@@ -149,14 +144,6 @@ public class DictService {
                 .build();
 
         dict = dictRepository.save(dict);
-
-        DictHistory dictHistory = DictHistory.builder()
-                .dict(dict)
-                .user(user)
-                .prevContent(dict.getContent())
-                .prevSummary(dict.getSummary())
-                .build();
-
         dictHistoryService.postDictHistory(dict, user);
 
         return DictPostResponseDto.builder()
@@ -399,12 +386,11 @@ public class DictService {
     // DictList 검색결과
     // ElasticSearch 로 변경 고려 중.
     private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
-        if(q.length() < 2){
+        if (q.length() < 2) {
             throw new IllegalArgumentException(SEARCH_MIN_SIZE_IS_TWO);
         }
 
-        String newQ = q;
-        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(newQ, page*size, size);
+        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(q, page * size, size);
         return searchResult.orElseGet(ArrayList::new);
     }
 
@@ -412,6 +398,13 @@ public class DictService {
     // DictDtoList to DictResponseDtoList
     private List<DictResponseDto> dictListToDictResponseDtoList(List<Dict> dictList, User user) {
         List<DictResponseDto> dictResponseDtoList = new ArrayList<>();
+
+        // 1. dict 목록을 저장한다.
+        // 2. dictLike 테이블에서 dict 목록을 IN 연산한 값을 가져온다.
+        // 3. 이걸 HashMap 에 저장한다. 킷값으로.
+        // 4. 이 키값이 존재하는지 확인하는 식으로 비교한다.
+        // 5. 성능 개선은 몰라도 N+1은 해결됨. ㄱㄱ
+        HashMap<String, Boolean> dictLikeList = getLikeList(dictList);
 
         for (Dict dict : dictList) {
             dictResponseDtoList.add(DictResponseDto.builder()
@@ -421,12 +414,28 @@ public class DictService {
                     .meaning(dict.getContent())
                     .firstWriter(dict.getFirstAuthor().getNickname())
                     .createdAt(dict.getCreatedAt())
-                    .isLike(user != null && isDictLike(dict, user))
+//                    .isLike(user != null && isDictLike(dict, user))
+                    .isLike(user != null && dictLikeList.get(dict.getDictId() + ":" + user.getId()) != null)
                     .likeCount(dict.getDictLikeList().size())
                     .build());
         }
 
         return dictResponseDtoList;
+    }
+
+    private HashMap<String, Boolean> getLikeList(List<Dict> dictList) {
+        QDictLike qDictLike = QDictLike.dictLike;
+        List<Tuple> dictLikeListTuple = queryFactory.select(qDictLike.dict.dictId, qDictLike.user.id)
+                .from(qDictLike)
+                .where(qDictLike.dict.in(dictList))
+                .fetch();
+
+        HashMap<String, Boolean> dictLikeList = new HashMap<>();
+        for (Tuple tuple : dictLikeListTuple) {
+            String genString = tuple.get(0, Long.class) + ":" + tuple.get(1, Long.class);
+            dictLikeList.put(genString, true);
+        }
+        return dictLikeList;
     }
 
     // DictDtoList to DictSearchResultResponseDtoList
