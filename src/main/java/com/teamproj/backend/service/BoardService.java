@@ -64,6 +64,7 @@ public class BoardService {
 
     private final CommentService commentService;
     private final RedisService redisService;
+    private final StatService statService;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final S3Uploader s3Uploader;
@@ -310,7 +311,10 @@ public class BoardService {
             deleteImg(board);
         }
 
+        // 수정
         board.update(boardUpdateRequestDto, imageUrl);
+        // 수정내역 통계에 저장(수정 내용은 보관되지 않음)
+        statService.statBoardModify(board);
 
         // 7. 게시글 저장 및 Response 전송
         boardRepository.save(board);
