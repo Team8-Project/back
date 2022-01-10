@@ -17,6 +17,7 @@ import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -383,17 +384,20 @@ public class DictService {
 
     // RecommendSearch
     private List<String> getSafeRecommendSearch(String key) {
-        List<String> result = redisService.getStringList(key);
+        try{
+            List<String> result = redisService.getStringList(key);
 
-        if (result == null) {
-            redisService.setRecommendSearch(key, getRecommendSearch(20));
-            result = redisService.getStringList(key);
             if (result == null) {
-                return new ArrayList<>();
+                redisService.setRecommendSearch(key, getRecommendSearch(20));
+                result = redisService.getStringList(key);
+                if (result == null) {
+                    return new ArrayList<>();
+                }
             }
+            return result;
+        }catch(RedisConnectionFailureException e){
+            return getRecommendSearch(20);
         }
-
-        return result;
     }
 
     // BestDict
@@ -494,14 +498,26 @@ public class DictService {
     private List<DictSearchResultResponseDto> dictListToDictSearchResultResponseDto(List<Dict> dictList, User user) {
         List<DictSearchResultResponseDto> dictSearchResultResponseDto = new ArrayList<>();
 
+        // 작성자 맵
+        HashMap<Long, String> firstWriterMap = getFirstWriterMap(dictList);
+        // 좋아요 맵
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
+        // 좋아요 개수 맵
+        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
+
         for (Dict dict : dictList) {
+            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
+            int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
+
             dictSearchResultResponseDto.add(DictSearchResultResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .isLike(user != null && isDictLike(dict, user))
-                    .likeCount(dict.getDictLikeList().size())
+                    .firstWriter(firstWriterMap.get(dict.getDictId()))
+                    .createdAt(dict.getCreatedAt())
+                    .isLike(user != null && dictLikeMap.get(dict.getDictId() + ":" + user.getId()) != null)
+                    .likeCount(likeCount)
                     .build());
         }
 
@@ -511,14 +527,23 @@ public class DictService {
     // DictList to DictBestResponseDtoList
     public List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, User user) {
         List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
+
+        // 좋아요 맵
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
+        // 좋아요 개수 맵
+        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
+        
         for (Dict dict : dictList) {
+            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
+            int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
+
             dictBestResponseDtoList.add(DictBestResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .isLike(user != null && isDictLike(dict, user))
-                    .likeCount(dict.getDictLikeList().size())
+                    .isLike(user != null && dictLikeMap.get(dict.getDictId() + ":" + user.getId()) != null)
+                    .likeCount(likeCount)
                     .build());
         }
         return dictBestResponseDtoList;

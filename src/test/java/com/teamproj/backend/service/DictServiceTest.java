@@ -57,9 +57,9 @@ class DictServiceTest {
                 .build();
 
         // 사전 초기데이터 주입
-        title = UUID.randomUUID().toString();
-        content = UUID.randomUUID().toString();
-        summary = UUID.randomUUID().toString();
+        title = "이건테스트제목입니다.";
+        content = "이건테스트내용입니다.";
+        summary = "이건테스트한줄요약입니다.";
         dictPostRequestDto = DictPostRequestDto.builder()
                 .title(title)
                 .content(content)
@@ -365,14 +365,6 @@ class DictServiceTest {
             @DisplayName("내용 일치")
             void getDictDetail_success_content_match() {
                 // given
-                String content = UUID.randomUUID().toString();
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .summary(UUID.randomUUID().toString())
-                        .content(content)
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
                 String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
                 // when
