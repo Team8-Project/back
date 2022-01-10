@@ -17,6 +17,7 @@ import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -273,6 +274,42 @@ public class DictService {
         return recommend;
     }
 
+    // 좋아요 목록 가져와서 HashMap 으로 반환
+    private HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
+        QDictLike qDictLike = QDictLike.dictLike;
+        List<Tuple> dictLikeListTuple = queryFactory.select(qDictLike.dict.dictId, qDictLike.user.id)
+                .from(qDictLike)
+                .where(qDictLike.dict.in(dictList))
+                .fetch();
+
+        HashMap<String, Boolean> dictLikeMap = new HashMap<>();
+        for (Tuple tuple : dictLikeListTuple) {
+            // 키값을 "DictId":"UserId"
+            String genString = tuple.get(0, Long.class) + ":" + tuple.get(1, Long.class);
+            dictLikeMap.put(genString, true);
+        }
+        return dictLikeMap;
+    }
+
+    // 사전 최초 작성자 목록 가져와서 HashMap 으로 반환
+    private HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
+        QDict qDict = QDict.dict;
+        List<Tuple> firstWriterTuple = queryFactory.select(qDict.dictId, qDict.firstAuthor.nickname)
+                .from(qDict)
+                .where(qDict.in(dictList))
+                .fetch();
+
+        HashMap<Long, String> firstWriterMap = new HashMap<>();
+        for (Tuple tuple : firstWriterTuple) {
+            // 키값은 DictId, 밸류는 nickname
+            Long key = tuple.get(0, Long.class);
+            String value = tuple.get(1, String.class);
+            firstWriterMap.put(key, value);
+        }
+
+        return firstWriterMap;
+    }
+
     // Get SafeEntity
     // User By UserDetails
     private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
@@ -347,17 +384,20 @@ public class DictService {
 
     // RecommendSearch
     private List<String> getSafeRecommendSearch(String key) {
-        List<String> result = redisService.getStringList(key);
+        try{
+            List<String> result = redisService.getStringList(key);
 
-        if (result == null) {
-            redisService.setRecommendSearch(key, getRecommendSearch(20));
-            result = redisService.getStringList(key);
             if (result == null) {
-                return new ArrayList<>();
+                redisService.setRecommendSearch(key, getRecommendSearch(20));
+                result = redisService.getStringList(key);
+                if (result == null) {
+                    return new ArrayList<>();
+                }
             }
+            return result;
+        }catch(RedisConnectionFailureException e){
+            return getRecommendSearch(20);
         }
-
-        return result;
     }
 
     // BestDict
@@ -401,55 +441,83 @@ public class DictService {
 
         // 1. dict 목록을 저장한다.
         // 2. dictLike 테이블에서 dict 목록을 IN 연산한 값을 가져온다.
-        // 3. 이걸 HashMap 에 저장한다. 킷값으로.
+        // 3. 이걸 HashMap 에 저장한다. 킷값으로. 조회할 때 시간복잡도가 O(1)
         // 4. 이 키값이 존재하는지 확인하는 식으로 비교한다.
         // 5. 성능 개선은 몰라도 N+1은 해결됨. ㄱㄱ
-        HashMap<String, Boolean> dictLikeList = getLikeList(dictList);
+        // -> 100개의 데이터를 한꺼번에 호출한 결과 10배이상 빨랐음. 성능개선 효과 있음.
+
+        // 작성자 맵
+        HashMap<Long, String> firstWriterMap = getFirstWriterMap(dictList);
+        // 좋아요 맵
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
+        // 좋아요 개수 맵
+        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
 
         for (Dict dict : dictList) {
+            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
+            int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
+
             dictResponseDtoList.add(DictResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .firstWriter(dict.getFirstAuthor().getNickname())
+                    .firstWriter(firstWriterMap.get(dict.getDictId()))
                     .createdAt(dict.getCreatedAt())
-//                    .isLike(user != null && isDictLike(dict, user))
-                    .isLike(user != null && dictLikeList.get(dict.getDictId() + ":" + user.getId()) != null)
-                    .likeCount(dict.getDictLikeList().size())
+                    .isLike(user != null && dictLikeMap.get(dict.getDictId() + ":" + user.getId()) != null)
+                    .likeCount(likeCount)
                     .build());
         }
 
         return dictResponseDtoList;
     }
 
-    private HashMap<String, Boolean> getLikeList(List<Dict> dictList) {
+    private HashMap<Long,Long> getLikeCountMap(List<Dict> dictList) {
         QDictLike qDictLike = QDictLike.dictLike;
-        List<Tuple> dictLikeListTuple = queryFactory.select(qDictLike.dict.dictId, qDictLike.user.id)
+        QDict qDict = QDict.dict;
+
+        List<Tuple> likeCountListTuple = queryFactory.select(qDictLike.dict.dictId, qDictLike.count())
                 .from(qDictLike)
                 .where(qDictLike.dict.in(dictList))
+                .groupBy(qDict)
                 .fetch();
 
-        HashMap<String, Boolean> dictLikeList = new HashMap<>();
-        for (Tuple tuple : dictLikeListTuple) {
-            String genString = tuple.get(0, Long.class) + ":" + tuple.get(1, Long.class);
-            dictLikeList.put(genString, true);
+        HashMap<Long, Long> likeCountMap = new HashMap<>();
+        for (Tuple tuple : likeCountListTuple) {
+            // 키값은 DictId, 밸류는 count
+            Long key = tuple.get(0, Long.class);
+            Long value = tuple.get(1, Long.class);
+            likeCountMap.put(key, value);
         }
-        return dictLikeList;
+
+        return likeCountMap;
     }
+
 
     // DictDtoList to DictSearchResultResponseDtoList
     private List<DictSearchResultResponseDto> dictListToDictSearchResultResponseDto(List<Dict> dictList, User user) {
         List<DictSearchResultResponseDto> dictSearchResultResponseDto = new ArrayList<>();
 
+        // 작성자 맵
+        HashMap<Long, String> firstWriterMap = getFirstWriterMap(dictList);
+        // 좋아요 맵
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
+        // 좋아요 개수 맵
+        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
+
         for (Dict dict : dictList) {
+            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
+            int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
+
             dictSearchResultResponseDto.add(DictSearchResultResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .isLike(user != null && isDictLike(dict, user))
-                    .likeCount(dict.getDictLikeList().size())
+                    .firstWriter(firstWriterMap.get(dict.getDictId()))
+                    .createdAt(dict.getCreatedAt())
+                    .isLike(user != null && dictLikeMap.get(dict.getDictId() + ":" + user.getId()) != null)
+                    .likeCount(likeCount)
                     .build());
         }
 
@@ -459,14 +527,23 @@ public class DictService {
     // DictList to DictBestResponseDtoList
     public List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, User user) {
         List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
+
+        // 좋아요 맵
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
+        // 좋아요 개수 맵
+        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
+        
         for (Dict dict : dictList) {
+            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
+            int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
+
             dictBestResponseDtoList.add(DictBestResponseDto.builder()
                     .dictId(dict.getDictId())
                     .title(dict.getDictName())
                     .summary(dict.getSummary())
                     .meaning(dict.getContent())
-                    .isLike(user != null && isDictLike(dict, user))
-                    .likeCount(dict.getDictLikeList().size())
+                    .isLike(user != null && dictLikeMap.get(dict.getDictId() + ":" + user.getId()) != null)
+                    .likeCount(likeCount)
                     .build());
         }
         return dictBestResponseDtoList;
