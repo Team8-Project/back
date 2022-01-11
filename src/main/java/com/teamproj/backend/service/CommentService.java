@@ -39,8 +39,6 @@ public class CommentService {
         return commentListToCommentResponseDtoList(commentList);
     }
 
-
-
     // 댓글 작성
     public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long boardId, CommentPostRequestDto commentPostRequestDto) {
         // 로그인 여부 확인

@@ -21,7 +21,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     Long countByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled);
 
-    Optional<Page<Board>> findAllByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled, Pageable pageable);
+    Optional<Page<Board>> findAllByBoardCategoryAndEnabledOrderByCreatedAtDesc(BoardCategory boardCategory, boolean enabled, Pageable pageable);
 
     @Modifying
     @Transactional
@@ -33,6 +33,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
                    " WHERE enabled = :enabled" +
                    "   AND b.board_category_category_name = :category" +
                    "   AND match(title, content) against(:q in natural language mode)" +
+                   " ORDER BY created_at desc" +
                    " LIMIT :page, :size",
             nativeQuery = true)
     Optional<List<Board>> findAllByTitleAndContentByFullText(@Param("q") String query,
