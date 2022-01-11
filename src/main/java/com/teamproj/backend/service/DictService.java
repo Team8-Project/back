@@ -13,6 +13,7 @@ import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.MemegleServiceStaticMethods;
 import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
@@ -277,24 +278,20 @@ public class DictService {
     // 좋아요 목록 가져와서 HashMap 으로 반환
     private HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
         QDictLike qDictLike = QDictLike.dictLike;
-        List<Tuple> dictLikeListTuple = queryFactory.select(qDictLike.dict.dictId, qDictLike.user.id)
+        List<Tuple> dictLikeListTuple = queryFactory
+                .select(qDictLike.dict.dictId, qDictLike.user.id)
                 .from(qDictLike)
                 .where(qDictLike.dict.in(dictList))
                 .fetch();
 
-        HashMap<String, Boolean> dictLikeMap = new HashMap<>();
-        for (Tuple tuple : dictLikeListTuple) {
-            // 키값을 "DictId":"UserId"
-            String genString = tuple.get(0, Long.class) + ":" + tuple.get(1, Long.class);
-            dictLikeMap.put(genString, true);
-        }
-        return dictLikeMap;
+        return MemegleServiceStaticMethods.getLikeMap(dictLikeListTuple);
     }
 
     // 사전 최초 작성자 목록 가져와서 HashMap 으로 반환
     private HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
         QDict qDict = QDict.dict;
-        List<Tuple> firstWriterTuple = queryFactory.select(qDict.dictId, qDict.firstAuthor.nickname)
+        List<Tuple> firstWriterTuple = queryFactory
+                .select(qDict.dictId, qDict.firstAuthor.nickname)
                 .from(qDict)
                 .where(qDict.in(dictList))
                 .fetch();
@@ -331,7 +328,8 @@ public class DictService {
         QDictLike qDictLike = QDictLike.dictLike;
 
         // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않음
-        return queryFactory.selectFrom(qDict).distinct()
+        return queryFactory
+                .selectFrom(qDict).distinct()
                 .leftJoin(qDict.dictLikeList, qDictLike)
                 .orderBy(qDict.createdAt.desc())
                 .offset(page)
@@ -350,7 +348,8 @@ public class DictService {
         QDictLike qDictLike = QDictLike.dictLike;
 
         NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
-        return queryFactory.select(qDictLike.dict.dictId, qDictLike.dict.dictName, qDictLike.dict.count().as(count))
+        return queryFactory
+                .select(qDictLike.dict.dictId, qDictLike.dict.dictName, qDictLike.dict.count().as(count))
                 .from(qDictLike)
                 .groupBy(qDictLike.dict)
                 .orderBy(count.desc())
@@ -374,7 +373,8 @@ public class DictService {
         QDictViewers qDictViewers = QDictViewers.dictViewers;
 
         NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
-        return queryFactory.select(qDictViewers.dict.dictId, qDictViewers.dict.count().as(count))
+        return queryFactory
+                .select(qDictViewers.dict.dictId, qDictViewers.dict.count().as(count))
                 .from(qDictViewers)
                 .groupBy(qDictViewers.dict)
                 .orderBy(count.desc())
@@ -476,21 +476,14 @@ public class DictService {
         QDictLike qDictLike = QDictLike.dictLike;
         QDict qDict = QDict.dict;
 
-        List<Tuple> likeCountListTuple = queryFactory.select(qDictLike.dict.dictId, qDictLike.count())
+        List<Tuple> likeCountListTuple = queryFactory
+                .select(qDictLike.dict.dictId, qDictLike.count())
                 .from(qDictLike)
                 .where(qDictLike.dict.in(dictList))
                 .groupBy(qDict)
                 .fetch();
 
-        HashMap<Long, Long> likeCountMap = new HashMap<>();
-        for (Tuple tuple : likeCountListTuple) {
-            // 키값은 DictId, 밸류는 count
-            Long key = tuple.get(0, Long.class);
-            Long value = tuple.get(1, Long.class);
-            likeCountMap.put(key, value);
-        }
-
-        return likeCountMap;
+        return MemegleServiceStaticMethods.getLikeCountMap(likeCountListTuple);
     }
 
 
