@@ -32,6 +32,7 @@ public interface DictRepository extends JpaRepository<Dict, Long> {
     @Query(value = "SELECT *" +
                    "  FROM dict d" +
                    " WHERE match(dict_name, content) against(:q in natural language mode)" +
+                   " ORDER BY created_at desc" +
                    " LIMIT :page, :size",
             nativeQuery = true)
     Optional<List<Dict>> findAllByDictNameOrContentByFullText(@Param("q") String query,

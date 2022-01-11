@@ -150,6 +150,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         skipPathList.add("GET,/api/board/list/*"); // 게시글 조회
         skipPathList.add("GET,/api/board/*/best"); // 명예의 밈짤
         skipPathList.add("GET,/api/board/count/*"); // 게시글 총 개수 출력
+        skipPathList.add("GET,/api/board/hashTag/*"); // 해시태그 검색
 
         // 퀴즈 API 허용
         skipPathList.add("GET,/api/quiz/**");

@@ -1,4 +1,4 @@
-package com.teamproj.backend.dto.board.BoardHashTag;
+package com.teamproj.backend.dto.BoardHashTag;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

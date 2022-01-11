@@ -23,8 +23,4 @@ public class BoardHashTag {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Board board;
-
-    public void updateHashTagName(String hashTagName) {
-        this.hashTagName = hashTagName;
-    }
 }
