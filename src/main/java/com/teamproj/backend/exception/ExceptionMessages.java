@@ -28,11 +28,10 @@ public final class ExceptionMessages {
     public static final String TITLE_IS_EMPTY = "제목은 필수 입력 값입니다.";
     public static final String CONTENT_IS_EMPTY = "내용은 필수 입력 값입니다.";
 
-    public static final String SEARCH_IS_EMPTY = "검색어는 필수 입력 값입니다.";
     public static final String SEARCH_BOARD_IS_EMPTY = "검색하려는 게시글이 없습니다.";
+    public static final String SEARCH_IS_EMPTY = "검색어는 필수 입력 값입니다.";
 
     public static final String HASHTAG_MAX_FIVE = "해시태그는 최대 5개까지 입력 가능합니다.";
-    public static final String HASHTAG_IS_EMPTY = "해시태그가 없습니다.";
 
     // Comment
     public static final String NOT_MY_COMMENT = "권한이 없습니다.";
