@@ -155,7 +155,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         // 퀴즈 API 허용
         skipPathList.add("GET,/api/quiz/**");
         // 통계 API 허용
-        skipPathList.add("GET,/stat");
+        skipPathList.add("GET,/api/stat/visitor"); // 방문자 정보
+        skipPathList.add("GET,/api/stat/quiz/*"); // 퀴즈 푼 사람 정보
 
         // Swagger 허용
         skipPathList.add("GET,/swagger-ui.html");

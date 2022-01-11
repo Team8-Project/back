@@ -3,12 +3,11 @@ package com.teamproj.backend.Repository.dict;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.Dict;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.util.Streamable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -16,8 +15,6 @@ import java.util.Optional;
 
 public interface DictRepository extends JpaRepository<Dict, Long> {
     boolean existsByDictName(String dictName);
-
-    Optional<Page<Dict>> findAllByDictNameLikeOrContentLike(String nameQuery, String contentQuery, Pageable pageable);
 
     Dict findByDictName(String title);
 
@@ -32,5 +29,13 @@ public interface DictRepository extends JpaRepository<Dict, Long> {
 
     Page<Dict> findAllByOrderByViewsDesc(Pageable pageable);
 
-    Long countByDictNameLikeOrContentLike(String nameQuery, String contentQuery);
+    @Query(value = "SELECT *" +
+                   "  FROM dict d" +
+                   " WHERE match(dict_name, content) against(:q in natural language mode)" +
+                   " ORDER BY created_at desc" +
+                   " LIMIT :page, :size",
+            nativeQuery = true)
+    Optional<List<Dict>> findAllByDictNameOrContentByFullText(@Param("q") String query,
+                                                     @Param("page") int page,
+                                                     @Param("size") int size);
 }

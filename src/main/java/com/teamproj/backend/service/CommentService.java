@@ -39,8 +39,6 @@ public class CommentService {
         return commentListToCommentResponseDtoList(commentList);
     }
 
-
-
     // 댓글 작성
     public CommentPostResponseDto postComment(UserDetailsImpl userDetails, Long boardId, CommentPostRequestDto commentPostRequestDto) {
         // 로그인 여부 확인
@@ -132,12 +130,9 @@ public class CommentService {
         }
 
         QComment qComment = QComment.comment;
-        QBoard qBoard = QBoard.board;
         QUser qUser = QUser.user;
 
         return queryFactory.selectFrom(qComment).distinct()
-                .leftJoin(qComment.board, qBoard)
-                .fetchJoin()
                 .leftJoin(qComment.user, qUser)
                 .fetchJoin()
                 .where(qComment.board.eq(board)

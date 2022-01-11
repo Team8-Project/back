@@ -25,15 +25,10 @@ import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.util.JwtAuthenticateProcessor;
-import com.teamproj.backend.util.S3Uploader;
-import com.teamproj.backend.util.StatisticsUtils;
-import com.teamproj.backend.util.ValidChecker;
+import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,9 +38,7 @@ import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
@@ -64,6 +57,7 @@ public class BoardService {
 
     private final CommentService commentService;
     private final RedisService redisService;
+    private final StatService statService;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final S3Uploader s3Uploader;
@@ -76,37 +70,55 @@ public class BoardService {
     public List<BoardResponseDto> getBoard(String categoryName, int page, int size, String token) {
         // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        // 2. Request로 넘어온 카테고리 네임 DB에서 조회
+        // 2. 받아온 회원 정보로 User 정보 받아오기
+        User user = getSafeUserByUserDetails(userDetails);
+        // 3. Request로 넘어온 카테고리 네임 DB에서 조회
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
-
-        // 3. RequestParam으로 넘어온 페이지 값과 사이즈 값 바탕으로 페이지네이션(내림차순 DESC)
-        Sort.Direction direction = Sort.Direction.DESC;
-        Sort sort = Sort.by(direction, "boardId");
-        Pageable pageable = PageRequest.of(page, size, sort);
-
         // 4. 카테고리와 enabled(삭제 안된) 데이터를 페이지네이션 조건에 맞게 리스트형식으로 가져오기
-        Page<Board> boardList = boardRepository.findAllByBoardCategoryAndEnabled(boardCategory, true, pageable)
-                .orElseThrow(
-                        () -> new NullPointerException(BOARD_IS_EMPTY)
-                );
+        List<Board> boardList = getSafeBoardList(boardCategory, page, size);
 
-        return getBoardResponseDtoList(userDetails, boardList);
+        return getBoardResponseDtoList(user, boardList);
     }
 
-    private List<BoardResponseDto> getBoardResponseDtoList(UserDetailsImpl userDetails, Page<Board> boardList) {
+    private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return null;
+        }
+        return jwtAuthenticateProcessor.getUser(userDetails);
+    }
+
+    private List<Board> getSafeBoardList(BoardCategory boardCategory, int page, int size) {
+        Optional<Page<Board>> boardPage = boardRepository.findAllByBoardCategoryAndEnabledOrderByCreatedAtDesc(boardCategory, true, PageRequest.of(page, size));
+        return boardPage.orElseThrow(() -> new NullPointerException(BOARD_IS_EMPTY)).toList();
+    }
+
+    private List<BoardResponseDto> getBoardResponseDtoList(User user, List<Board> boardList) {
         // 5. DB에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
         List<BoardResponseDto> boardResponseDtoList = new ArrayList<>();
-        for(Board board : boardList) {
-            // 6. 게시글 좋아요 여부 확인(로그인한 유저만)
-            boolean isLike = false;
-            if (userDetails != null) {
-                Optional<BoardLike> boardLike = boardLikeRepository.findByBoardAndUser(
-                        board, jwtAuthenticateProcessor.getUser(userDetails)
-                );
 
-                if (boardLike.isPresent()) {
-                    isLike = true;
-                }
+        // 작성자 맵
+        HashMap<String, String> userInfoMap = getUserInfoMap(boardList);
+        // 좋아요 맵
+        HashMap<String, Boolean> boardLikeMap = getBoardLikeMap(boardList);
+        // 좋아요 개수 맵
+        HashMap<Long, Long> likeCountMap = getLikeCountMap(boardList);
+        // 댓글 개수 맵
+        HashMap<Long, Integer> commentCountMap = getCommentCountMap(boardList);
+        // 해시태그 맵
+        HashMap<Long, List<String>> boardHashTagMap = getBoardHashTagMap(boardList);
+
+        for (Board board : boardList) {
+            // Map에 사용될 id 키값
+            Long boardId = board.getBoardId();
+
+            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
+            Long likeCountLong = likeCountMap.get(boardId);
+            int likeCount = likeCountLong == null ? 0 : likeCountLong.intValue();
+
+            // boardHashTagMap 에 값이 없음 = 해시태그가 없음. 빈 리스트
+            List<String> boardHashTagList = new ArrayList<>();
+            if (boardHashTagMap.get(boardId) != null) {
+                boardHashTagList = boardHashTagMap.get(boardId);
             }
 
             // 7. 게시글 List 데이터를 Dto에 List에 담아서 리턴
@@ -114,25 +126,144 @@ public class BoardService {
                     .boardId(board.getBoardId())
                     .thumbNail(board.getThumbNail())
                     .title(board.getTitle())
-                    .username(board.getUser().getUsername())
-                    .profileImageUrl(board.getUser().getProfileImage())
-                    .writer(board.getUser().getNickname())
+                    .username(userInfoMap.get(boardId + ":username"))
+                    .profileImageUrl(userInfoMap.get(boardId + ":profileImage"))
+                    .writer(userInfoMap.get(boardId + ":nickname"))
                     .content(board.getContent())
                     .createdAt(board.getCreatedAt())
                     .views(board.getViews())
-                    .likeCnt(board.getLikes().size())
-                    .commentCnt(commentService.getCommentList(board).size())
-                    .isLike(isLike)
-                    .hashTags(board.getBoardHashTagList().stream().map(
-                            e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
-                    )
+                    .likeCnt(likeCount)
+                    .commentCnt(commentCountMap.get(boardId))
+                    .isLike(user != null && boardLikeMap.get(boardId + ":" + user.getId()) != null)
+                    .hashTags(boardHashTagList)
                     .build());
         }
         return boardResponseDtoList;
     }
+
+    private HashMap<Long, List<String>> getBoardHashTagMap(List<Board> boardList) {
+        QBoardHashTag qBoardHashTag = QBoardHashTag.boardHashTag;
+
+        List<Tuple> boardHashTagListTuple = queryFactory
+                .select(qBoardHashTag.board.boardId, qBoardHashTag.hashTagName)
+                .from(qBoardHashTag)
+                .where(qBoardHashTag.board.in(boardList))
+                .fetch();
+
+        HashMap<Long, List<String>> boardHashTagMap = new HashMap<>();
+
+        // 튜플을 돌면서 List<String> 값 수집.
+        // 출력은 항상 boardId 오름차순. boardId가 달라지는 시점에 List를 Map에 넣고 초기화시키면 됨.
+        // boardId를 저장할 변수를 for문 외부에 만들고 이 값과 비교하면서 달라지면 Map에 삽입. 같을경우 List에 삽입.
+        // 이론상 완벽해 ㄱㄱ
+        // 근데 내 코드가 완벽하지 않아..... 멘토링 끝나고 개선함
+
+        Long recentBoardId = 0L;
+        if (boardHashTagListTuple.size() > 0) {
+            recentBoardId = boardHashTagListTuple.get(0).get(0, Long.class);
+        }
+
+        List<String> hashTagList = new ArrayList<>();
+        for(int i = 0; i < boardHashTagListTuple.size(); i++){
+            Long boardId = boardHashTagListTuple.get(i).get(0, Long.class);
+
+            if (recentBoardId.longValue() != boardId.longValue()) {
+                // 최근 boardId와 일치하지 않을 경우 맵에 저장 후 clear.
+                List<String> copyList = new ArrayList<>(hashTagList);
+                boardHashTagMap.put(recentBoardId, copyList);
+                recentBoardId = boardId;
+                hashTagList.clear();
+            }
+
+            hashTagList.add(boardHashTagListTuple.get(i).get(1, String.class));
+
+            if(i == boardHashTagListTuple.size() - 1){
+                // 마지막 리스트일 경우 한 번 더 추가.
+                List<String> copyList = new ArrayList<>(hashTagList);
+                boardHashTagMap.put(boardId, copyList);
+                hashTagList.clear();
+            }
+        }
+
+        return boardHashTagMap;
+    }
+
+    private HashMap<Long, Integer> getCommentCountMap(List<Board> boardList) {
+        QBoard qBoard = QBoard.board;
+        List<Tuple> commentCountListTuple = queryFactory
+                .select(qBoard.boardId, qBoard.commentList.size())
+                .from(qBoard)
+                .where(qBoard.in(boardList))
+                .fetch();
+
+        HashMap<Long, Integer> commentCountMap = new HashMap<>();
+        for (Tuple tuple : commentCountListTuple) {
+            Long boardId = tuple.get(0, Long.class);
+            Integer commentCount = tuple.get(1, Integer.class);
+
+            commentCountMap.put(boardId, commentCount);
+        }
+
+        return commentCountMap;
+    }
+
+    private HashMap<Long, Long> getLikeCountMap(List<Board> boardList) {
+        QBoardLike qBoardLike = QBoardLike.boardLike;
+        QBoard qBoard = QBoard.board;
+
+        List<Tuple> likeCountListTuple = queryFactory
+                .select(qBoardLike.board.boardId, qBoardLike.count())
+                .from(qBoardLike)
+                .where(qBoardLike.board.in(boardList))
+                .groupBy(qBoard)
+                .fetch();
+
+        return MemegleServiceStaticMethods.getLikeCountMap(likeCountListTuple);
+    }
+
+    private HashMap<String, Boolean> getBoardLikeMap(List<Board> boardList) {
+        QBoardLike qBoardLike = QBoardLike.boardLike;
+        List<Tuple> boardLikeListTuple = queryFactory.select(qBoardLike.board.boardId, qBoardLike.user.id)
+                .from(qBoardLike)
+                .where(qBoardLike.board.in(boardList))
+                .fetch();
+
+        return MemegleServiceStaticMethods.getLikeMap(boardLikeListTuple);
+    }
+
+
+    private HashMap<String, String> getUserInfoMap(List<Board> boardList) {
+        // 얻어오는 정보 : 사용자 아이디, 사용자 닉네임, 사용자 프로필이미지
+        QBoard qBoard = QBoard.board;
+        List<Tuple> userInfoTuple = queryFactory.select(qBoard.boardId, qBoard.user.username, qBoard.user.nickname, qBoard.user.profileImage)
+                .from(qBoard)
+                .where(qBoard.in(boardList))
+                .fetch();
+
+        HashMap<String, String> userInfoMap = new HashMap<>();
+        for (Tuple tuple : userInfoTuple) {
+            // Long key : boardId
+            Long key = tuple.get(0, Long.class);
+            // 키값은 boardId:username, 밸류는 username
+            String username = tuple.get(1, String.class);
+            String usernameKey = key + ":username";
+            userInfoMap.put(usernameKey, username);
+            // 키값은 boardId:nickname, 밸류는 nickname
+            String nickname = tuple.get(2, String.class);
+            String nicknameKey = key + ":nickname";
+            userInfoMap.put(nicknameKey, nickname);
+            // 키값은 boardId:profileImage, 밸류는 profileImage
+            String profileImageKey = key + ":profileImage";
+            String profileImage = tuple.get(3, String.class);
+            userInfoMap.put(profileImageKey, profileImage);
+        }
+
+        return userInfoMap;
+    }
     //endregion
 
     //region 게시글 작성
+    @Transactional
     public BoardUploadResponseDto uploadBoard(UserDetailsImpl userDetails,
                                               BoardUploadRequestDto boardUploadRequestDto,
                                               String categoryName,
@@ -302,14 +433,17 @@ public class BoardService {
         // 6. multipartFile로 넘어온 이미지 파일 저장
         // - 기존에 S3에 저장되어 있는 이미지 삭제 후
         String imageUrl = "";
-        if(!multipartFile.isEmpty()) {
+        if (!multipartFile.isEmpty()) {
             imageUrl = s3Uploader.upload(multipartFile, S3dirName);
             deleteImg(board);
         } else {
             deleteImg(board);
         }
 
+        // 수정
         board.update(boardUpdateRequestDto, imageUrl);
+        // 수정내역 통계에 저장(수정 내용은 보관되지 않음)
+        statService.statBoardModify(board);
 
         // 7. 게시글 저장 및 Response 전송
         boardRepository.save(board);
@@ -388,6 +522,7 @@ public class BoardService {
                 .result(true)
                 .build();
     }
+
     // 게시판 오늘의 좋아요 카운트 - 1
     private void todayLikeCancelProc(Board board) {
         Optional<BoardTodayLike> boardTodayLike = boardTodayLikeRepository.findByBoard(board);
@@ -399,6 +534,7 @@ public class BoardService {
             }
         }
     }
+
     // 게시판 오늘의 좋아요 카운트 + 1
     private void todayLikeProc(Board board, BoardCategory boardCategory) {
         Optional<BoardTodayLike> boardTodayLike = boardTodayLikeRepository.findByBoard(board);
@@ -429,13 +565,12 @@ public class BoardService {
 //                .type(QueryTypeEnum.BOARD)
 //                .build();
 //        recentSearchRepository.save(recentSearch);
+
         // 2. 제목에 검색어가 포함되어 있는 게시글 리스트 조회
-        Optional<List<Board>> findBoardList = boardRepository.findByTitleContaining(q);
-        // 3. 게시글 검색 결과가 없으면 빈 ArrayList 리턴
-        List<Board> boardList = findBoardList.get();
-        if (boardList.size() == 0) {
-            return new ArrayList<>();
-        }
+        int page = 0;
+        int size = 1000;
+        String category = "FREEBOARD";
+        List<Board> boardList = getSaveSearchResult(q, category, page * size, size);
 
         // 3. 검색 결과가 있으면 해당 게시글들 Response
         List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
@@ -461,6 +596,19 @@ public class BoardService {
         }
 
         return boardSearchResponseDtoList;
+    }
+
+    private List<Board> getSaveSearchResult(String q, String category, int page, int size) {
+        if (q.length() < 2) {
+            throw new IllegalArgumentException(SEARCH_MIN_SIZE_IS_TWO);
+        }
+
+        // 전문검색 쿼리 뒤의 글자도 검색 되도록.
+        String newQ = q + "*";
+        Optional<List<Board>> result = boardRepository.findAllByTitleAndContentByFullText(newQ, category, true, page, size);
+
+        // 검색결과가 존재하지 않을 시 빈 리스트 return.
+        return result.orElseGet(ArrayList::new);
     }
     //endregion
 
@@ -566,18 +714,19 @@ public class BoardService {
 
         // 4. 로그인한 유저라면
         // - 로그인한 유저가 명예의 밈짤 이미지들에 좋아요 눌렀는지 여부
-        if(userDetails != null) {
+        if (userDetails != null) {
             User user = jwtAuthenticateProcessor.getUser(userDetails);
 
             ObjectMapper mapper = new ObjectMapper();
-            List<BoardMemeBestResponseDto> mappedList = mapper.convertValue(boardMemeBestResponseDtoList, new TypeReference<List<BoardMemeBestResponseDto>>(){});
+            List<BoardMemeBestResponseDto> mappedList = mapper.convertValue(boardMemeBestResponseDtoList, new TypeReference<List<BoardMemeBestResponseDto>>() {
+            });
 
             List<BoardMemeBestResponseDto> resultList = new ArrayList<>();
-            for(BoardMemeBestResponseDto boardMemeBestResponseDto : mappedList) {
+            for (BoardMemeBestResponseDto boardMemeBestResponseDto : mappedList) {
                 Board board = boardRepository.findById(boardMemeBestResponseDto.getBoardId()).orElse(null);
                 Long boardId = boardMemeBestResponseDto.getBoardId();
                 Boolean boardLike = boardLikeRepository.existsByBoard_BoardIdAndUser(boardId, user);
-                resultList.add(new BoardMemeBestResponseDto(boardMemeBestResponseDto, (long)board.getLikes().size(), boardLike));
+                resultList.add(new BoardMemeBestResponseDto(boardMemeBestResponseDto, (long) board.getLikes().size(), boardLike));
             }
 
             return resultList;
@@ -618,7 +767,7 @@ public class BoardService {
             boardMemeBestResponseDtoList.add(
                     BoardMemeBestResponseDto.builder()
                             .boardId(tuple.get(0, Long.class))
-                            .thumbNail(tuple.get(1,String.class))
+                            .thumbNail(tuple.get(1, String.class))
                             .title(tuple.get(2, String.class))
                             .username(tuple.get(3, String.class))
                             .profileImageUrl(tuple.get(4, String.class))

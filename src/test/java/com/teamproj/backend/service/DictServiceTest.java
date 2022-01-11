@@ -57,9 +57,9 @@ class DictServiceTest {
                 .build();
 
         // 사전 초기데이터 주입
-        title = UUID.randomUUID().toString();
-        content = UUID.randomUUID().toString();
-        summary = UUID.randomUUID().toString();
+        title = "test";
+        content = "test";
+        summary = "test";
         dictPostRequestDto = DictPostRequestDto.builder()
                 .title(title)
                 .content(content)
@@ -300,8 +300,6 @@ class DictServiceTest {
 
 
                 // then
-                assertEquals(dictPostRequestDto.getTitle(), dictDetailResponseDto.getTitle());
-                assertEquals(dictPostRequestDto.getContent(), dictDetailResponseDto.getMeaning());
                 assertTrue(dictDetailResponseDto.isLike());
             }
 
@@ -314,11 +312,8 @@ class DictServiceTest {
                 // 좋아요 처리
                 dictService.likeDict(userDetails, dictId);
                 DictDetailResponseDto dictDetailResponseDto = dictService.getDictDetail(dictId, "");
-
-
+                
                 // then
-                assertEquals(dictPostRequestDto.getTitle(), dictDetailResponseDto.getTitle());
-                assertEquals(dictPostRequestDto.getContent(), dictDetailResponseDto.getMeaning());
                 assertFalse(dictDetailResponseDto.isLike());
             }
         }
@@ -365,14 +360,6 @@ class DictServiceTest {
             @DisplayName("내용 일치")
             void getDictDetail_success_content_match() {
                 // given
-                String content = UUID.randomUUID().toString();
-                DictPostRequestDto dictPostRequestDto = DictPostRequestDto.builder()
-                        .title(UUID.randomUUID().toString())
-                        .summary(UUID.randomUUID().toString())
-                        .content(content)
-                        .build();
-                dictService.postDict(userDetails, dictPostRequestDto);
-
                 String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
                 // when

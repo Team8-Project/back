@@ -1,5 +1,6 @@
 package com.teamproj.backend.model.board;
 
+import com.teamproj.backend.util.Timestamped;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class BoardViewers {
+public class BoardViewers extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long viewersId;
