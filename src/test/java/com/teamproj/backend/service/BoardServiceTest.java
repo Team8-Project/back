@@ -8,7 +8,7 @@ import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
-import com.teamproj.backend.dto.board.BoardHashTag.BoardHashTagResponseDto;
+import com.teamproj.backend.dto.BoardHashTag.BoardHashTagResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
 import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
+
 @Transactional
 @Rollback(value = true)
 
