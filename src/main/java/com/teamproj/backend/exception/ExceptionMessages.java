@@ -45,4 +45,8 @@ public final class ExceptionMessages {
 
     // DictHistory
     public static final String NOT_EXIST_DICT_HISTORY = "유효하지 않은 역사입니다.";
+
+    // DictCurious
+    public static final String NOT_EXIST_DICT_CURIOUS = "유효하지 않은 요청입니다.";
+    public static final String NOT_YOUR_CURIOUS = "당신의 요청이 아닙니다.";
 }

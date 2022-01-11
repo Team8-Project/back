@@ -156,7 +156,6 @@ public class BoardService {
         // 출력은 항상 boardId 오름차순. boardId가 달라지는 시점에 List를 Map에 넣고 초기화시키면 됨.
         // boardId를 저장할 변수를 for문 외부에 만들고 이 값과 비교하면서 달라지면 Map에 삽입. 같을경우 List에 삽입.
         // 이론상 완벽해 ㄱㄱ
-        // 근데 내 코드가 완벽하지 않아..... 멘토링 끝나고 개선함
 
         Long recentBoardId = 0L;
         if (boardHashTagListTuple.size() > 0) {

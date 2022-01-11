@@ -61,6 +61,24 @@ public class DictService {
                 .build();
     }
 
+    // 사전 이름 중복검사. 사용불가시 기존 표현 뭔지 나오도록.
+    public DictNameCheckResponseDtoNeo neoCheckDictName(DictNameCheckRequestDto dictName){
+        Dict dict = dictRepository.findByDictName(dictName.getDictName());
+        if(dict == null){
+            return DictNameCheckResponseDtoNeo.builder()
+                    .result(false)
+                    .build();
+        }
+
+        return DictNameCheckResponseDtoNeo.builder()
+                .dictId(dict.getDictId())
+                .dictName(dict.getDictName())
+                .meaning(dict.getContent())
+                .result(true)
+                .build();
+        // 여기에 사전이름, 내용 등 .....
+    }
+
     // 베스트 용어 사전 가져오기
     public List<DictBestResponseDto> getBestDict(String token) {
         // 1. 회원 정보가 존재할 시 로그인 처리
