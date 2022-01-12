@@ -2,6 +2,7 @@ package com.teamproj.backend.model.dict;
 
 
 import com.teamproj.backend.model.User;
+import com.teamproj.backend.model.alarm.Alarm;
 import com.teamproj.backend.util.Timestamped;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;

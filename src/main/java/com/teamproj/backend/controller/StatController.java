@@ -32,4 +32,9 @@ public class StatController {
                 .message("정답 결과 정산..")
                 .build();
     }
+
+    @GetMapping("/api/stat/dict")
+    public void statDict(){
+
+    }
 }

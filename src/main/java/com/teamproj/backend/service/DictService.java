@@ -147,8 +147,17 @@ public class DictService {
         // 비회원이 함수로 요청하는지 확인(JWT 토큰의 유효성으로 확인)
         ValidChecker.loginCheck(userDetails);
 
+        String dictName = dictPostRequestDto.getTitle();
+        String summary = dictPostRequestDto.getSummary();
+        String content = dictPostRequestDto.getContent();
+
+        // 한줄요약이 너무 길 경우 예외 발생.
+        if(summary.length() > 30){
+            throw new IllegalArgumentException(SUMMARY_IS_TOO_BIG);
+        }
+
         // 이미 같은 이름의 사전이 존재할 경우 예외 발생.
-        if (dictRepository.existsByDictName(dictPostRequestDto.getTitle())) {
+        if (dictRepository.existsByDictName(dictName)) {
             throw new IllegalArgumentException(EXIST_DICT);
         }
         User user = jwtAuthenticateProcessor.getUser(userDetails);
@@ -157,9 +166,9 @@ public class DictService {
         Dict dict = Dict.builder()
                 .firstAuthor(user)
                 .recentModifier(user)
-                .content(dictPostRequestDto.getContent())
-                .dictName(dictPostRequestDto.getTitle())
-                .summary(dictPostRequestDto.getSummary())
+                .content(content)
+                .dictName(dictName)
+                .summary(summary)
                 .build();
 
         dict = dictRepository.save(dict);
@@ -175,6 +184,14 @@ public class DictService {
     public DictPutResponseDto putDict(UserDetailsImpl userDetails, Long dictId, DictPutRequestDto dictPutRequestDto) {
         ValidChecker.loginCheck(userDetails);
 
+        String summary = dictPutRequestDto.getSummary();
+        String content = dictPutRequestDto.getContent();
+
+        // 한줄요약이 너무 길 경우 예외 발생.
+        if(summary.length() > 30){
+            throw new IllegalArgumentException(SUMMARY_IS_TOO_BIG);
+        }
+
         Dict dict = getSafeDict(dictId);
         User user = jwtAuthenticateProcessor.getUser(userDetails);
 
@@ -182,8 +199,8 @@ public class DictService {
         dictHistoryService.postDictHistory(dict, user);
 
         dict.setRecentModifier(user);
-        dict.setSummary(dictPutRequestDto.getSummary());
-        dict.setContent(dictPutRequestDto.getContent());
+        dict.setSummary(summary);
+        dict.setContent(content);
 
         return DictPutResponseDto.builder()
                 .result("수정 성공")

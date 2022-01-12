@@ -1,5 +1,6 @@
 package com.teamproj.backend.service;
 
+import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.Repository.stat.*;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.statistics.*;
@@ -8,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Optional;
 
 @Service
@@ -18,6 +22,23 @@ public class StatService {
     private final StatQuizSolverRepository statQuizSolverRepository;
     private final StatBoardModifyRepository statBoardModifyRepository;
     private final StatNumericDataRepository statNumericDataRepository;
+
+    private final DictRepository dictRepository;
+
+    // 사전 통계 내용 출력
+    public void statDict(){
+        // 총 단어 개수
+        Long dictAllCount = dictRepository.count();
+        // 오늘 등록된 단어 개수
+        LocalDateTime yesterdayTime = LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(0, 0, 0)); //어제 00:00:00
+        Long dictTodayCount = dictRepository.countByCreatedAtGreaterThanEqual(yesterdayTime);
+        // 총 질문 개수
+//        Long questionAllCount =
+        // 해결된 질문 개수
+        // 답변을 기다리는 질문 개수
+        // 단어 많이 등록한 유저 랭킹
+        // 일별 등록 단어 개수 그래프
+    }
 
     // 게시글 수정 내역
     public void statBoardModify(Board board){
