@@ -1,9 +1,6 @@
 package com.teamproj.backend.service;
 
-import com.teamproj.backend.Repository.stat.StatBoardModifyRepository;
-import com.teamproj.backend.Repository.stat.StatQuizSolverRepository;
-import com.teamproj.backend.Repository.stat.StatQuizStarterRepository;
-import com.teamproj.backend.Repository.stat.StatVisitorRepository;
+import com.teamproj.backend.Repository.stat.*;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.statistics.*;
 import com.teamproj.backend.util.StatisticsUtils;
@@ -20,6 +17,7 @@ public class StatService {
     private final StatQuizStarterRepository statQuizStarterRepository;
     private final StatQuizSolverRepository statQuizSolverRepository;
     private final StatBoardModifyRepository statBoardModifyRepository;
+    private final StatNumericDataRepository statNumericDataRepository;
 
     // 게시글 수정 내역
     public void statBoardModify(Board board){
@@ -64,8 +62,10 @@ public class StatService {
     // 전체 방문자수 통계.
     // 하루에 한 번씩 일일 방문자수의 레코드 수를 반영하도록 되어 있음.
     @Transactional
-    public void statVisitorToNumericData(Long statVisitorCnt, StatNumericData statNumericData){
+    public void statVisitorToNumericData(Long statVisitorCnt, String data){
+        StatNumericData statNumericData = statNumericDataRepository.findByName(data);
         statNumericData.setData(statNumericData.getData() + statVisitorCnt);
+        statNumericDataRepository.save(statNumericData);
         statVisitorRepository.deleteAll();
     }
 
