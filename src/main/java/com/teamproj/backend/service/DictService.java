@@ -76,7 +76,6 @@ public class DictService {
                 .meaning(dict.getContent())
                 .result(true)
                 .build();
-        // 여기에 사전이름, 내용 등 .....
     }
 
     // 베스트 용어 사전 가져오기
@@ -294,7 +293,7 @@ public class DictService {
     }
 
     // 좋아요 목록 가져와서 HashMap 으로 반환
-    private HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
+    public HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
         QDictLike qDictLike = QDictLike.dictLike;
         List<Tuple> dictLikeListTuple = queryFactory
                 .select(qDictLike.dict.dictId, qDictLike.user.id)
@@ -306,7 +305,7 @@ public class DictService {
     }
 
     // 사전 최초 작성자 목록 가져와서 HashMap 으로 반환
-    private HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
+    public HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
         QDict qDict = QDict.dict;
         List<Tuple> firstWriterTuple = queryFactory
                 .select(qDict.dictId, qDict.firstAuthor.nickname)
@@ -490,7 +489,7 @@ public class DictService {
         return dictResponseDtoList;
     }
 
-    private HashMap<Long,Long> getLikeCountMap(List<Dict> dictList) {
+    public HashMap<Long,Long> getLikeCountMap(List<Dict> dictList) {
         QDictLike qDictLike = QDictLike.dictLike;
         QDict qDict = QDict.dict;
 
