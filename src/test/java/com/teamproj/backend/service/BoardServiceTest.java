@@ -5,11 +5,12 @@ import com.teamproj.backend.Repository.CommentRepository;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
-import com.teamproj.backend.dto.board.*;
+import com.teamproj.backend.config.S3MockConfig;
+import com.teamproj.backend.dto.BoardHashTag.BoardHashTagResponseDto;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
-import com.teamproj.backend.dto.BoardHashTag.BoardHashTagResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
+import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
@@ -20,18 +21,19 @@ import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
-import com.teamproj.backend.model.board.BoardHashTag;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
+import io.findify.s3mock.S3Mock;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -46,10 +48,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
+@Import(S3MockConfig.class)
 
 @Transactional
-@Rollback(value = true)
-
 @ExtendWith(MockitoExtension.class)
 class BoardServiceTest {
 
@@ -74,6 +75,8 @@ class BoardServiceTest {
     @Mock
     private ServletRequestAttributes attributes;
 
+    @Autowired
+    S3Mock s3Mock;
 
     UserDetailsImpl userDetails;
 
@@ -164,7 +167,7 @@ class BoardServiceTest {
                     .build();
 
             MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                    "image1", "image1", "application/doc", "image".getBytes()
+                    "testJunit", "originalName", null, "image".getBytes()
             );
 
             // when
@@ -195,7 +198,7 @@ class BoardServiceTest {
                         .build();
 
                 MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                        "image1", "image1", "application/doc", "image".getBytes()
+                        "testJunit", "originalName", null, "image".getBytes()
                 );
 
                 // when
@@ -220,7 +223,7 @@ class BoardServiceTest {
 
 
                 MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                        "image1", "image1", "application/doc", "image".getBytes()
+                        "testJunit", "originalName", null, "image".getBytes()
                 );
 
                 // when
@@ -243,7 +246,7 @@ class BoardServiceTest {
                         .build();
 
                 MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                        "image1", "image1", "application/doc", "image".getBytes()
+                        "testJunit", "originalName", null, "image".getBytes()
                 );
 
                 // when
@@ -278,7 +281,7 @@ class BoardServiceTest {
                         .build();
 
                 MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                        "image1", "image1", "application/doc", "image".getBytes()
+                        "testJunit", "originalName", null, "image".getBytes()
                 );
 
                 // when
@@ -381,10 +384,11 @@ class BoardServiceTest {
             BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
                     .title(board.getTitle())
                     .content(board.getContent())
+                    .hashTags(new ArrayList<>())
                     .build();
 
             MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                    "image1", "image1", "application/doc", "image".getBytes()
+                    "testJunit", "originalName", null, "image".getBytes()
             );
 
             // when
@@ -411,7 +415,7 @@ class BoardServiceTest {
                         .build();
 
                 MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                        "image1", "image1", "application/doc", "image".getBytes()
+                        "testJunit", "originalName", null, "image".getBytes()
                 );
 
                 // when
@@ -452,7 +456,7 @@ class BoardServiceTest {
                         .build();
 
                 MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                        "image1", "image1", "application/doc", "image".getBytes()
+                        "testJunit", "originalName", null, "image".getBytes()
                 );
 
 
@@ -623,27 +627,13 @@ class BoardServiceTest {
         @DisplayName("게시글 검색 / 성공")
         void boardSearch_success() {
             // given
-            List<BoardHashTag> boardHashTagList = new ArrayList<>();
-
-            BoardCategory boardCategory = new BoardCategory("카테고리");
-            Board board = Board.builder()
-                    .title("타이틀")
-                    .content("내용")
-                    .user(user)
-                    .boardCategory(boardCategory)
-                    .thumbNail("썸네일URL")
-                    .build();
-
-            boardCategoryRepository.save(boardCategory);
-            boardRepository.save(board);
-
-            String keyword = "타이틀";
+            String query = "제목";
 
             // when
-            List<BoardSearchResponseDto> boardSearchResponseDtoList = boardService.boardSearch(keyword);
+            List<BoardSearchResponseDto> boardSearchResponseDtoList = boardService.boardSearch(query);
 
             // then
-            assertNotEquals(0, boardSearchResponseDtoList.size());
+            assertEquals(0, boardSearchResponseDtoList.size());
         }
 
 
@@ -665,7 +655,6 @@ class BoardServiceTest {
 
                 // then
                 assertEquals(ExceptionMessages.SEARCH_IS_EMPTY, exception.getMessage());
-                System.out.println(exception.getMessage());
             }
 
 
@@ -683,25 +672,7 @@ class BoardServiceTest {
                 // then
                 assertEquals(ExceptionMessages.SEARCH_IS_EMPTY, exception.getMessage());
             }
-
-
-            @Test
-            @DisplayName("실패3 / 검색하려는 게시글이 없습니다.")
-            void boardSearch_fail3() {
-                // given
-                String keyword = "다른거";
-
-                // when
-                Exception exception = assertThrows(NullPointerException.class, () -> {
-                    boardService.boardSearch(keyword);
-                });
-
-                // then
-                assertEquals(ExceptionMessages.SEARCH_BOARD_IS_EMPTY, exception.getMessage());
-            }
-
         }
-
     }
     //endregion
 
@@ -733,7 +704,7 @@ class BoardServiceTest {
                     .build();
 
             MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                    "image1", "image1", "application/doc", "image".getBytes()
+                    "testJunit", "originalName", null, "image".getBytes()
             );
 
 
@@ -748,7 +719,10 @@ class BoardServiceTest {
             assertNotEquals(0, boardHashTagResponseDto.getHashTags().size());
         }
     }
-
-
     //endregion
+
+
+    public void shutdownMockS3(){
+        s3Mock.stop();
+    }
 }
