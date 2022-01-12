@@ -21,6 +21,7 @@ import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.dto.comment.CommentResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
+import com.teamproj.backend.model.QComment;
 import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.*;
@@ -38,7 +39,10 @@ import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
@@ -103,12 +107,12 @@ public class BoardService {
         // 좋아요 개수 맵
         HashMap<Long, Long> likeCountMap = getLikeCountMap(boardList);
         // 댓글 개수 맵
-        HashMap<Long, Integer> commentCountMap = getCommentCountMap(boardList);
+        HashMap<Long, Long> commentCountMap = getCommentCountMap(boardList);
         // 해시태그 맵
         HashMap<Long, List<String>> boardHashTagMap = getBoardHashTagMap(boardList);
 
         for (Board board : boardList) {
-            // Map에 사용될 id 키값
+            // Map 에 사용 될 id 키값
             Long boardId = board.getBoardId();
 
             // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
@@ -120,6 +124,10 @@ public class BoardService {
             if (boardHashTagMap.get(boardId) != null) {
                 boardHashTagList = boardHashTagMap.get(boardId);
             }
+
+            // CommentCountMap 에 값이 없을 경우 댓글이 없음 = 0개.
+            Long commentCountLong = commentCountMap.get(boardId);
+            int commentCount = commentCountLong == null ? 0 : commentCountLong.intValue();
 
             // 7. 게시글 List 데이터를 Dto에 List에 담아서 리턴
             boardResponseDtoList.add(BoardResponseDto.builder()
@@ -133,7 +141,7 @@ public class BoardService {
                     .createdAt(board.getCreatedAt())
                     .views(board.getViews())
                     .likeCnt(likeCount)
-                    .commentCnt(commentCountMap.get(boardId))
+                    .commentCnt(commentCount)
                     .isLike(user != null && boardLikeMap.get(boardId + ":" + user.getId()) != null)
                     .hashTags(boardHashTagList)
                     .build());
@@ -156,7 +164,6 @@ public class BoardService {
         // 출력은 항상 boardId 오름차순. boardId가 달라지는 시점에 List를 Map에 넣고 초기화시키면 됨.
         // boardId를 저장할 변수를 for문 외부에 만들고 이 값과 비교하면서 달라지면 Map에 삽입. 같을경우 List에 삽입.
         // 이론상 완벽해 ㄱㄱ
-        // 근데 내 코드가 완벽하지 않아..... 멘토링 끝나고 개선함
 
         Long recentBoardId = 0L;
         if (boardHashTagListTuple.size() > 0) {
@@ -188,18 +195,21 @@ public class BoardService {
         return boardHashTagMap;
     }
 
-    private HashMap<Long, Integer> getCommentCountMap(List<Board> boardList) {
-        QBoard qBoard = QBoard.board;
+    private HashMap<Long, Long> getCommentCountMap(List<Board> boardList) {
+        QComment qComment = QComment.comment;
+        NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
         List<Tuple> commentCountListTuple = queryFactory
-                .select(qBoard.boardId, qBoard.commentList.size())
-                .from(qBoard)
-                .where(qBoard.in(boardList))
+                .select(qComment.board.boardId, qComment.count().as(count))
+                .from(qComment)
+                .where(qComment.board.in(boardList)
+                        .and(qComment.enabled.eq(true)))
+                .groupBy(qComment.board.boardId)
                 .fetch();
 
-        HashMap<Long, Integer> commentCountMap = new HashMap<>();
+        HashMap<Long, Long> commentCountMap = new HashMap<>();
         for (Tuple tuple : commentCountListTuple) {
             Long boardId = tuple.get(0, Long.class);
-            Integer commentCount = tuple.get(1, Integer.class);
+            Long commentCount = tuple.get(1, Long.class);
 
             commentCountMap.put(boardId, commentCount);
         }

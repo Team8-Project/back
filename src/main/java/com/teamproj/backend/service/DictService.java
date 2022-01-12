@@ -61,6 +61,23 @@ public class DictService {
                 .build();
     }
 
+    // 사전 이름 중복검사. 사용불가시 기존 표현 뭔지 나오도록.
+    public DictNameCheckResponseDtoNeo neoCheckDictName(DictNameCheckRequestDto dictName){
+        Dict dict = dictRepository.findByDictName(dictName.getDictName());
+        if(dict == null){
+            return DictNameCheckResponseDtoNeo.builder()
+                    .result(false)
+                    .build();
+        }
+
+        return DictNameCheckResponseDtoNeo.builder()
+                .dictId(dict.getDictId())
+                .dictName(dict.getDictName())
+                .meaning(dict.getContent())
+                .result(true)
+                .build();
+    }
+
     // 베스트 용어 사전 가져오기
     public List<DictBestResponseDto> getBestDict(String token) {
         // 1. 회원 정보가 존재할 시 로그인 처리
@@ -276,7 +293,7 @@ public class DictService {
     }
 
     // 좋아요 목록 가져와서 HashMap 으로 반환
-    private HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
+    public HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
         QDictLike qDictLike = QDictLike.dictLike;
         List<Tuple> dictLikeListTuple = queryFactory
                 .select(qDictLike.dict.dictId, qDictLike.user.id)
@@ -288,7 +305,7 @@ public class DictService {
     }
 
     // 사전 최초 작성자 목록 가져와서 HashMap 으로 반환
-    private HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
+    public HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
         QDict qDict = QDict.dict;
         List<Tuple> firstWriterTuple = queryFactory
                 .select(qDict.dictId, qDict.firstAuthor.nickname)
@@ -472,7 +489,7 @@ public class DictService {
         return dictResponseDtoList;
     }
 
-    private HashMap<Long,Long> getLikeCountMap(List<Dict> dictList) {
+    public HashMap<Long,Long> getLikeCountMap(List<Dict> dictList) {
         QDictLike qDictLike = QDictLike.dictLike;
         QDict qDict = QDict.dict;
 
