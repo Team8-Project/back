@@ -544,7 +544,7 @@ public class DictQuestionService {
     }
 
     private void checkSelected(DictQuestion dictQuestion) {
-        if (dictQuestionRepository.existsById(dictQuestion.getQuestionId())) {
+        if (questionSelectRepository.existsByDictQuestion(dictQuestion)) {
             throw new IllegalArgumentException(ALREADY_SELECT);
         }
     }
