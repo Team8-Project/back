@@ -92,5 +92,14 @@ public class DictQuestionController {
                 .data(dictQuestionService.selectAnswer(userDetails, commentId))
                 .build();
     }
+
+    @GetMapping("/api/dict/question/count")
+    public ResponseDto<Long> getQuestionCount(){
+        return ResponseDto.<Long>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(dictQuestionService.getTotalQuestionCount())
+                .build();
+    }
 }
 
