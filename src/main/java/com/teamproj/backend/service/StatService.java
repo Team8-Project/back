@@ -3,6 +3,7 @@ package com.teamproj.backend.service;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.Repository.stat.*;
 import com.teamproj.backend.model.board.Board;
+import com.teamproj.backend.model.dict.question.DictQuestion;
 import com.teamproj.backend.model.statistics.*;
 import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class StatService {
     private final StatQuizSolverRepository statQuizSolverRepository;
     private final StatBoardModifyRepository statBoardModifyRepository;
     private final StatNumericDataRepository statNumericDataRepository;
+    private final StatQuestionModifyRepository statQuestionModifyRepository;
 
     private final DictRepository dictRepository;
 
@@ -46,6 +48,13 @@ public class StatService {
                 .boardId(board.getBoardId())
                 .build();
         statBoardModifyRepository.save(statBoardModify);
+    }
+
+    public void statQuestionModify(DictQuestion dictQuestion){
+        StatQuestionModify statQuestionModify = StatQuestionModify.builder()
+                .questionId(dictQuestion.getQuestionId())
+                .build();
+        statQuestionModifyRepository.save(statQuestionModify);
     }
 
     // 일일 방문자 통계

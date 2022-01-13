@@ -8,6 +8,8 @@ import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.dto.dict.*;
+import com.teamproj.backend.dto.dict.question.search.DictQuestionSearchResponseDto;
+import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
@@ -32,6 +34,7 @@ import static com.teamproj.backend.util.RedisKey.DICT_RECOMMEND_SEARCH_KEY;
 @RequiredArgsConstructor
 public class DictService {
 
+    private final DictQuestionService dictQuestionService;
     private final DictHistoryService dictHistoryService;
 
     private final DictRepository dictRepository;
@@ -246,10 +249,22 @@ public class DictService {
     }
 
     // 검색 기능
-    public List<DictSearchResultResponseDto> getSearchResult(String token, String q, int page, int size) {
+    public DictSearchResponseDto getSearchResult(String token, String q, int page, int size) {
         // 검색 결과를 좋아요 했는지 확인하기 위해 사용자 정보를 받음.
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = getSafeUserByUserDetails(userDetails);
+
+        List<DictSearchResultResponseDto> dictResult = getDictSearchResult(user, q, page, size);
+        List<DictQuestionSearchResponseDto> questionResult = dictQuestionService.questionSearch(user, q, page, size);
+
+        return DictSearchResponseDto.builder()
+                .dictResult(dictResult)
+                .questionResult(questionResult)
+                .build();
+    }
+
+    // 사전 검색 기능
+    public List<DictSearchResultResponseDto> getDictSearchResult(User user, String q, int page, int size) {
         List<Dict> dictList = getSafeDictListBySearch(q, page, size);
 
         return dictListToDictSearchResultResponseDto(dictList, user);

@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface AlarmRepository extends JpaRepository<Alarm, Long> {
     boolean existsByNavIdAndUser(Long navId, User user);
 
-    Optional<List<Alarm>> findAllByUserAndCheckOrderByCreatedAtDesc(User user, boolean isCheck);
+    Optional<List<Alarm>> findAllByUserAndCheckedOrderByCreatedAtDesc(User user, Boolean isCheck);
 }

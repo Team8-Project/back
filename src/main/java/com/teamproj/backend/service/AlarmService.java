@@ -24,6 +24,7 @@ public class AlarmService {
 
     private final AlarmRepository alarmRepository;
 
+    // 알림 생성
     public void sendAlarm(AlarmTypeEnum alarmTypeEnum, Long navId, User user){
         // 이미 존재하는 알람인지 확인
         if(alarmRepository.existsByNavIdAndUser(navId, user)) {
@@ -33,13 +34,15 @@ public class AlarmService {
 
         Alarm alarm = Alarm.builder()
                 .alarmTypeEnum(alarmTypeEnum)
+                .navId(navId)
                 .user(user)
-                .isCheck(false)
+                .checked(false)
                 .build();
 
         alarmRepository.save(alarm);
     }
 
+    // 알림 정보 요청
     public void receiveAlarm(UserDetailsImpl userDetails){
         ValidChecker.loginCheck(userDetails);
         User user = jwtAuthenticateProcessor.getUser(userDetails);
@@ -47,6 +50,7 @@ public class AlarmService {
         // return to Dto List
     }
 
+    // 알림 이동
     @Transactional
     public void navAlarm(UserDetailsImpl userDetails, Long alarmId){
         // 작업 목록
@@ -62,7 +66,10 @@ public class AlarmService {
         }
 
         // 확인한 알람으로 변경
-        alarm.setCheck(true);
+        alarm.setChecked(true);
+
+        // 알람 위치로(현재는 질문ID만) 이동
+        // 질문 아이디만 넘겨주면 됨.
     }
 
     // Get Safe Entity
@@ -73,7 +80,7 @@ public class AlarmService {
     }
     // AlarmListByUser
     private List<Alarm> getSafeAlarmListByUser(User user) {
-        Optional<List<Alarm>> alarmList = alarmRepository.findAllByUserAndCheckOrderByCreatedAtDesc(user, false);
+        Optional<List<Alarm>> alarmList = alarmRepository.findAllByUserAndCheckedOrderByCreatedAtDesc(user, false);
         return alarmList.orElseGet(ArrayList::new);
     }
 }
