@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
@@ -24,6 +24,8 @@ import com.teamproj.backend.model.image.ImageTypeEnum;
 import com.teamproj.backend.model.viewers.ViewTypeEnum;
 import com.teamproj.backend.model.viewers.Viewers;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.RedisService;
+import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

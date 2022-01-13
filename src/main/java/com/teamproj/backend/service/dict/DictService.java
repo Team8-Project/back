@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
@@ -14,6 +14,7 @@ import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.MemegleServiceStaticMethods;
 import com.teamproj.backend.util.StatisticsUtils;

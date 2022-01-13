@@ -4,12 +4,13 @@ import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.dto.dict.DictPostRequestDto;
 import com.teamproj.backend.dto.dict.DictPutRequestDto;
-import com.teamproj.backend.dto.dict.DictResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryRecentResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.dict.DictHistoryService;
+import com.teamproj.backend.service.dict.DictService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;

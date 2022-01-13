@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.dict;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.CommentRepository;
