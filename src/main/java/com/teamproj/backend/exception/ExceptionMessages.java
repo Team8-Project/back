@@ -42,6 +42,7 @@ public final class ExceptionMessages {
     public static final String EXIST_DICT = "이미 존재하는 사전입니다.";
     public static final String NOT_EXIST_DICT = "존재하지 않는 사전입니다.";
     public static final String NOT_EXIST_DICT_LIKE = "존재하지 않는 좋아요...?";
+    public static final String SUMMARY_IS_TOO_BIG = "한줄요약은 최대 30자까지 쓸 수 있습니다.";
 
     // DictHistory
     public static final String NOT_EXIST_DICT_HISTORY = "유효하지 않은 역사입니다.";
@@ -50,4 +51,15 @@ public final class ExceptionMessages {
     public static final String NOT_EXIST_DICT_CURIOUS = "유효하지 않은 요청입니다.";
     public static final String NOT_YOUR_CURIOUS = "당신의 요청이 아닙니다.";
     public static final String NOT_DUPLICATION_YOUR_REQUEST = "같은 사람이 중복해서 요청할 수 없습니다.";
+
+    // DictQuestion
+    public static final String DICT_QUESTION_IS_EMPTY = "조회 할 질문이 없습니다.";
+    public static final String NOT_EXIST_QUESTION = "유효하지 않거나 삭제된 질문입니다.";
+    public static final String NOT_MY_QUESTION = "당신이 작성한 질문이 아닙니다.";
+    public static final String CAN_NOT_MODIFY_SELECT_QUESTION = "채택이 완료된 질문은 변경 할 수 없습니다.";
+    public static final String ALREADY_SELECT = "이미 채택을 완료한 글입니다.";
+
+    // Alarm
+    public static final String NOT_EXIST_ALARM = "유효하지 않은 알람입니다.";
+    public static final String NOT_YOUR_ALARM = "당신의 알람이 아닙니다.";
 }

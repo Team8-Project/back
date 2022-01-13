@@ -2,6 +2,7 @@ package com.teamproj.backend.controller;
 
 import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.dict.*;
+import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
@@ -139,13 +140,13 @@ public class DictController {
     }
 
     @GetMapping("/api/dict/search")
-    public ResponseDto<List<DictSearchResultResponseDto>> getSearchResult(@RequestHeader(value = "Authorization", required = false) String token,
-                                                                          @RequestParam String q,
-                                                                          @RequestParam int page,
-                                                                          @RequestParam int size) {
-        return ResponseDto.<List<DictSearchResultResponseDto>>builder()
+    public ResponseDto<DictSearchResponseDto> getSearchResult(@RequestHeader(value = "Authorization", required = false) String token,
+                                                              @RequestParam String q,
+                                                              @RequestParam int page,
+                                                              @RequestParam int size) {
+        return ResponseDto.<DictSearchResponseDto>builder()
                 .status(HttpStatus.OK.toString())
-                .message("사전 검색어 : " + q)
+                .message("검색어 : " + q)
                 .data(dictService.getSearchResult(token, q, page, size))
                 .build();
     }

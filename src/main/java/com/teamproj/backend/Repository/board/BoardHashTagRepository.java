@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardHashTagRepository extends JpaRepository<BoardHashTag, String> {
-    List<BoardHashTag> findByHashTagName(String keyword);
+    List<BoardHashTag> findByHashTagName(String query);
 
     @Transactional
     @Modifying

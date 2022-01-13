@@ -347,10 +347,9 @@ class DictServiceTest {
             @DisplayName("제목 일치")
             void getDictDetail_success_title_match() {
                 // given
-                String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
                 // when
-                DictSearchResultResponseDto dictSearchResultResponseDtoList = dictService.getSearchResult(token, title, 0, 5).get(0);
+                DictSearchResultResponseDto dictSearchResultResponseDtoList = dictService.getDictSearchResult(null, title, 0, 5).get(0);
 
                 // then
                 assertEquals(title, dictSearchResultResponseDtoList.getTitle());
@@ -360,10 +359,9 @@ class DictServiceTest {
             @DisplayName("내용 일치")
             void getDictDetail_success_content_match() {
                 // given
-                String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
                 // when
-                DictSearchResultResponseDto dictSearchResultResponseDtoList = dictService.getSearchResult(token, content, 0, 5).get(0);
+                DictSearchResultResponseDto dictSearchResultResponseDtoList = dictService.getDictSearchResult(null, content, 0, 5).get(0);
 
                 // then
                 assertEquals(content, dictSearchResultResponseDtoList.getMeaning());

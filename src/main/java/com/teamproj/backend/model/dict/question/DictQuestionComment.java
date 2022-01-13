@@ -1,8 +1,7 @@
-package com.teamproj.backend.model;
+package com.teamproj.backend.model.dict.question;
 
+import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
-import com.teamproj.backend.model.dict.question.DictQuestion;
-import com.teamproj.backend.model.dict.question.QuestionSelect;
 import com.teamproj.backend.util.Timestamped;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,15 +15,15 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Comment extends Timestamped {
+public class DictQuestionComment extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long commentId;
+    private Long questionCommentId;
 
-    // 댓글이 달린 게시글
+    // 댓글이 달린 질문
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
-    private Board board;
+    @JoinColumn(nullable = false)
+    private DictQuestion dictQuestion;
 
     // 댓글 작성자
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,6 +33,10 @@ public class Comment extends Timestamped {
     // 댓글 내용
     @Column(nullable = false)
     private String content;
+
+    @OneToOne(mappedBy = "questionComment", cascade = CascadeType.ALL)
+    @JoinColumn(nullable = false, unique = true)
+    private QuestionSelect questionSelect;
 
     @Column(columnDefinition = "boolean default true")
     private boolean enabled;

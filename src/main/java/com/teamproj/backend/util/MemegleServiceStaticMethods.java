@@ -27,4 +27,15 @@ public class MemegleServiceStaticMethods {
 
         return likeCountMap;
     }
+
+    public static HashMap<Long, Long> getLongLongMap(List<Tuple> tupleList) {
+        HashMap<Long, Long> map = new HashMap<>();
+        for (Tuple tuple : tupleList) {
+            Long key = tuple.get(0, Long.class);
+            Long value = tuple.get(1, Long.class);
+            map.put(key, value);
+        }
+
+        return map;
+    }
 }
