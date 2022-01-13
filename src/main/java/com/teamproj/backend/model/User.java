@@ -1,8 +1,10 @@
 package com.teamproj.backend.model;
 
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
+import com.teamproj.backend.model.alarm.Alarm;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.dict.DictLike;
+import com.teamproj.backend.model.dict.question.DictCuriousToo;
 import com.teamproj.backend.util.Timestamped;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,6 +51,12 @@ public class User extends Timestamped {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private final List<RecentSearch> recentSearchList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private final List<Alarm> alarmList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private final List<DictCuriousToo> dictCuriousTooList = new ArrayList<>();
 
     public void setKakaoId(Long kakaoId) {
         this.kakaoId = kakaoId;
