@@ -3,7 +3,7 @@ package com.teamproj.backend.controller;
 import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.DictQuestionCommentService;
+import com.teamproj.backend.service.dict.DictQuestionCommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

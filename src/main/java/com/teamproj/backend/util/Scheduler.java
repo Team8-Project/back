@@ -6,7 +6,7 @@ import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.Repository.stat.StatNumericDataRepository;
 import com.teamproj.backend.Repository.stat.StatVisitorRepository;
 import com.teamproj.backend.service.BoardService;
-import com.teamproj.backend.service.DictService;
+import com.teamproj.backend.service.dict.DictService;
 import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.service.StatService;
 import lombok.RequiredArgsConstructor;

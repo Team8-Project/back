@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.admin;
 
 import com.teamproj.backend.Repository.alarm.AlarmRepository;
 import com.teamproj.backend.model.User;

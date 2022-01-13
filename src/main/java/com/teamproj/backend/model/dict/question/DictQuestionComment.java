@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -40,6 +42,9 @@ public class DictQuestionComment extends Timestamped {
 
     @Column(columnDefinition = "boolean default true")
     private boolean enabled;
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL)
+    private List<QuestionCommentLike> questionCommentLike = new ArrayList<>();
 
     public void update(String content){
         this.content = content;

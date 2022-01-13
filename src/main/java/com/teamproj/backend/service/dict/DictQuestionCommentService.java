@@ -1,10 +1,11 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.dict;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.CommentRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
 import com.teamproj.backend.Repository.dict.DictQuestionCommentRepository;
 import com.teamproj.backend.Repository.dict.DictQuestionRepository;
+import com.teamproj.backend.Repository.dict.QuestionSelectRepository;
 import com.teamproj.backend.dto.comment.*;
 import com.teamproj.backend.dto.dict.question.comment.DictQuestionCommentResponseDto;
 import com.teamproj.backend.model.Comment;
@@ -35,6 +36,7 @@ import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_BOARD;
 public class DictQuestionCommentService {
     private final DictQuestionRepository dictQuestionRepository;
     private final DictQuestionCommentRepository commentRepository;
+    private final QuestionSelectRepository questionSelectRepository;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final JPAQueryFactory queryFactory;
@@ -85,12 +87,20 @@ public class DictQuestionCommentService {
 
         // 자신이 작성한 댓글인지 확인
         DictQuestionComment comment = commentIsMineCheck(userDetails, commentId);
+
+        checkSelected(comment);
         // enabled 를 false 로 하여 삭제 처리. 이후 쿼리에서 조회되지 않음!
         comment.setEnabled(false);
 
         return CommentDeleteResponseDto.builder()
                 .result("삭제 성공")
                 .build();
+    }
+
+    private void checkSelected(DictQuestionComment comment) {
+        if (questionSelectRepository.existsByQuestionComment(comment)) {
+            throw new IllegalArgumentException(ALREADY_SELECT);
+        }
     }
 
 
