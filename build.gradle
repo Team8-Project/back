@@ -84,7 +84,7 @@ jar{
 }
 
 test {
-//    exclude '**/*'
+    exclude '**/*'
     useJUnitPlatform()
 }
 
