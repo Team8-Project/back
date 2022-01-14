@@ -1,7 +1,6 @@
 package com.teamproj.backend.model.dict.question;
 
 import com.teamproj.backend.model.User;
-import com.teamproj.backend.model.dict.Dict;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
