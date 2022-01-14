@@ -479,6 +479,9 @@ public class DictService {
     // ElasticSearch 로 변경 고려 중.
     private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
 //        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(q, page * size, size);
+        if(q.length() < 1){
+            return new ArrayList<>();
+        }
         Optional<Page<Dict>> searchResult = dictRepository.findAllByDictNameContainingOrContentContaining(q, q, PageRequest.of(page, size));
         return searchResult.map(Streamable::toList).orElseGet(ArrayList::new);
     }
