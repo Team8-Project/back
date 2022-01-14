@@ -18,4 +18,7 @@ public class DictQuestionCommentResponseDto {
     private String commentWriter;
     private String commentContent;
     private LocalDateTime createdAt;
+    private int likeCount;
+    private Boolean isLike;
+    private Boolean isSelected;
 }

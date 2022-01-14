@@ -34,4 +34,14 @@ public class DictQuestionCommentController {
                 .data(dictQuestionCommentService.deleteComment(userDetails, commentId))
                 .build();
     }
+
+    @GetMapping("/api/dict/comment/like/{commentId}")
+    public ResponseDto<Boolean> likeComment(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                            @PathVariable Long commentId){
+        return ResponseDto.<Boolean>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(dictQuestionCommentService.likeComment(userDetails, commentId))
+                .build();
+    }
 }

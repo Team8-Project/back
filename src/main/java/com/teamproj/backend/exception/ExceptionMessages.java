@@ -58,6 +58,7 @@ public final class ExceptionMessages {
     public static final String NOT_MY_QUESTION = "당신이 작성한 질문이 아닙니다.";
     public static final String CAN_NOT_MODIFY_SELECT_QUESTION = "채택이 완료된 질문은 변경 할 수 없습니다.";
     public static final String ALREADY_SELECT = "이미 채택을 완료한 글입니다.";
+    public static final String CAN_NOT_SELECT_MINE = "자기 자신을 채택할 수 없습니다.";
 
     // Alarm
     public static final String NOT_EXIST_ALARM = "유효하지 않은 알람입니다.";
