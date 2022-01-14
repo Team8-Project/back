@@ -8,6 +8,7 @@ import com.teamproj.backend.dto.comment.CommentResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.board.BoardService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
