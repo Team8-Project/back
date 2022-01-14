@@ -3,7 +3,7 @@ package com.teamproj.backend.controller;
 import com.teamproj.backend.dto.BoardHashTag.BoardHashTagSearchResponseDto;
 import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.BoardHashTag.BoardHashTagResponseDto;
-import com.teamproj.backend.service.BoardHashTagService;
+import com.teamproj.backend.service.board.BoardHashTagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;

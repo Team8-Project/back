@@ -1,6 +1,8 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.alarm.AlarmRepository;
+import com.teamproj.backend.dto.alarm.AlarmNavResponseDto;
+import com.teamproj.backend.dto.alarm.AlarmResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.alarm.Alarm;
 import com.teamproj.backend.model.alarm.AlarmTypeEnum;
@@ -59,16 +61,36 @@ public class AlarmService {
     }
 
     // 알림 정보 요청
-    public void receiveAlarm(UserDetailsImpl userDetails) {
+    public List<AlarmResponseDto> receiveAlarm(UserDetailsImpl userDetails) {
         ValidChecker.loginCheck(userDetails);
         User user = jwtAuthenticateProcessor.getUser(userDetails);
         List<Alarm> alarmList = getSafeAlarmListByUser(user);
         // return to Dto List
+        // To do : 우선 List<AlarmResponseDto>에 담아서 리턴 했습니다. 차 후에 수정 필요
+        return getAlarmListToResponseDto(alarmList);
+    }
+
+    // 알림 정보들(AlarmList) Dto에 담아서 리턴
+    private List<AlarmResponseDto> getAlarmListToResponseDto(List<Alarm> alarmList) {
+        List<AlarmResponseDto> alarmResponseDtoList = new ArrayList<>();
+
+        for (Alarm alarm : alarmList) {
+            alarmResponseDtoList.add(AlarmResponseDto.builder()
+                    .alarmId(alarm.getAlarmId())
+                    .alarmType(alarm.getAlarmTypeEnum().name())
+                    .checked(alarm.isChecked())
+                    .navId(alarm.getNavId())
+                    .username(alarm.getUser().getUsername())
+                    .nickname(alarm.getUser().getNickname())
+                    .build()
+            );
+        }
+        return alarmResponseDtoList;
     }
 
     // 알림 이동
     @Transactional
-    public void navAlarm(UserDetailsImpl userDetails, Long alarmId) {
+    public AlarmNavResponseDto navAlarm(UserDetailsImpl userDetails, Long alarmId) {
         // 작업 목록
         // 1. 알람 id 확인하여 올바른 정보 전달
         // 2. 알람의 확인여부 true로
@@ -87,7 +109,27 @@ public class AlarmService {
         // 알람 위치로(현재는 질문ID만) 이동
         // 질문 아이디(navId)만 넘겨주는 DTO 작성하면 됨.
         // 이후 알람 종류가 늘어날 경우 Enum값도 같이 넘겨줘야 함.
+        return AlarmNavResponseDto.builder()
+                .navId(alarm.getNavId())
+                .build();
     }
+
+    // region 알림 읽음으로 처리
+    public String readCheckAlarm(Long alarmId, UserDetailsImpl userDetails) {
+        // 알람 아이디로 알람 정보 가져오기
+        Alarm alarm = getSafeAlarmById(alarmId);
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
+        // 자신의 알람이 아닐 경우 튕겨냄.
+        if (user.getId().equals(alarm.getUser().getId())) {
+            throw new IllegalArgumentException(NOT_YOUR_ALARM);
+        }
+        // 알람 읽음 처리
+        alarm.setChecked(true);
+        // 읽음 처리 완료 메시지 Response
+        return "읾음 처리 완료";
+    }
+    // endregion
+
 
     // Get Safe Entity
     // Alarm

@@ -23,17 +23,19 @@ import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
+import com.teamproj.backend.service.board.BoardHashTagService;
+import com.teamproj.backend.service.board.BoardService;
 import io.findify.s3mock.S3Mock;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -51,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(S3MockConfig.class)
 
 @Transactional
+@Rollback
 @ExtendWith(MockitoExtension.class)
 class BoardServiceTest {
 
