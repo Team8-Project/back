@@ -289,12 +289,13 @@ public class DictQuestionService {
         // 좋아요 여부
         boolean isCuriousToo = getSafeCurious(user, dictQuestion);
 
+        User writer = dictQuestion.getUser();
         List<DictQuestionCommentResponseDto> commentList = commentService.getCommentList(dictQuestion, user);
         return DictQuestionDetailResponseDto.builder()
                 .questionId(questionId)
-                .username(user.getUsername())
-                .writer(user.getNickname())
-                .profileImageUrl(user.getProfileImage())
+                .username(writer.getUsername())
+                .writer(writer.getNickname())
+                .profileImageUrl(writer.getProfileImage())
                 .title(dictQuestion.getQuestionName())
                 .content(dictQuestion.getContent())
                 .thumbNail(dictQuestion.getThumbNail())
