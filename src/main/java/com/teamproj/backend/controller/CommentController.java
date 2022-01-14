@@ -6,11 +6,8 @@ import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,6 +43,17 @@ public class CommentController {
                 .status(HttpStatus.OK.toString())
                 .message("댓글 삭제")
                 .data(commentService.deleteComment(userDetails, commentId))
+                .build();
+    }
+
+    @GetMapping("/api/board/question/select/{commentId}")
+    public ResponseDto<String> selectAnswer(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                            @PathVariable Long commentId) {
+
+        return ResponseDto.<String>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(commentService.selectAnswer(userDetails, commentId))
                 .build();
     }
 }
