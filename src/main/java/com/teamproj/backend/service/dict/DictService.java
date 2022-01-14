@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
@@ -14,13 +14,16 @@ import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.MemegleServiceStaticMethods;
 import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -475,12 +478,12 @@ public class DictService {
     // DictList 검색결과
     // ElasticSearch 로 변경 고려 중.
     private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
-        if (q.length() < 2) {
-            throw new IllegalArgumentException(SEARCH_MIN_SIZE_IS_TWO);
+//        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(q, page * size, size);
+        if(q.length() < 1){
+            return new ArrayList<>();
         }
-
-        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(q, page * size, size);
-        return searchResult.orElseGet(ArrayList::new);
+        Optional<Page<Dict>> searchResult = dictRepository.findAllByDictNameContainingOrContentContaining(q, q, PageRequest.of(page, size));
+        return searchResult.map(Streamable::toList).orElseGet(ArrayList::new);
     }
 
     // Entity To Dto

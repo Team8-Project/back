@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.board;
 
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -8,6 +8,8 @@ import com.teamproj.backend.dto.BoardHashTag.BoardHashTagSearchResponseDto;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardHashTag;
 import com.teamproj.backend.model.board.QBoardHashTag;
+import com.teamproj.backend.service.CommentService;
+import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.util.MySqlJpaTemplates;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

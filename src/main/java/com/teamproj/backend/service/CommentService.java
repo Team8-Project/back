@@ -8,6 +8,7 @@ import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.QComment;
 import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
+import com.teamproj.backend.model.alarm.AlarmTypeEnum;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.QBoard;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -22,12 +23,16 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.model.alarm.AlarmTypeEnum.*;
+
 
 @Service
 @RequiredArgsConstructor
 public class CommentService {
     private final BoardRepository boardRepository;
     private final CommentRepository commentRepository;
+    private final AlarmService alarmService;
+
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final JPAQueryFactory queryFactory;
 
@@ -52,6 +57,9 @@ public class CommentService {
                 .user(user)
                 .enabled(true)
                 .build());
+
+        // 질문 작성자에게 알람
+        alarmService.sendAlarm(RECEIVE_COMMENT, boardId, board.getUser());
 
         // Comment to CommentPostResponseDto
         return CommentPostResponseDto.builder()
@@ -95,6 +103,9 @@ public class CommentService {
                 .result("삭제 성공")
                 .build();
     }
+
+    // 댓글 채택
+
 
 
     // region 보조 기능

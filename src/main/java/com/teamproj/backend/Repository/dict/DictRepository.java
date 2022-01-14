@@ -40,4 +40,6 @@ public interface DictRepository extends JpaRepository<Dict, Long> {
                                                      @Param("page") int page,
                                                      @Param("size") int size);
     Long countByCreatedAtGreaterThanEqual(LocalDateTime createdAt);
+
+    Optional<Page<Dict>> findAllByDictNameContainingOrContentContaining(String dictName, String content, Pageable pageable);
 }

@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.board;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +26,9 @@ import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.CommentService;
+import com.teamproj.backend.service.RedisService;
+import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

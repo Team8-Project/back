@@ -6,6 +6,8 @@ import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.board.BoardService;
+import com.teamproj.backend.service.dict.DictService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -6,6 +6,7 @@ import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
+import com.teamproj.backend.service.dict.DictService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

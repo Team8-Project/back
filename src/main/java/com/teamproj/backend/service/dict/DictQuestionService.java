@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
@@ -24,6 +24,8 @@ import com.teamproj.backend.model.image.ImageTypeEnum;
 import com.teamproj.backend.model.viewers.ViewTypeEnum;
 import com.teamproj.backend.model.viewers.Viewers;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.RedisService;
+import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -198,25 +200,7 @@ public class DictQuestionService {
                 .where(qDictQuestion.in(questionList))
                 .fetch();
 
-        HashMap<String, String> userInfoMap = new HashMap<>();
-        for (Tuple tuple : userInfoTuple) {
-            // Long key : boardId
-            Long key = tuple.get(0, Long.class);
-            // 키값은 boardId:username, 밸류는 username
-            String username = tuple.get(1, String.class);
-            String usernameKey = key + ":username";
-            userInfoMap.put(usernameKey, username);
-            // 키값은 boardId:nickname, 밸류는 nickname
-            String nickname = tuple.get(2, String.class);
-            String nicknameKey = key + ":nickname";
-            userInfoMap.put(nicknameKey, nickname);
-            // 키값은 boardId:profileImage, 밸류는 profileImage
-            String profileImageKey = key + ":profileImage";
-            String profileImage = tuple.get(3, String.class);
-            userInfoMap.put(profileImageKey, profileImage);
-        }
-
-        return userInfoMap;
+        return MemegleServiceStaticMethods.getUserInfoMap(userInfoTuple);
     }
     //endregion
 
@@ -305,12 +289,13 @@ public class DictQuestionService {
         // 좋아요 여부
         boolean isCuriousToo = getSafeCurious(user, dictQuestion);
 
-        List<DictQuestionCommentResponseDto> commentList = commentService.getCommentList(dictQuestion);
+        User writer = dictQuestion.getUser();
+        List<DictQuestionCommentResponseDto> commentList = commentService.getCommentList(dictQuestion, user);
         return DictQuestionDetailResponseDto.builder()
                 .questionId(questionId)
-                .username(user.getUsername())
-                .writer(user.getNickname())
-                .profileImageUrl(user.getProfileImage())
+                .username(writer.getUsername())
+                .writer(writer.getNickname())
+                .profileImageUrl(writer.getProfileImage())
                 .title(dictQuestion.getQuestionName())
                 .content(dictQuestion.getContent())
                 .thumbNail(dictQuestion.getThumbNail())
@@ -535,6 +520,9 @@ public class DictQuestionService {
         // 이미 채택된 질문인지 확인함
         checkSelected(dictQuestion);
 
+        // 내가 작성한 댓글은 채택할 수 없음
+        checkSelectMine(userDetails, comment);
+
         questionSelectRepository.save(QuestionSelect.builder()
                 .dictQuestion(dictQuestion)
                 .questionComment(comment)
@@ -543,8 +531,15 @@ public class DictQuestionService {
         return "채택 완료";
     }
 
+    // 내 댓글인지 확인(내 댓글은 채택 불가)
+    private void checkSelectMine(UserDetailsImpl userDetails, DictQuestionComment comment) {
+        if(userDetails.getUsername().equals(comment.getUser().getUsername())){
+            throw new IllegalArgumentException(CAN_NOT_SELECT_MINE);
+        }
+    }
+    // 이미 채택이 완료된 글인지 확인
     private void checkSelected(DictQuestion dictQuestion) {
-        if (dictQuestionRepository.existsById(dictQuestion.getQuestionId())) {
+        if (questionSelectRepository.existsByDictQuestion(dictQuestion)) {
             throw new IllegalArgumentException(ALREADY_SELECT);
         }
     }
@@ -562,6 +557,7 @@ public class DictQuestionService {
     //endregion
 
     //region 중복코드 정리
+    // 질문 변경 권한 확인
     private void checkPermissionToQuestion(UserDetailsImpl userDetails, DictQuestion dictQuestion) {
         if (!userDetails.getUsername().equals(dictQuestion.getUser().getUsername())) {
             throw new IllegalArgumentException(NOT_MY_QUESTION);

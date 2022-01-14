@@ -7,7 +7,7 @@ import com.teamproj.backend.dto.dict.question.DictQuestionUploadResponseDto;
 import com.teamproj.backend.dto.dict.question.detail.DictQuestionDetailResponseDto;
 import com.teamproj.backend.dto.dict.question.update.DictQuestionUpdateRequestDto;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.DictQuestionService;
+import com.teamproj.backend.service.dict.DictQuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -90,6 +90,15 @@ public class DictQuestionController {
                 .status(HttpStatus.OK.toString())
                 .message("success")
                 .data(dictQuestionService.selectAnswer(userDetails, commentId))
+                .build();
+    }
+
+    @GetMapping("/api/dict/question/count")
+    public ResponseDto<Long> getQuestionCount(){
+        return ResponseDto.<Long>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(dictQuestionService.getTotalQuestionCount())
                 .build();
     }
 }

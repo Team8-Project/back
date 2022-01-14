@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.dict;
 
 import com.teamproj.backend.Repository.dict.DictCuriousRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;

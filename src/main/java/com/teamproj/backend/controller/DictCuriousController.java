@@ -5,7 +5,7 @@ import com.teamproj.backend.dto.dictCurious.DictCuriousPostRequestDto;
 import com.teamproj.backend.dto.dictCurious.DictCuriousPostResponseDto;
 import com.teamproj.backend.dto.dictCurious.DictCuriousResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.DictCuriousService;
+import com.teamproj.backend.service.dict.DictCuriousService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
