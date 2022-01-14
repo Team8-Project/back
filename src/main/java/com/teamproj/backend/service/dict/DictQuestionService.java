@@ -265,7 +265,7 @@ public class DictQuestionService {
         // 2. 질문 조회
         DictQuestion dictQuestion = getSafeQuestionById(questionId);
         // 3. 질문 좋아요 여부 조회(로그인한 유저만)
-        User user = jwtAuthenticateProcessor.getUser(userDetails);
+        User user = getSafeUserByUserDetails(userDetails);
 
         // 4. 게시글 조회수 관련 처리 로직
         // - 조회하는 유저 IP를 통해 조회수 새로고침과 같은 중복 처리 방지
