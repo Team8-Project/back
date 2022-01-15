@@ -56,7 +56,7 @@ public class StatService {
         StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
 
         if(statDictResponseDto == null){
-            redisService.setObjectValue(STAT_DICT_KEY, getStatDict());
+            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
             return redisService.getStatDict(STAT_DICT_KEY);
         }
 
