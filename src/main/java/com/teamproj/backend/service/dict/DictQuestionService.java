@@ -24,6 +24,7 @@ import com.teamproj.backend.model.image.ImageTypeEnum;
 import com.teamproj.backend.model.viewers.ViewTypeEnum;
 import com.teamproj.backend.model.viewers.Viewers;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.AlarmService;
 import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.util.*;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.model.alarm.AlarmTypeEnum.SELECT_USER;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +58,7 @@ public class DictQuestionService {
     private final RedisService redisService;
     private final StatService statService;
     private final DictQuestionCommentService commentService;
+    private final AlarmService alarmService;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final S3Uploader s3Uploader;
@@ -534,11 +537,14 @@ public class DictQuestionService {
         // 내가 작성한 댓글은 채택할 수 없음
         checkSelectMine(userDetails, comment);
 
+
         questionSelectRepository.save(QuestionSelect.builder()
                 .dictQuestion(dictQuestion)
                 .questionComment(comment)
                 .build());
 
+        // 질문 채택 후 질문 작성자에게 알림
+        alarmService.sendAlarm(SELECT_USER, dictQuestion.getQuestionId(), comment.getUser());
         return "채택 완료";
     }
 

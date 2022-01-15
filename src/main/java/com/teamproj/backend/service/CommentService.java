@@ -58,8 +58,6 @@ public class CommentService {
                 .enabled(true)
                 .build());
 
-        // 질문 작성자에게 알람
-        alarmService.sendAlarm(RECEIVE_COMMENT, boardId, board.getUser());
 
         // Comment to CommentPostResponseDto
         return CommentPostResponseDto.builder()
@@ -103,9 +101,6 @@ public class CommentService {
                 .result("삭제 성공")
                 .build();
     }
-
-    // 댓글 채택
-
 
 
     // region 보조 기능

@@ -15,9 +15,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    Board findByTitle(String title);
-
-    List<Board> findByUserAndEnabled(User user, boolean enabled);
 
     Long countByBoardCategoryAndEnabled(BoardCategory boardCategory, boolean enabled);
 
