@@ -16,6 +16,7 @@ import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.question.*;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.AlarmService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.MemegleServiceStaticMethods;
 import com.teamproj.backend.util.ValidChecker;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.model.alarm.AlarmTypeEnum.RECEIVE_COMMENT;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,8 @@ public class DictQuestionCommentService {
     private final DictQuestionCommentRepository commentRepository;
     private final QuestionSelectRepository questionSelectRepository;
     private final QuestionCommentLikeRepository questionCommentLikeRepository;
+
+    private final AlarmService alarmService;
 
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final JPAQueryFactory queryFactory;
@@ -62,6 +66,9 @@ public class DictQuestionCommentService {
                 .user(user)
                 .enabled(true)
                 .build());
+
+        // 질문 작성자에게 알람
+        alarmService.sendAlarm(RECEIVE_COMMENT, dictQuestion.getQuestionId(), dictQuestion.getUser());
 
         // Comment to CommentPostResponseDto
         return CommentPostResponseDto.builder()
@@ -191,10 +198,7 @@ public class DictQuestionCommentService {
             Long commentId = comment.getQuestionCommentId();
 
             // likeMap 에 값이 있음 = true, 없음 = false
-            boolean isLike = false;
-            if (user != null) {
-                isLike = likeMap.get(commentId + ":" + user.getId()) != null;
-            }
+            boolean isLike = likeMap.get(commentId + ":" + user.getId()) != null;
             // likeCountMap 에 값이 있음 = 개수 출력, 없음 = 0
             Long likeCountLong = likeCountMap.get(commentId);
             int likeCount = likeCountLong == null ? 0 : likeCountLong.intValue();
@@ -218,9 +222,9 @@ public class DictQuestionCommentService {
     private Long getSelectedComment(List<DictQuestionComment> commentList) {
         Optional<QuestionSelect> questionSelect = questionSelectRepository.findByQuestionCommentIn(commentList);
 
-        if (questionSelect.isPresent()) {
+        if(questionSelect.isPresent()){
             return questionSelect.get().getQuestionComment().getQuestionCommentId();
-        } else {
+        }else{
             return 0L;
         }
     }

@@ -1,5 +1,6 @@
 package com.teamproj.backend.dto.mypage;
 
+import com.teamproj.backend.dto.dict.question.mypage.DictQuestionMyPageResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,4 +18,6 @@ public class MyPageResponseDto {
     private int dictCount;
     private List<MyPagePostBoardResponseDto> postBoards;
     private List<MyPageDictResponseDto> dict;
+    private int qustionCount;
+    private List<DictQuestionMyPageResponseDto> qustion;
 }

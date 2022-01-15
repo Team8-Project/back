@@ -7,6 +7,7 @@ import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.service.dict.DictHistoryService;
 import com.teamproj.backend.service.dict.DictService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 public class DictController {
     private final DictService dictService;
     private final DictHistoryService dictHistoryService;
+    private final StatService statService;
 
     @GetMapping("/api/dict")
     public ResponseDto<List<DictResponseDto>> getDictList(@RequestHeader(value = "Authorization", required = false) String token,

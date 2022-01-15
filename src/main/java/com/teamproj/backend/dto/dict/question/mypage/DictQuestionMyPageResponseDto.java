@@ -1,10 +1,9 @@
-package com.teamproj.backend.dto.dict.question;
+package com.teamproj.backend.dto.dict.question.mypage;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DictQuestionResponseDto {
+public class DictQuestionMyPageResponseDto {
     private Long questionId;
     private String thumbNail;
     private String title;
