@@ -64,7 +64,6 @@ public class DictQuestionService {
     private final S3Uploader s3Uploader;
 
     private final JPAQueryFactory queryFactory;
-    private final EntityManager entityManager;
 
     private final String S3dirName = "dictQuestionImages";
 
@@ -424,14 +423,14 @@ public class DictQuestionService {
         DictQuestion dictQuestion = getSafeQuestion(questionId);
         // 2. 해당 게시글 좋아요 조회
         User user = jwtAuthenticateProcessor.getUser(userDetails);
-        Optional<DictCuriousToo> dictCuriosToo = dictCuriousTooRepository.findByDictQuestionAndUser(dictQuestion, user);
+        Optional<DictCuriousToo> dictCuriousToo = dictCuriousTooRepository.findByDictQuestionAndUser(dictQuestion, user);
 
         // 3. 나도 궁금해요 여부 확인
         // - 체크 되어있다면 취소 후 false 반환
         // - 체크 안 되어있다면 추가 후 true 반환
         boolean isLike = false;
-        if (dictCuriosToo.isPresent()) {
-            dictCuriousTooRepository.deleteByDictQuestionAndUser(dictQuestion, user);
+        if (dictCuriousToo.isPresent()) {
+            dictCuriousTooRepository.deleteById(dictCuriousToo.get().getCuriousTooId());
         } else {
             dictCuriousTooRepository.save(DictCuriousToo.builder()
                     .dictQuestion(dictQuestion)
