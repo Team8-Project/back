@@ -1,5 +1,7 @@
 package com.teamproj.backend.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.dict.DictQuestionRepository;
@@ -53,14 +55,17 @@ public class StatService {
 
     // 사전 통계 내용 출력
     public StatDictResponseDto statDict() {
-        StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+//        StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+//
+//        if(statDictResponseDto == null){
+//            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
+//            statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+//        }
+//
+//        ObjectMapper mapper = new ObjectMapper();
 
-        if(statDictResponseDto == null){
-            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
-            return redisService.getStatDict(STAT_DICT_KEY);
-        }
-
-        return statDictResponseDto;
+//        return mapper.convertValue(statDictResponseDto, new TypeReference<StatDictResponseDto>(){});
+        return getStatDict();
     }
 
     private StatDictResponseDto getStatDict() {
