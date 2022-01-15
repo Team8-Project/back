@@ -30,17 +30,18 @@ public class RedisService {
     private final RedisTemplate<String, MainTodayBoardResponseDto> redisMainTodayBoardResponseDtoTemplate;
     private final RedisTemplate<String, QuizResponseDto> redisQuizResponseDtoTemplate;
     private final RedisTemplate<String, BoardMemeBestResponseDto> redisMemeBestResponseDtoTemplate;
+    private final RedisTemplate<String, StatDictResponseDto> redisStatDictResponseDtoTemplate;
 
-    public void setObjectValue(String key, Object object){
+    public void setStatDict(String key, StatDictResponseDto object){
         redisTemplate.delete(key);
-        ValueOperations<String, Object> redis = redisTemplate.opsForValue();
+        ValueOperations<String, StatDictResponseDto> redis = redisStatDictResponseDtoTemplate.opsForValue();
         redis.set(key, object);
         redisTemplate.expire(key, 10, TimeUnit.MINUTES);
     }
 
     public StatDictResponseDto getStatDict(String key){
-        ValueOperations<String, Object> redis = redisTemplate.opsForValue();
-        return (StatDictResponseDto) redis.get(key);
+        ValueOperations<String, StatDictResponseDto> redis = redisStatDictResponseDtoTemplate.opsForValue();
+        return redis.get(key);
     }
 
     public void setBestDict(String key, List<String> bestDictList) {
