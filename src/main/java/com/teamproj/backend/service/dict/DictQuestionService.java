@@ -28,13 +28,13 @@ import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.net.URLDecoder;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +61,7 @@ public class DictQuestionService {
     private final S3Uploader s3Uploader;
 
     private final JPAQueryFactory queryFactory;
+    private final EntityManager entityManager;
 
     private final String S3dirName = "dictQuestionImages";
 
@@ -70,10 +71,8 @@ public class DictQuestionService {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         // 2. 받아온 회원 정보로 User 정보 받아오기
         User user = getSafeUserByUserDetails(userDetails);
-        // 4. 카테고리와 enabled(삭제 안된) 데이터를 페이지네이션 조건에 맞게 리스트형식으로 가져오기
-        List<DictQuestion> questionList = getSafeQuestionList(true, page, size);
-
-        return getDictQuestionResponseDtoList(user, questionList);
+        // 3. 카테고리와 enabled(삭제 안된) 데이터를 페이지네이션 조건에 맞게 리스트형식으로 가져오기
+        return getQuestionProc(user, true, page, size);
     }
 
     private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
@@ -83,68 +82,81 @@ public class DictQuestionService {
         return jwtAuthenticateProcessor.getUser(userDetails);
     }
 
-    private List<DictQuestion> getSafeQuestionList(boolean enabled, int page, int size) {
-        Optional<Page<DictQuestion>> dictQuestionPage = dictQuestionRepository.findAllByEnabledOrderByCreatedAtDesc(enabled, PageRequest.of(page, size));
-        return dictQuestionPage.orElseThrow(() -> new NullPointerException(DICT_QUESTION_IS_EMPTY)).toList();
+    private List<DictQuestionResponseDto> getQuestionProc(User user, boolean enabled, int page, int size) {
+        QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
+        int offset = page * size;
+        List<Tuple> tupleList = queryFactory
+                .select(qDictQuestion.questionId, qDictQuestion.questionName, qDictQuestion.thumbNail, qDictQuestion.content,
+                        qDictQuestion.user.id, qDictQuestion.user.username, qDictQuestion.user.profileImage, qDictQuestion.user.nickname,
+                        qDictQuestion.createdAt, qDictQuestion.views, qDictQuestion.dictCuriousTooList.size(),
+                        qDictQuestion.questionCommentList.size())
+                .from(qDictQuestion)
+                .where(qDictQuestion.enabled.eq(enabled))
+                .orderBy(qDictQuestion.questionId.desc())
+                .offset(offset)
+                .limit(size)
+                .fetch();
+
+        return getDictQuestionResponseDtoList(user, tupleList);
     }
 
-    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(User user, List<DictQuestion> questionList) {
-        // 5. DB에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
+    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(User user, List<Tuple> tupleList) {
+        List<Long> questionIdList = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            questionIdList.add(tuple.get(0, Long.class));
+        }
+        // 나도 궁금해요 맵
+        HashMap<String, Boolean> curiousTooMap = getCuriousTooMap(questionIdList);
+        // 채택 여부 맵
+        HashMap<Long, Long> completeMap = getIsComplete(questionIdList);
+        // 5. DB 에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
         List<DictQuestionResponseDto> dictQuestionResponseDtoList = new ArrayList<>();
 
-        // 작성자 맵
-        HashMap<String, String> userInfoMap = getUserInfoMap(questionList);
-        // 나도 궁금해요 맵
-        HashMap<String, Boolean> curiousTooMap = getCuriousTooMap(questionList);
-        // 좋아요 개수 맵
-        HashMap<Long, Long> curiousTooCountMap = getCuriousTooCountMap(questionList);
-        // 댓글 개수 맵
-        HashMap<Long, Long> commentCountMap = getDictQuestionCommentCountMap(questionList);
-        // 채택 여부 맵
-        HashMap<Long, Long> completeMap = getIsComplete(questionList);
+        Long userId = user == null ? 0L : user.getId();
+        for (Tuple tuple : tupleList) {
+            Long questionId = tuple.get(0, Long.class);
+            String title = tuple.get(1, String.class);
+            String thumbNail = tuple.get(2, String.class);
+            String content = tuple.get(3, String.class);
+            Long likeUserId = tuple.get(4, Long.class);
+            String username = tuple.get(5, String.class);
+            String profileImage = tuple.get(6, String.class);
+            String writer = tuple.get(7, String.class);
+            LocalDateTime createdAt = tuple.get(8, LocalDateTime.class);
+            Integer views = tuple.get(9, Integer.class);
+            Integer curiousTooCnt = tuple.get(10, Integer.class);
+            Integer commentCnt = tuple.get(11, Integer.class);
 
-        for (DictQuestion dictQuestion : questionList) {
-            // Map 에 사용 될 id 키값
-            Long questionId = dictQuestion.getQuestionId();
+            Boolean isCuriousToo = curiousTooMap.get(questionId + ":" + likeUserId);
+            Long isComplete = completeMap.get(questionId);
 
-            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
-            Long curiousTooCountLong = curiousTooCountMap.get(questionId);
-            int curiousTooCount = curiousTooCountLong == null ? 0 : curiousTooCountLong.intValue();
-
-            // CommentCountMap 에 값이 없을 경우 댓글이 없음 = 0개.
-            Long commentCountLong = commentCountMap.get(questionId);
-            int commentCount = commentCountLong == null ? 0 : commentCountLong.intValue();
-
-            // completeMap 에 값이 없을 경우 채택되지 않음 = false.
-            boolean isComplete = completeMap.get(questionId) != null;
-
-            // 7. 질문 List 데이터를 DtoList 에 담아서 리턴
             dictQuestionResponseDtoList.add(DictQuestionResponseDto.builder()
                     .questionId(questionId)
-                    .title(dictQuestion.getQuestionName())
-                    .thumbNail(dictQuestion.getThumbNail())
-                    .content(dictQuestion.getContent())
-                    .username(userInfoMap.get(questionId + ":username"))
-                    .profileImageUrl(userInfoMap.get(questionId + ":profileImage"))
-                    .writer(userInfoMap.get(questionId + ":nickname"))
-                    .createdAt(dictQuestion.getCreatedAt())
-                    .views(dictQuestion.getViews())
-                    .curiousTooCnt(curiousTooCount)
-                    .commentCnt(commentCount)
-                    .isCuriousToo(user != null && curiousTooMap.get(questionId + ":" + user.getId()) != null)
-                    .isComplete(isComplete)
-                    .build());
+                    .title(title)
+                    .thumbNail(thumbNail)
+                    .content(content)
+                    .username(username)
+                    .profileImageUrl(profileImage)
+                    .writer(writer)
+                    .createdAt(createdAt)
+                    .views(views == null ? 0 : views)
+                    .curiousTooCnt(curiousTooCnt == null ? 0 : curiousTooCnt)
+                    .commentCnt(commentCnt == null ? 0 : commentCnt)
+                    .isCuriousToo(isCuriousToo != null)
+                    .isComplete(isComplete != null)
+                    .build()
+            );
         }
 
         return dictQuestionResponseDtoList;
     }
 
     // 채택 여부 받아오기 기능
-    private HashMap<Long, Long> getIsComplete(List<DictQuestion> questionList) {
+    private HashMap<Long, Long> getIsComplete(List<Long> questionIdList) {
         QQuestionSelect qQuestionSelect = QQuestionSelect.questionSelect;
         List<Tuple> selectTuple = queryFactory.select(qQuestionSelect.dictQuestion.questionId, qQuestionSelect.questionComment.questionCommentId)
                 .from(qQuestionSelect)
-                .where(qQuestionSelect.dictQuestion.in(questionList))
+                .where(qQuestionSelect.dictQuestion.questionId.in(questionIdList))
                 .fetch();
 
         return MemegleServiceStaticMethods.getLongLongMap(selectTuple);
@@ -181,11 +193,11 @@ public class DictQuestionService {
     }
 
     // 나도 궁금해요 체크 여부 받아오기 기능
-    private HashMap<String, Boolean> getCuriousTooMap(List<DictQuestion> questionList) {
+    private HashMap<String, Boolean> getCuriousTooMap(List<Long> questionIdList) {
         QDictCuriousToo qDictCuriousToo = QDictCuriousToo.dictCuriousToo;
         List<Tuple> curiousTooTuple = queryFactory.select(qDictCuriousToo.dictQuestion.questionId, qDictCuriousToo.user.id)
                 .from(qDictCuriousToo)
-                .where(qDictCuriousToo.dictQuestion.in(questionList))
+                .where(qDictCuriousToo.dictQuestion.questionId.in(questionIdList))
                 .fetch();
 
         return MemegleServiceStaticMethods.getLikeMap(curiousTooTuple);
@@ -279,10 +291,6 @@ public class DictQuestionService {
             dictQuestionRepository.updateView(questionId);
         }
 
-        // 5. 게시글 좋아요 리스트 조회
-//        List<BoardLike> boardLikeList = boardLikeRepository.findAllByBoard(board);
-//
-//        List<CommentResponseDto> commentList = commentService.getCommentList(board);
         // 채택 여부
         QuestionSelect questionSelect = dictQuestion.getQuestionSelect();
         Long selectedCommentId = questionSelect == null ? 0L : questionSelect.getQuestionComment().getQuestionCommentId();
@@ -448,17 +456,20 @@ public class DictQuestionService {
 
         // 2. 제목에 검색어가 포함되어 있는 질문 리스트 조회
         List<DictQuestion> questionList = getSafeSearchResult(q, page * size, size);
-
+        List<Long> questionIdList = new ArrayList<>();
+        for(DictQuestion dictQuestion : questionList){
+            questionIdList.add(dictQuestion.getQuestionId());
+        }
         // 작성자 맵
         HashMap<String, String> userInfoMap = getUserInfoMap(questionList);
         // 나도 궁금해요 맵
-        HashMap<String, Boolean> curiousTooMap = getCuriousTooMap(questionList);
+        HashMap<String, Boolean> curiousTooMap = getCuriousTooMap(questionIdList);
         // 좋아요 개수 맵
         HashMap<Long, Long> curiousTooCountMap = getCuriousTooCountMap(questionList);
         // 댓글 개수 맵
         HashMap<Long, Long> commentCountMap = getDictQuestionCommentCountMap(questionList);
         // 채택 여부 맵
-        HashMap<Long, Long> completeMap = getIsComplete(questionList);
+        HashMap<Long, Long> completeMap = getIsComplete(questionIdList);
 
 
         // 3. 검색 결과가 있으면 해당 게시글들 Response
@@ -533,10 +544,11 @@ public class DictQuestionService {
 
     // 내 댓글인지 확인(내 댓글은 채택 불가)
     private void checkSelectMine(UserDetailsImpl userDetails, DictQuestionComment comment) {
-        if(userDetails.getUsername().equals(comment.getUser().getUsername())){
+        if (userDetails.getUsername().equals(comment.getUser().getUsername())) {
             throw new IllegalArgumentException(CAN_NOT_SELECT_MINE);
         }
     }
+
     // 이미 채택이 완료된 글인지 확인
     private void checkSelected(DictQuestion dictQuestion) {
         if (questionSelectRepository.existsByDictQuestion(dictQuestion)) {
