@@ -1,6 +1,7 @@
 package com.teamproj.backend.controller;
 
 import com.teamproj.backend.dto.ResponseDto;
+import com.teamproj.backend.dto.statistics.StatDictResponseDto;
 import com.teamproj.backend.service.StatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,7 @@ public class StatController {
     private final StatService statService;
 
     @GetMapping("/api/stat/visitor")
-    public ResponseDto<Long> statVisitor(){
+    public ResponseDto<Long> statVisitor() {
         return ResponseDto.<Long>builder()
                 .status(HttpStatus.OK.toString())
                 .message("방문자 정보 수집")
@@ -25,7 +26,7 @@ public class StatController {
 
     @GetMapping("/api/stat/quiz/{category}")
     public ResponseDto<Object> statQuizSolver(@PathVariable String category,
-                                              @RequestParam int score){
+                                              @RequestParam int score) {
         statService.statQuizSolver(category, score);
         return ResponseDto.builder()
                 .status(HttpStatus.OK.toString())
@@ -34,7 +35,11 @@ public class StatController {
     }
 
     @GetMapping("/api/stat/dict")
-    public void statDict(){
-
+    public ResponseDto<StatDictResponseDto> getStatDict() {
+        return ResponseDto.<StatDictResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(statService.statDict())
+                .build();
     }
 }

@@ -8,6 +8,7 @@ import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.dto.dict.*;
+import com.teamproj.backend.dto.dict.question.DictQuestionResponseDto;
 import com.teamproj.backend.dto.dict.question.search.DictQuestionSearchResponseDto;
 import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;

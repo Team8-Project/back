@@ -12,9 +12,11 @@ import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.model.dict.QDict;
+import com.teamproj.backend.model.dict.QDictLike;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.dict.DictService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.MemegleServiceStaticMethods;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,10 +30,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RankService {
-    private final DictService dictService;
-    private final DictRepository dictRepository;
-    private final DictLikeRepository dictLikeRepository;
-
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
     private final JPAQueryFactory queryFactory;
@@ -56,11 +54,11 @@ public class RankService {
         List<RankDictAllTimeResponseDto> dictResponseDtoList = new ArrayList<>();
 
         // 작성자 맵
-        HashMap<Long, String> firstWriterMap = dictService.getFirstWriterMap(dictList);
+        HashMap<Long, String> firstWriterMap = getFirstWriterMap(dictList);
         // 좋아요 맵
-        HashMap<String, Boolean> dictLikeMap = dictService.getDictLikeMap(dictList);
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
         // 좋아요 개수 맵
-        HashMap<Long, Long> likeCountMap = dictService.getLikeCountMap(dictList);
+        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
 
         for (Dict dict : dictList) {
             // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
@@ -81,6 +79,52 @@ public class RankService {
         return dictResponseDtoList;
     }
 
+    //region 보조기능
+    // Utils
+    public HashMap<Long,Long> getLikeCountMap(List<Dict> dictList) {
+        QDictLike qDictLike = QDictLike.dictLike;
+        QDict qDict = QDict.dict;
+
+        List<Tuple> likeCountListTuple = queryFactory
+                .select(qDictLike.dict.dictId, qDictLike.count())
+                .from(qDictLike)
+                .where(qDictLike.dict.in(dictList))
+                .groupBy(qDict)
+                .fetch();
+
+        return MemegleServiceStaticMethods.getLikeCountMap(likeCountListTuple);
+    }
+    // 좋아요 목록 가져와서 HashMap 으로 반환
+    public HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
+        QDictLike qDictLike = QDictLike.dictLike;
+        List<Tuple> dictLikeListTuple = queryFactory
+                .select(qDictLike.dict.dictId, qDictLike.user.id)
+                .from(qDictLike)
+                .where(qDictLike.dict.in(dictList))
+                .fetch();
+
+        return MemegleServiceStaticMethods.getLikeMap(dictLikeListTuple);
+    }
+
+    // 사전 최초 작성자 목록 가져와서 HashMap 으로 반환
+    public HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
+        QDict qDict = QDict.dict;
+        List<Tuple> firstWriterTuple = queryFactory
+                .select(qDict.dictId, qDict.firstAuthor.nickname)
+                .from(qDict)
+                .where(qDict.in(dictList))
+                .fetch();
+
+        HashMap<Long, String> firstWriterMap = new HashMap<>();
+        for (Tuple tuple : firstWriterTuple) {
+            // 키값은 DictId, 밸류는 nickname
+            Long key = tuple.get(0, Long.class);
+            String value = tuple.get(1, String.class);
+            firstWriterMap.put(key, value);
+        }
+
+        return firstWriterMap;
+    }
     // Get Safe Entity
     // 전체 기간 랭크
     private List<Dict> getAllTimeDictRankList() {
@@ -108,6 +152,9 @@ public class RankService {
         List<RankResponseDto> rankResponseDtoList = new ArrayList<>();
         for (Tuple tuple : tupleList) {
             Long userId = tuple.get(0, Long.class);
+            if(userId.equals(1L)){
+                continue;
+            }
             String profileImage = tuple.get(1, String.class);
             String nickname = tuple.get(2, String.class);
             Long postCount = tuple.get(3, Long.class);
@@ -140,4 +187,5 @@ public class RankService {
                 .limit(10)
                 .fetch();
     }
+    //endregion
 }
