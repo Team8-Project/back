@@ -38,22 +38,11 @@ public class CommentController {
 
     @DeleteMapping("/api/board/comment/{commentId}")
     public ResponseDto<CommentDeleteResponseDto> deleteComment(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                                  @PathVariable Long commentId) {
+                                                               @PathVariable Long commentId) {
         return ResponseDto.<CommentDeleteResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("댓글 삭제")
                 .data(commentService.deleteComment(userDetails, commentId))
-                .build();
-    }
-
-    @GetMapping("/api/board/question/select/{commentId}")
-    public ResponseDto<String> selectAnswer(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                            @PathVariable Long commentId) {
-
-        return ResponseDto.<String>builder()
-                .status(HttpStatus.OK.toString())
-                .message("success")
-                .data(commentService.selectAnswer(userDetails, commentId))
                 .build();
     }
 }
