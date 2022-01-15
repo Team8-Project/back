@@ -32,6 +32,7 @@ public class RedisService {
     public void setSetObject(String key, Object object){
         SetOperations<String, Object> set = redisTemplate.opsForSet();
         set.add(key, object);
+        redisTemplate.expire(key, 10, TimeUnit.MINUTES);
     }
 
     public StatDictResponseDto getStatDict(String key){
