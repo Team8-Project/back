@@ -32,7 +32,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.net.URLDecoder;
 import java.time.LocalDateTime;
@@ -64,7 +63,6 @@ public class DictQuestionService {
     private final S3Uploader s3Uploader;
 
     private final JPAQueryFactory queryFactory;
-    private final EntityManager entityManager;
 
     private final String S3dirName = "dictQuestionImages";
 
@@ -121,7 +119,7 @@ public class DictQuestionService {
             String title = tuple.get(1, String.class);
             String thumbNail = tuple.get(2, String.class);
             String content = tuple.get(3, String.class);
-            Long likeUserId = tuple.get(4, Long.class);
+            Long writerId = tuple.get(4, Long.class);
             String username = tuple.get(5, String.class);
             String profileImage = tuple.get(6, String.class);
             String writer = tuple.get(7, String.class);
@@ -130,7 +128,7 @@ public class DictQuestionService {
             Integer curiousTooCnt = tuple.get(10, Integer.class);
             Integer commentCnt = tuple.get(11, Integer.class);
 
-            Boolean isCuriousToo = curiousTooMap.get(questionId + ":" + likeUserId);
+            Boolean isCuriousToo = curiousTooMap.get(questionId + ":" + userId);
             Long isComplete = completeMap.get(questionId);
 
             dictQuestionResponseDtoList.add(DictQuestionResponseDto.builder()
@@ -424,14 +422,14 @@ public class DictQuestionService {
         DictQuestion dictQuestion = getSafeQuestion(questionId);
         // 2. 해당 게시글 좋아요 조회
         User user = jwtAuthenticateProcessor.getUser(userDetails);
-        Optional<DictCuriousToo> dictCuriosToo = dictCuriousTooRepository.findByDictQuestionAndUser(dictQuestion, user);
+        Optional<DictCuriousToo> dictCuriousToo = dictCuriousTooRepository.findByDictQuestionAndUser(dictQuestion, user);
 
         // 3. 나도 궁금해요 여부 확인
         // - 체크 되어있다면 취소 후 false 반환
         // - 체크 안 되어있다면 추가 후 true 반환
         boolean isLike = false;
-        if (dictCuriosToo.isPresent()) {
-            dictCuriousTooRepository.deleteByDictQuestionAndUser(dictQuestion, user);
+        if (dictCuriousToo.isPresent()) {
+            dictCuriousTooRepository.deleteById(dictCuriousToo.get().getCuriousTooId());
         } else {
             dictCuriousTooRepository.save(DictCuriousToo.builder()
                     .dictQuestion(dictQuestion)
