@@ -1,5 +1,6 @@
 package com.teamproj.backend.service;
 
+import com.querydsl.core.types.dsl.StringOperation;
 import com.teamproj.backend.dto.board.BoardMemeBest.BoardMemeBestResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,15 +31,16 @@ public class RedisService {
     private final RedisTemplate<String, QuizResponseDto> redisQuizResponseDtoTemplate;
     private final RedisTemplate<String, BoardMemeBestResponseDto> redisMemeBestResponseDtoTemplate;
 
-    public void setSetObject(String key, Object object){
-        SetOperations<String, Object> set = redisTemplate.opsForSet();
-        set.add(key, object);
+    public void setObjectValue(String key, Object object){
+        redisTemplate.delete(key);
+        ValueOperations<String, Object> redis = redisTemplate.opsForValue();
+        redis.set(key, object);
         redisTemplate.expire(key, 10, TimeUnit.MINUTES);
     }
 
     public StatDictResponseDto getStatDict(String key){
-        SetOperations<String, Object> set = redisTemplate.opsForSet();
-        return (StatDictResponseDto) set.members(key);
+        ValueOperations<String, Object> redis = redisTemplate.opsForValue();
+        return (StatDictResponseDto) redis.get(key);
     }
 
     public void setBestDict(String key, List<String> bestDictList) {
