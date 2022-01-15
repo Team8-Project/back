@@ -42,4 +42,6 @@ public interface DictRepository extends JpaRepository<Dict, Long> {
     Long countByCreatedAtGreaterThanEqual(LocalDateTime createdAt);
 
     Optional<Page<Dict>> findAllByDictNameContainingOrContentContaining(String dictName, String content, Pageable pageable);
+
+    Optional<List<Dict>> findAllByCreatedAtGreaterThanEqual(LocalDateTime localdateTime);
 }
