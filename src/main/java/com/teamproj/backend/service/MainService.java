@@ -34,14 +34,14 @@ public class MainService {
 
         List<MainTodayMemeResponseDto> mainTodayMemeResponseDtoList = getSafeMainTodayMemeResponseDtoList(TODAY_LIST_KEY);
         List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = getSafeMainMemeImageResponseDtoList(TODAY_MEME_IMAGE_LIST_KEY);
-        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = getSafeMainTodayBoardResponseDtoList(TODAY_BOARD_LIST_KEY);
+//        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = getSafeMainTodayBoardResponseDtoList(TODAY_BOARD_LIST_KEY);
         
         return MainPageResponseDto.builder()
                 .username(user == null ? null : user.getUsername())
                 .nickname(user == null ? null : user.getNickname())
                 .todayMemes(mainTodayMemeResponseDtoList)
-                .popularBoards(mainTodayBoardResponseDtoList)
                 .popularImages(mainMemeImageResponseDtoList)
+//                .popularBoards(mainTodayBoardResponseDtoList)
                 .build();
     }
 
@@ -96,22 +96,22 @@ public class MainService {
 
     // MainTodayBoardResponseDtoList
     // 인기게시글(게시판)
-    private List<MainTodayBoardResponseDto> getSafeMainTodayBoardResponseDtoList(String key) {
-        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
-
-        // getSafeMainTodayMemeResponseDtoList 기능과 동일함.
-        if (mainTodayBoardResponseDtoList == null || mainTodayBoardResponseDtoList.size() < 5) {
-            List<MainTodayBoardResponseDto> setElement = boardService.getTodayBoard(5);
-
-            if (setElement.size() > 0) {
-                redisService.setTodayBoardList(key, setElement);
-                mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
-            } else {
-                return new ArrayList<>();
-            }
-        }
-
-        return mainTodayBoardResponseDtoList;
-    }
-
+    // 현재 미사용
+//    private List<MainTodayBoardResponseDto> getSafeMainTodayBoardResponseDtoList(String key) {
+//        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
+//
+//        // getSafeMainTodayMemeResponseDtoList 기능과 동일함.
+//        if (mainTodayBoardResponseDtoList == null || mainTodayBoardResponseDtoList.size() < 5) {
+//            List<MainTodayBoardResponseDto> setElement = boardService.getTodayBoard(5);
+//
+//            if (setElement.size() > 0) {
+//                redisService.setTodayBoardList(key, setElement);
+//                mainTodayBoardResponseDtoList = redisService.getTodayBoardList(key);
+//            } else {
+//                return new ArrayList<>();
+//            }
+//        }
+//
+//        return mainTodayBoardResponseDtoList;
+//    }
 }
