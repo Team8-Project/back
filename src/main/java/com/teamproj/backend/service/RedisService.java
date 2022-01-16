@@ -1,19 +1,17 @@
 package com.teamproj.backend.service;
 
-import com.querydsl.core.types.dsl.StringOperation;
 import com.teamproj.backend.dto.board.BoardMemeBest.BoardMemeBestResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.dto.quiz.QuizResponseDto;
-import com.teamproj.backend.dto.statistics.StatDictPostByDayDto;
 import com.teamproj.backend.dto.statistics.StatDictResponseDto;
 import com.teamproj.backend.model.board.BoardHashTag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,6 +32,8 @@ public class RedisService {
 
     public void setStatDict(String key, StatDictResponseDto object){
         redisTemplate.delete(key);
+
+        redisStatDictResponseDtoTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(StatDictResponseDto.class));
         ValueOperations<String, StatDictResponseDto> redis = redisStatDictResponseDtoTemplate.opsForValue();
         redis.set(key, object);
         redisTemplate.expire(key, 10, TimeUnit.MINUTES);
