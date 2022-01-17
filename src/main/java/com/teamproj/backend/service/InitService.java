@@ -34,8 +34,8 @@ public class InitService {
         - 펀쿨섹
         - 지디?
         - 자기야 왜 또 칭얼거려
-        -
-        -
+        - 멈춰!
+        - 무야호
 
         보통(밈잘알)
         - 블랙워그레이몬
@@ -44,22 +44,22 @@ public class InitService {
         - 에스파는 나야
         - 야, 이기영!
         - 형이 왜 거기서 나와
-        - (텍스트) 빅맥
-        -
-        -
-        -
+        - 빅맥
+        - 아이돌 유행어
+        - 지상렬
+        - 요리왕비룡
 
         어려움(밈중독)
         - 군침싹
         - 없어요
         - 나비보벳따우
         - 다메다네
-        -
-        -
-        -
-        -
-        -
-        -
+        - 대기
+        - 스고이재팬
+        - 펀쿨흡족
+        - 원남쓰
+        - 2000년
+        - 심영
      */
     public void initQuiz() {
         // 퀴즈리스트(손으로넣음)
@@ -68,94 +68,240 @@ public class InitService {
         List<String> choiceList = new ArrayList<>();
 
         // 쉬움
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/crazy.jpg"); // 나는 지금 미쳐가고있다
-        questionList.add("빈 칸에 들어갈 말은?");
-        choiceList.add("음악만이 나라에서 허락하는 유일한 마약이니까");
-        choiceList.add("음악 없는 시간 속의 나는 감당할 수 없으니까");
-        choiceList.add("음악만이 나를 가장 화려하게 빛내니까");
-        choiceList.add("음악은 나를 자유롭게 해주니까");
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/sosad.png"); // ㄱ ㅏ 끔...
+//        questionList.add("LV1#위 사진 속 인물과 가장 관련이 깊은 단어는 무엇인가?");
+//        choiceList.add("두뇌 풀가동");
+//        choiceList.add("김치 싸대기");
+//        choiceList.add("섹도시발");
+//        choiceList.add("별빛로긔_☆");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/liver.gif"); // 간때문이야
+//        questionList.add("LV1#어떤 제품과 관련된 영상인가?");
+//        choiceList.add("우루사");
+//        choiceList.add("인사돌");
+//        choiceList.add("이가탄");
+//        choiceList.add("아로나민");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/funcool.png"); // 펀쿨섹
+//        questionList.add("LV1#이 사람이 실제로 하지 않은 말은?");
+//        choiceList.add("지금의 일본이 바뀌기 위해서는, 변화 해야 합니다.");
+//        choiceList.add("기후변화같은 큰 문제를 다룰 땐 Fun해야 합니다. 그리고 Cool하고 Sexy하게 대처해야 합니다.");
+//        choiceList.add("반성해야 한다고 생각하고 반성하고 있는데 반성하고 있다는 자세를 보이고 있지 못 하다는 점에서 반성을 해야한다고 생각합니다.");
+//        choiceList.add("지금처럼이면 안 된다고 생각합니다. 그렇기 때문에 일본은 지금처럼이면 안 된다고 생각합니다.");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/crazy.jpg"); // 나는 지금 미쳐가고있다
+//        questionList.add("LV1#빈 칸에 들어갈 말은?");
+//        choiceList.add("음악만이 나라에서 허락하는 유일한 마약이니까");
+//        choiceList.add("음악 없는 시간 속의 나는 감당할 수 없으니까");
+//        choiceList.add("음악만이 나를 가장 화려하게 빛내니까");
+//        choiceList.add("음악은 나를 자유롭게 해주니까");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/eunkwang.jpeg"); // 소리지르지말고
+//        questionList.add("LV1#서은광이 콘서트 중 외친 말은?");
+//        choiceList.add("모두 소리지르지 말고~...박수쳐!");
+//        choiceList.add("소리질러!");
+//        choiceList.add("에블바디 스탠드 업~!");
+//        choiceList.add("순천 렛츠기릿!!!");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/gaeko.png"); // GD?
+//        questionList.add("LV1#개코가 이 상황에서 한 말은?");
+//        choiceList.add("GD?");
+//        choiceList.add("나왔다.");
+//        choiceList.add("자이언티?");
+//        choiceList.add("나 진짜 형인 줄 알았어");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/honey.png"); // 자기야 왜 칭얼거려
+//        questionList.add("LV1#사진 속 인물이 당신에게 속삭일 말은?");
+//        choiceList.add("자기야. 왜 또 칭얼거려.");
+//        choiceList.add("이 몸, 등장.");
+//        choiceList.add("잇힝");
+//        choiceList.add("어, 예쁘다.");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/myfeet.gif"); // 나의 발을 모기가 물었어
+//        questionList.add("LV1#어떤 주제를 다룬 춤인가?");
+//        choiceList.add("엄청 큰 모기가 나의 발을 물었어");
+//        choiceList.add("사마귀가 사냥을 시작했어");
+//        choiceList.add("이걸 살까 저걸 살까 둘다 골랐어");
+//        choiceList.add("종묘제례악");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/stop.gif"); // 멈춰
+//        questionList.add("LV1#유행어 '멈춰!'와 관계 없는 것은?");
+//        choiceList.add("과속");
+//        choiceList.add("뉴스");
+//        choiceList.add("노르웨이");
+//        choiceList.add("학교폭력");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/yaho.gif"); // 무야호
+//        questionList.add("LV1#이 장면 이후, '그만큼 신나시다는거지~'라고 말한 사람은 누구인가?");
+//        choiceList.add("정형돈");
+//        choiceList.add("유재석");
+//        choiceList.add("노홍철");
+//        choiceList.add("정준하");
 
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/eunkwang.jpeg"); // 소리지르지말고
-        questionList.add("서은광이 콘서트 중 외친 말은?");
-        choiceList.add("모두 소리지르지 말고~...박수쳐!");
-        choiceList.add("소리질러!");
-        choiceList.add("에블바디 스탠드 업~!");
-        choiceList.add("순천 렛츠기릿!!!");
-
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/gaeko.png"); // GD?
-        questionList.add("개코가 이 상황에서 한 말은?");
-        choiceList.add("GD?");
-        choiceList.add("나왔다.");
-        choiceList.add("자이언티?");
-        choiceList.add("나 진짜 형인 줄 알았어");
-
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/honey.png"); // 자기야 왜 칭얼거려
-        questionList.add("사진 속 인물이 당신에게 속삭일 말은?");
-        choiceList.add("자기야. 왜 또 칭얼거려.");
-        choiceList.add("이 몸, 등장.");
-        choiceList.add("잇힝");
-        choiceList.add("어, 예쁘다.");
-
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/myfeet.gif"); // 나의 발을 모기가 물었어
-        questionList.add("어떤 주제를 다룬 춤인가?");
-        choiceList.add("엄청 큰 모기가 나의 발을 물었어");
-        choiceList.add("사마귀가 사냥을 시작했어");
-        choiceList.add("이걸 살까 저걸 살까 둘다 골랐어");
-        choiceList.add("종묘제례악");
-        
-
+        /*
+         ********************************************************************************************************
+         */
 
         // 보통
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/blackwar.jpg"); // 블랙워그레이몬
-        questionList.add("빈 칸에 들어갈 문장은?");
-        choiceList.add("나는 나보다 약한 녀석의 명령 따위는 듣지 않는다");
-        choiceList.add("그런 걸 말이라고 하는거냐 멍청한 놈");
-        choiceList.add("그저 버러지의 단말마로 들리는 군");
-        choiceList.add("너 따위가 나에게 명령할 권한은 없다");
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/blackwar.jpg"); // 블랙워그레이몬
+//        questionList.add("LV2#빈 칸에 들어갈 문장은?");
+//        choiceList.add("나는 나보다 약한 녀석의 명령 따위는 듣지 않는다");
+//        choiceList.add("그런 걸 말이라고 하는거냐 멍청한 놈");
+//        choiceList.add("그저 버러지의 단말마로 들리는 군");
+//        choiceList.add("너 따위가 나에게 명령할 권한은 없다");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/emergency.jpg"); // 비상이다
+//        questionList.add("LV2#글쓴이가 마지막에 한 말은?");
+//        choiceList.add("비상이다");
+//        choiceList.add("재난이다");
+//        choiceList.add("응급이다");
+//        choiceList.add("큰일이다");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/hey.png"); // 여름이었다
+//        questionList.add("LV2#“야, 이기영!” ");
+//        choiceList.add("여름이었다.");
+//        choiceList.add("봄이었다.");
+//        choiceList.add("가을이었다.");
+//        choiceList.add("겨울이었다.");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/insung.jpg"); // 인성문제있어
+//        questionList.add("LV2#사진 속 상황에 대한 설명으로 알맞은 것은?");
+//        choiceList.add("훈련병이 훈련을 수행하던 중 바닥에 침을 뱉었다.");
+//        choiceList.add("훈련병이 목봉 체조 중 몸을 숙여 혼자 휴식을 취했다.");
+//        choiceList.add("훈련병이 번호를 외치던 중 여섯이 아닌 버섯이라고 말했다.");
+//        choiceList.add("훈련병이 지혈 훈련 중 ‘f**k’ 이라고 외쳤다.");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/espa.jpg"); // 에스파는 나야
+//        questionList.add("LV2#다음 이미지에 같이 쓰인 트윗은?");
+//        choiceList.add("에스파는 나야 둘이 될 수 없어");
+//        choiceList.add("말티즈는 나야 주인님 그녀석은 가짜에요");
+//        choiceList.add("에스파는 나야 둘이 될...수 있네?");
+//        choiceList.add("말티즈는 나야 둘이 될 수 없어");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/bro.jpg"); // 형이 거기서 왜 나와
+//        questionList.add("LV2#무한도전 속 위 장면에 해당하는 에피소드와 상황을 바르게 짝지어 설명한 것은?");
+//        choiceList.add("유혹의 거인 - 술을 먹던 중 갑작스러운 유재석의 등장");
+//        choiceList.add("WM7 - 연습을 하던 중 대본에 없던 유재석의 난입");
+//        choiceList.add("퍼펙트센스 - 헬기 몰래카메라를 마친 후 유재석이 등장");
+//        choiceList.add("의상한 형제 - 최후의 순간 정형돈의 집 앞에 등장한 동맹 유재석");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/bigmac.jpg"); // 빅맥
+//        questionList.add("LV2#빅맥송에서 말하는 빅맥 구성요소의 순서로 옳은 것은?");
+//        choiceList.add("참깨빵-패티-소스-양상추-치즈-피클-양파");
+//        choiceList.add("참깨빵-양상추-패티-소스-치즈-피클-양파");
+//        choiceList.add("참깨빵-패티-치즈-양상추-소스-피클-양파");
+//        choiceList.add("참깨빵-양상추-치즈-패티-소스-피클-양파");
 
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/emergency.jpg"); // 비상이다
-        questionList.add("글쓴이가 마지막에 한 말은?");
-        choiceList.add("비상이다");
-        choiceList.add("재난이다");
-        choiceList.add("응급이다");
-        choiceList.add("큰일이다");
+//        quizImgList.add(""); // 아이돌 유행어
+//        questionList.add("LV2#다음 중, 유행어의 어원이 아이돌이 아닌 것은 무엇인가?");
+//        choiceList.add("뻘쭘하다");
+//        choiceList.add("완전 ~하다");
+//        choiceList.add("깜놀");
+//        choiceList.add("1도 모르겠다");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/jisang.jpg"); // 지상렬
+//        questionList.add("LV2#위 사진 속 인물이 실제로 하지 않은 말은?");
+//        choiceList.add("이 사람이 나에게 디스어포인트를 준다");
+//        choiceList.add("혓바닥에서 와이파이좀 터진다");
+//        choiceList.add("안구에 습기가 찼다");
+//        choiceList.add("식도에 조명탄이 터진다");
+//
+        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/mimi.gif"); // 미미
+        questionList.add("LV2#영상 속 인물이 내린 평가로 올바른 것은?");
+        choiceList.add("지복(至福)");
+        choiceList.add("미미(美味)");
+        choiceList.add("초절(超絶)");
+        choiceList.add("극락(極樂)");
 
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/hey.png"); // 여름이었다
-        questionList.add("“야, 이기영!” ");
-        choiceList.add("여름이었다.");
-        choiceList.add("봄이었다.");
-        choiceList.add("가을이었다.");
-        choiceList.add("겨울이었다.");
+        /*
+         ********************************************************************************************************
+         */
 
         // 어려움
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/cute.jpg"); // 군침
-        questionList.add("위 사진 속 가려진 단어와 가장 관련이 깊은 것은?");
-        choiceList.add("뽀롱뽀롱 뽀로로");
-        choiceList.add("히어로즈 오브 더 스톰");
-        choiceList.add("속지마 주인님 저 녀석은 가짜야");
-        choiceList.add("내 오른손에 흑염룡이 잠들어 있다");
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/cute.jpg"); // 군침
+//        questionList.add("LV3#위 사진 속 가려진 단어와 가장 관련이 깊은 것은?");
+//        choiceList.add("뽀롱뽀롱 뽀로로");
+//        choiceList.add("히어로즈 오브 더 스톰");
+//        choiceList.add("속지마 주인님 저 녀석은 가짜야");
+//        choiceList.add("내 오른손에 흑염룡이 잠들어 있다");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/nothing.gif"); // 없어요
+//        questionList.add("LV3#마지막에 들어갈 말은?");
+//        choiceList.add("아니 없어요 그냥");
+//        choiceList.add("아니 그런거 없어요");
+//        choiceList.add("원래 없었어요");
+//        choiceList.add("아니요 없어요");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/navibo.png"); // 나비보벳따우우
+//        questionList.add("LV3#나비보벳따우로 유명한 이 캐릭터의 이름은 무엇일까?");
+//        choiceList.add("K.K");
+//        choiceList.add("J.J");
+//        choiceList.add("T.P");
+//        choiceList.add("A.J");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/damedane.gif"); // 다메다네
+//        questionList.add("LV3#‘다메다네’ 로 유명한 게임 ‘용과 같이’의 삽입곡의 곡명은 무엇일까?");
+//        choiceList.add("바보같아(ばかみたい)");
+//        choiceList.add("안 되겠네(だめだね)");
+//        choiceList.add("일그러지지 않는 추억(歪まない思い)");
+//        choiceList.add("오직 당신만 믿고서(あんた信じるばかりで)");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/degi.jpg"); // 박대기
+//        questionList.add("LV3#위 사진 속 기자의 이메일 주소로 옳은 것은?");
+//        choiceList.add("waiting@kbs.co.kr");
+//        choiceList.add("weather@kbs.co.kr");
+//        choiceList.add("air@kbs.co.kr");
+//        choiceList.add("standby@kbs.co.kr");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/sugoi.gif"); // 스고이재팬
+//        questionList.add("LV3#위 장면은 일본의 프로그램 ‘메이드 인 재팬’의 일부분이다. 이 장면이 등장한 에피소드의 주제로 옳은 것은?");
+//        choiceList.add("일본의 [택시 자동문]이 칠레에 첫 상륙");
+//        choiceList.add("일본의 [식품 배달 드론]이 칠레에 첫 상륙");
+//        choiceList.add("일본의 [가츠동과 카레]가 칠레에 첫 상륙");
+//        choiceList.add("일본의 [초고속 열차]가 칠레에 첫 상륙");
 
-        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/nothing.gif"); // 없어요
-        questionList.add("마지막에 들어갈 말은?");
-        choiceList.add("아니 없어요 그냥");
-        choiceList.add("아니 그런거 없어요");
-        choiceList.add("원래 없었어요");
-        choiceList.add("아니요 없어요");
-
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/funcoolok.gif"); // 펀쿨흡족
+//        questionList.add("LV3#해당 인물은 어떤 발언을 한 뒤 흡족한 웃음을 지었을까?");
+//        choiceList.add("하겠습니다. 그것이 약속이니까.");
+//        choiceList.add("기후변화같은 큰 문제를 다룰 땐 Fun해야 합니다. 그리고 Cool하고 Sexy하게 대처해야 합니다.");
+//        choiceList.add("촌스러운 설명은 필요 없을 것 같네요.");
+//        choiceList.add("실루엣이 떠올랐습니다. 어렴풋이 떠올랐어요, 46이라는 숫자가요.");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/wonnam.png"); // 원남쓰
+//        questionList.add("LV3#여기서, 원남쓰의 나이는 몇 살일까?");
+//        choiceList.add("30살");
+//        choiceList.add("23살");
+//        choiceList.add("26살");
+//        choiceList.add("34살");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/2000.PNG"); // 2000년
+//        questionList.add("LV3#다음 중, 2000년대에 탄생한 캐릭터가 아닌 것은 무엇인가?");
+//        choiceList.add("펩시맨");
+//        choiceList.add("뿌까");
+//        choiceList.add("우비소년");
+//        choiceList.add("마시마로");
+//
+//        quizImgList.add("https://memeglememegle-bucket.s3.ap-northeast-2.amazonaws.com/quiz/2000.PNG"); // 2000년
+//        questionList.add("LV3#다음 상황에 이어지는 장면은 무엇인가?");
+//        choiceList.add("김두한 일행이 심영을 살해하려고 한다.");
+//        choiceList.add("의사가 심영이 고자가 되었음을 알린다.");
+//        choiceList.add("수도경찰서의 형사가 조사를 위해 찾아온다.");
+//        choiceList.add("김두한 일행이 찾아온다.");
 
         List<Quiz> quizList = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < questionList.size(); i++) {
+            String[] question = questionList.get(i).split("#");
             quizList.add(Quiz.builder()
                     .quizImage(quizImgList.get(i))
-                    .question(questionList.get(i))
-                    .category("IMAGE")
+                    .question(question[1])
+                    .category(question[0])
                     .build());
         }
 
         List<Quiz> saveQuizList = quizRepository.saveAll(quizList);
         List<QuizBank> quizBankList = new ArrayList<>();
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < questionList.size(); i++) {
             for (int k = 0; k < 4; k++) {
                 int choiceIdx = i * 4;
                 quizBankList.add(QuizBank.builder()
@@ -166,7 +312,7 @@ public class InitService {
         }
 
         List<QuizBank> saveQuizBankList = quizBankRepository.saveAll(quizBankList);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < questionList.size(); i++) {
             Quiz quiz = saveQuizList.get(i);
             quiz.setSolution(saveQuizBankList.get(i * 4));
             quizRepository.save(quiz);
