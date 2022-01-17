@@ -350,26 +350,6 @@ public class DictService {
         return MemegleServiceStaticMethods.getLikeMap(dictLikeListTuple);
     }
 
-    // 사전 최초 작성자 목록 가져와서 HashMap 으로 반환
-    public HashMap<Long, String> getFirstWriterMap(List<Dict> dictList) {
-        QDict qDict = QDict.dict;
-        List<Tuple> firstWriterTuple = queryFactory
-                .select(qDict.dictId, qDict.firstAuthor.nickname)
-                .from(qDict)
-                .where(qDict.in(dictList))
-                .fetch();
-
-        HashMap<Long, String> firstWriterMap = new HashMap<>();
-        for (Tuple tuple : firstWriterTuple) {
-            // 키값은 DictId, 밸류는 nickname
-            Long key = tuple.get(0, Long.class);
-            String value = tuple.get(1, String.class);
-            firstWriterMap.put(key, value);
-        }
-
-        return firstWriterMap;
-    }
-
     // Get SafeEntity
     // User By UserDetails
     private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
@@ -420,12 +400,6 @@ public class DictService {
                 .offset(page)
                 .limit(size)
                 .fetch();
-    }
-
-    // DictLike
-    private DictLike getSafeDictLike(User user, Dict dict) {
-        Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(user, dict);
-        return dictLike.orElseThrow(() -> new NullPointerException(NOT_EXIST_DICT_LIKE));
     }
 
     // DictLikeTuple
@@ -537,7 +511,7 @@ public class DictService {
         // 3. 이걸 HashMap 에 저장한다. 킷값으로. 조회할 때 시간복잡도가 O(1)
         // 4. 이 키값이 존재하는지 확인하는 식으로 비교한다.
         // 5. 성능 개선은 몰라도 N+1은 해결됨. ㄱㄱ
-        // -> 100개의 데이터를 한꺼번에 호출한 결과 10배이상 빨랐음. 성능개선 효과 있음.
+        // -> 100개의 데이터를 한꺼번에 호출한 결과 성능개선 효과 있음.
 
         // 좋아요 맵
         List<Long> dictIdList = getDictIdListByTupleList(dictTupleList);
@@ -577,7 +551,7 @@ public class DictService {
                 .groupBy(qDict)
                 .fetch();
 
-        return MemegleServiceStaticMethods.getLikeCountMap(likeCountListTuple);
+        return MemegleServiceStaticMethods.getLongLongMap(likeCountListTuple);
     }
 
 

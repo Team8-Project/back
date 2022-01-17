@@ -23,7 +23,6 @@ import java.util.List;
 public class DictController {
     private final DictService dictService;
     private final DictHistoryService dictHistoryService;
-    private final StatService statService;
 
     @GetMapping("/api/dict")
     public ResponseDto<List<DictResponseDto>> getDictList(@RequestHeader(value = "Authorization", required = false) String token,

@@ -38,18 +38,6 @@ public class MemegleServiceStaticMethods {
         return likeMap;
     }
 
-    public static HashMap<Long, Long> getLikeCountMap(List<Tuple> likeCountListTuple){
-        HashMap<Long, Long> likeCountMap = new HashMap<>();
-        for (Tuple tuple : likeCountListTuple) {
-            // 키값은 DictId, 밸류는 count
-            Long key = tuple.get(0, Long.class);
-            Long value = tuple.get(1, Long.class);
-            likeCountMap.put(key, value);
-        }
-
-        return likeCountMap;
-    }
-
     public static HashMap<Long, Long> getLongLongMap(List<Tuple> tupleList) {
         HashMap<Long, Long> map = new HashMap<>();
         for (Tuple tuple : tupleList) {
