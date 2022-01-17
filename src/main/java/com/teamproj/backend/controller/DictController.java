@@ -2,6 +2,7 @@ package com.teamproj.backend.controller;
 
 import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.dict.*;
+import com.teamproj.backend.dto.dict.mymeme.DictMyMemeResponseDto;
 import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
@@ -32,6 +33,15 @@ public class DictController {
                 .status(HttpStatus.OK.toString())
                 .message("사전 목록 요청")
                 .data(dictService.getDictList(page, size, token))
+                .build();
+    }
+
+    @GetMapping("/api/myMeme/dict")
+    public ResponseDto<List<DictMyMemeResponseDto>> getMyMeme(@AuthenticationPrincipal UserDetailsImpl userDetails){
+        return ResponseDto.<List<DictMyMemeResponseDto>>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(dictService.getMyMeme(userDetails))
                 .build();
     }
 
