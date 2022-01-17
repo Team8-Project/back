@@ -32,16 +32,17 @@ public class RedisService {
 
     public void setStatDict(String key, StatDictResponseDto object){
         redisTemplate.delete(key);
-
-        redisStatDictResponseDtoTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(StatDictResponseDto.class));
-        ValueOperations<String, StatDictResponseDto> redis = redisStatDictResponseDtoTemplate.opsForValue();
+        ValueOperations<String, Object> redis = redisTemplate.opsForValue();
         redis.set(key, object);
         redisTemplate.expire(key, 10, TimeUnit.MINUTES);
     }
 
     public StatDictResponseDto getStatDict(String key){
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(StatDictResponseDto.class));
         ValueOperations<String, StatDictResponseDto> redis = redisStatDictResponseDtoTemplate.opsForValue();
-        return redis.get(key);
+        StatDictResponseDto data = redis.get(key);
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+        return data;
     }
 
     public void setBestDict(String key, List<String> bestDictList) {

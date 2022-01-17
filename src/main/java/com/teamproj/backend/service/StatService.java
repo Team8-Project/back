@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import static com.teamproj.backend.util.RedisKey.*;
+import static com.teamproj.backend.util.RedisKey.STAT_DICT_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -57,14 +57,15 @@ public class StatService {
     public StatDictResponseDto statDict() {
         StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
 
-        if(statDictResponseDto == null){
+        if (statDictResponseDto == null) {
             redisService.setStatDict(STAT_DICT_KEY, getStatDict());
             statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
         }
 
         ObjectMapper mapper = new ObjectMapper();
 
-        return mapper.convertValue(statDictResponseDto, new TypeReference<StatDictResponseDto>(){});
+        return mapper.convertValue(statDictResponseDto, new TypeReference<StatDictResponseDto>() {
+        });
 //        return getStatDict();
     }
 
@@ -72,7 +73,7 @@ public class StatService {
         // 총 단어 개수
         Long dictCountAll = dictRepository.count();
         // 최근 7일간 등록된 단어 개수(일별)
-        List<StatDictPostByDayDto> dictCountWeeks = getDictPostByDay(7);
+        List<StatDictPostByDayDto> dictCountWeeks = getDictPostByDay(6);
         // 총 질문 개수
         Long questionCountAll = dictQuestionRepository.countByEnabled(true);
         // 해결된 질문 개수
@@ -212,28 +213,48 @@ public class StatService {
     // 일일 사전 생성 통계
     private List<StatDictPostByDayDto> getDictPostByDay(int day) {
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.now().minusDays(day), LocalTime.of(0, 0, 0)); // 일주일 전 00:00:00
+
+        List<StatDictPostByDayDto> result = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            result.add(StatDictPostByDayDto.builder()
+                    .date(localDateTime.plusDays(i).getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN))
+                    .count(0L)
+                    .build());
+        }
+
         Optional<List<Dict>> weekDict = dictRepository.findAllByCreatedAtGreaterThanEqual(localDateTime);
-        if (!weekDict.isPresent()) {
-            return new ArrayList<>();
+        if (!weekDict.isPresent() || weekDict.get().size() == 0) {
+            return result;
         }
 
         LocalDate date = weekDict.get().get(0).getCreatedAt().toLocalDate();
-        List<StatDictPostByDayDto> result = new ArrayList<>();
+
         long count = 0L;
         for (Dict dict : weekDict.get()) {
             LocalDate dictDate = dict.getCreatedAt().toLocalDate();
             if (dictDate.equals(date)) {
                 count++;
             } else {
-                result.add(StatDictPostByDayDto.builder()
-                        .date(date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN))
-                        .count(count)
-                        .build());
+                String dateName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+                // i = 6일 경우(오늘)는 for문 바깥에서 처리하기 때문에 6회만 시행.
+                for (int i = 0; i < 6; i++) {
+                    if (result.get(i).getDate().equals(dateName)) {
+                        result.remove(i);
+                        result.add(StatDictPostByDayDto.builder()
+                                .date(dateName)
+                                .count(count)
+                                .build());
+                        break;
+                    }
+                }
+
+                // 다음 존재하는 날짜로 다시 세팅.
                 count = 1L;
                 date = dictDate;
             }
         }
         if (count > 0) {
+            result.remove(6);
             result.add(StatDictPostByDayDto.builder()
                     .date(date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN))
                     .count(count)
@@ -241,6 +262,7 @@ public class StatService {
         }
         return result;
     }
+
     // GetSafeEntity
     // StatVisitor
     private StatVisitor getSafeStatVisitorByVisitorIp(String visitorIp, String referer) {
