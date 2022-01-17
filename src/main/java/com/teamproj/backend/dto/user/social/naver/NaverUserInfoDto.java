@@ -8,7 +8,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class NaverUserInfoDto {
-    private Long id;
+    private String id;
     private String nickname;
     private String profileImage;
 }
