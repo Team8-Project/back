@@ -42,7 +42,7 @@ public class User extends Timestamped {
     private Long kakaoId;
 
     @Column(unique = true)
-    private Long naverId;
+    private String naverId;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private final List<Board> boardList = new ArrayList<>();
@@ -66,7 +66,7 @@ public class User extends Timestamped {
         this.kakaoId = kakaoId;
     }
 
-    public void setNaverId(Long naverId) {
+    public void setNaverId(String naverId) {
         this.naverId = naverId;
     }
 
