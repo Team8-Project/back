@@ -21,13 +21,12 @@ import com.teamproj.backend.util.MemegleServiceStaticMethods;
 import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
@@ -56,9 +55,9 @@ public class DictService {
         // 2. 받아온 회원 정보로 User 정보 받아오기 - 좋아요 했는지 여부 판단하기 위해 (select from user 시행 지점)
         User user = getSafeUserByUserDetails(userDetails);
         // 3. 사전 목록 가져오기 - 현재 페이지네이션이 잘못 되어있는데 프론트엔드 분들이 교정해서 쓰고 계셔서 수정 하지 않음.
-        List<Dict> dictList = getSafeDictPage(page, size);
+        List<Tuple> dictTupleList = getSafeDictTupleList(page, size);
         // 4. 사전 목록을 알맞은 반환 양식으로 변환하여 return.
-        return dictListToDictResponseDtoList(dictList, user);
+        return dictListToDictResponseDtoList(dictTupleList, user);
     }
 
     // 스크랩 목록 가져오기
@@ -68,8 +67,6 @@ public class DictService {
 
         return getMyMemeList(user);
     }
-
-
 
     // 사전 이름 중복검사
     public DictNameCheckResponseDto checkDictName(DictNameCheckRequestDto dictName) {
@@ -237,15 +234,15 @@ public class DictService {
             2. 좋아요 중이 아닐 시 : 좋아요
          */
         boolean isLike = false;
-        if (dictLikeRepository.existsByUserAndDict(user, dict)) {
-            DictLike dictLike = getSafeDictLike(user, dict);
-            dictLikeRepository.deleteById(dictLike.getDictLikeId());
+        Optional<DictLike> dictLike = dictLikeRepository.findByUserAndDict(user, dict);
+        if (dictLike.isPresent()) {
+            dictLikeRepository.deleteById(dictLike.get().getDictLikeId());
         } else {
-            DictLike dictLike = DictLike.builder()
+            DictLike newDictLike = DictLike.builder()
                     .dict(dict)
                     .user(user)
                     .build();
-            dictLikeRepository.save(dictLike);
+            dictLikeRepository.save(newDictLike);
             isLike = true;
         }
         return DictLikeResponseDto.builder()
@@ -279,9 +276,12 @@ public class DictService {
 
     // 사전 검색 기능
     public List<DictSearchResultResponseDto> getDictSearchResult(User user, String q, int page, int size) {
-        List<Dict> dictList = getSafeDictListBySearch(q, page, size);
+        if (q.length() < 1) {
+            return new ArrayList<>();
+        }
+        List<Tuple> searchResultTupleList = getSearchResultTupleList(q, page, size);
 
-        return dictListToDictSearchResultResponseDto(dictList, user);
+        return dictListToDictSearchResultResponseDto(searchResultTupleList, user);
     }
 
     // region 보조 기능
@@ -339,12 +339,12 @@ public class DictService {
     }
 
     // 좋아요 목록 가져와서 HashMap 으로 반환
-    public HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
+    public HashMap<String, Boolean> getDictLikeMap(List<Long> dictIdList) {
         QDictLike qDictLike = QDictLike.dictLike;
         List<Tuple> dictLikeListTuple = queryFactory
                 .select(qDictLike.dict.dictId, qDictLike.user.id)
                 .from(qDictLike)
-                .where(qDictLike.dict.in(dictList))
+                .where(qDictLike.dict.dictId.in(dictIdList))
                 .fetch();
 
         return MemegleServiceStaticMethods.getLikeMap(dictLikeListTuple);
@@ -408,15 +408,14 @@ public class DictService {
         return dict.orElseThrow(() -> new NullPointerException(NOT_EXIST_DICT));
     }
 
-    // DictPage
-    private List<Dict> getSafeDictPage(int page, int size) {
+    // DictTupleList
+    private List<Tuple> getSafeDictTupleList(int page, int size) {
         QDict qDict = QDict.dict;
-        QDictLike qDictLike = QDictLike.dictLike;
 
-        // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않음
+        // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않고 사용하기로 함
         return queryFactory
-                .selectFrom(qDict).distinct()
-                .leftJoin(qDict.dictLikeList, qDictLike)
+                .select(qDict.dictId, qDict.dictName, qDict.summary, qDict.firstAuthor.nickname, qDict.createdAt, qDict.dictLikeList.size())
+                .from(qDict)
                 .orderBy(qDict.createdAt.desc())
                 .offset(page)
                 .limit(size)
@@ -510,19 +509,27 @@ public class DictService {
     }
 
     // DictList 검색결과
-    // ElasticSearch 로 변경 고려 중.
-    private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
-//        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(q, page * size, size);
-        if (q.length() < 1) {
-            return new ArrayList<>();
-        }
-        Optional<Page<Dict>> searchResult = dictRepository.findAllByDictNameContainingOrContentContaining(q, q, PageRequest.of(page, size));
-        return searchResult.map(Streamable::toList).orElseGet(ArrayList::new);
+    private List<Tuple> getSearchResultTupleList(String q, int page, int size) {
+        QDict qDict = QDict.dict;
+        String newQ = "%" + q + "%";
+        int offset = page * size;
+
+        return queryFactory
+                .select(qDict.dictId, qDict.dictName, qDict.summary, qDict.content, qDict.firstAuthor.nickname,
+                        qDict.createdAt, qDict.dictLikeList.size())
+                .from(qDict)
+                .where(qDict.dictName.like(newQ)
+                        .or(qDict.summary.like(newQ))
+                        .or(qDict.content.like(newQ)))
+                .orderBy(qDict.createdAt.desc())
+                .offset(offset)
+                .limit(size)
+                .fetch();
     }
 
     // Entity To Dto
     // DictDtoList to DictResponseDtoList
-    private List<DictResponseDto> dictListToDictResponseDtoList(List<Dict> dictList, User user) {
+    private List<DictResponseDto> dictListToDictResponseDtoList(List<Tuple> dictTupleList, User user) {
         List<DictResponseDto> dictResponseDtoList = new ArrayList<>();
 
         // 1. dict 목록을 저장한다.
@@ -532,25 +539,26 @@ public class DictService {
         // 5. 성능 개선은 몰라도 N+1은 해결됨. ㄱㄱ
         // -> 100개의 데이터를 한꺼번에 호출한 결과 10배이상 빨랐음. 성능개선 효과 있음.
 
-        // 작성자 맵
-        HashMap<Long, String> firstWriterMap = getFirstWriterMap(dictList);
         // 좋아요 맵
-        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
-        // 좋아요 개수 맵
-        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
+        List<Long> dictIdList = getDictIdListByTupleList(dictTupleList);
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictIdList);
 
-        for (Dict dict : dictList) {
-            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
-            int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
+        for (Tuple tuple : dictTupleList) {
+            Long dictId = tuple.get(0, Long.class);
+            String title = tuple.get(1, String.class);
+            String summary = tuple.get(2, String.class);
+            String firstWriter = tuple.get(3, String.class);
+            LocalDateTime createdAt = tuple.get(4, LocalDateTime.class);
+            Integer likeCountInteger = tuple.get(5, Integer.class);
+            int likeCount = likeCountInteger == null ? 0 : likeCountInteger;
 
             dictResponseDtoList.add(DictResponseDto.builder()
-                    .dictId(dict.getDictId())
-                    .title(dict.getDictName())
-                    .summary(dict.getSummary())
-                    .meaning(dict.getContent())
-                    .firstWriter(firstWriterMap.get(dict.getDictId()))
-                    .createdAt(dict.getCreatedAt())
-                    .isLike(user != null && dictLikeMap.get(dict.getDictId() + ":" + user.getId()) != null)
+                    .dictId(dictId)
+                    .title(title)
+                    .summary(summary)
+                    .firstWriter(firstWriter)
+                    .createdAt(createdAt)
+                    .isLike(user != null && dictLikeMap.get(dictId + ":" + user.getId()) != null)
                     .likeCount(likeCount)
                     .build());
         }
@@ -574,28 +582,31 @@ public class DictService {
 
 
     // DictDtoList to DictSearchResultResponseDtoList
-    private List<DictSearchResultResponseDto> dictListToDictSearchResultResponseDto(List<Dict> dictList, User user) {
+    private List<DictSearchResultResponseDto> dictListToDictSearchResultResponseDto(List<Tuple> dictTupleList, User user) {
         List<DictSearchResultResponseDto> dictSearchResultResponseDto = new ArrayList<>();
 
-        // 작성자 맵
-        HashMap<Long, String> firstWriterMap = getFirstWriterMap(dictList);
         // 좋아요 맵
-        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
-        // 좋아요 개수 맵
-        HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
+        List<Long> dictIdList = getDictIdListByTupleList(dictTupleList);
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictIdList);
 
-        for (Dict dict : dictList) {
-            // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
-            int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
+        for (Tuple tuple : dictTupleList) {
+            Long dictId = tuple.get(0, Long.class);
+            String title = tuple.get(1, String.class);
+            String summary = tuple.get(2, String.class);
+            String meaning = tuple.get(3, String.class);
+            String firstWriter = tuple.get(4, String.class);
+            LocalDateTime createdAt = tuple.get(5, LocalDateTime.class);
+            Integer likeCountInteger = tuple.get(6, Integer.class);
+            int likeCount = likeCountInteger == null ? 0 : likeCountInteger;
 
             dictSearchResultResponseDto.add(DictSearchResultResponseDto.builder()
-                    .dictId(dict.getDictId())
-                    .title(dict.getDictName())
-                    .summary(dict.getSummary())
-                    .meaning(dict.getContent())
-                    .firstWriter(firstWriterMap.get(dict.getDictId()))
-                    .createdAt(dict.getCreatedAt())
-                    .isLike(user != null && dictLikeMap.get(dict.getDictId() + ":" + user.getId()) != null)
+                    .dictId(dictId)
+                    .title(title)
+                    .summary(summary)
+                    .meaning(meaning)
+                    .firstWriter(firstWriter)
+                    .createdAt(createdAt)
+                    .isLike(user != null && dictLikeMap.get(dictId + ":" + user.getId()) != null)
                     .likeCount(likeCount)
                     .build());
         }
@@ -603,12 +614,24 @@ public class DictService {
         return dictSearchResultResponseDto;
     }
 
+    private List<Long> getDictIdListByTupleList(List<Tuple> tupleList) {
+        List<Long> result = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            result.add(tuple.get(0, Long.class));
+        }
+        return result;
+    }
+
     // DictList to DictBestResponseDtoList
     public List<DictBestResponseDto> dictListToDictBestResponseDtoList(List<Dict> dictList, User user) {
         List<DictBestResponseDto> dictBestResponseDtoList = new ArrayList<>();
 
         // 좋아요 맵
-        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
+        List<Long> li = new ArrayList<>();
+        for (Dict dict : dictList) {
+            li.add(dict.getDictId());
+        }
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(li);
         // 좋아요 개수 맵
         HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
 

@@ -15,7 +15,6 @@ public class DictResponseDto {
     private Long dictId;
     private String title;
     private String summary;
-    private String meaning;
     private String firstWriter;
     private LocalDateTime createdAt;
     private boolean isLike;
