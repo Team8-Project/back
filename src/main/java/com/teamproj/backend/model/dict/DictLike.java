@@ -1,6 +1,7 @@
 package com.teamproj.backend.model.dict;
 
 import com.teamproj.backend.model.User;
+import com.teamproj.backend.util.Timestamped;
 import lombok.*;
 
 import javax.persistence.*;
@@ -10,7 +11,7 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DictLike {
+public class DictLike extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long dictLikeId;

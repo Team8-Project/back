@@ -8,7 +8,7 @@ import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.dto.dict.*;
-import com.teamproj.backend.dto.dict.question.DictQuestionResponseDto;
+import com.teamproj.backend.dto.dict.mymeme.DictMyMemeResponseDto;
 import com.teamproj.backend.dto.dict.question.search.DictQuestionSearchResponseDto;
 import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
@@ -61,6 +61,16 @@ public class DictService {
         return dictListToDictResponseDtoList(dictList, user);
     }
 
+    // 스크랩 목록 가져오기
+    public List<DictMyMemeResponseDto> getMyMeme(UserDetailsImpl userDetails) {
+        ValidChecker.loginCheck(userDetails);
+        User user = getSafeUserByUserDetails(userDetails);
+
+        return getMyMemeList(user);
+    }
+
+
+
     // 사전 이름 중복검사
     public DictNameCheckResponseDto checkDictName(DictNameCheckRequestDto dictName) {
         return DictNameCheckResponseDto.builder()
@@ -69,9 +79,9 @@ public class DictService {
     }
 
     // 사전 이름 중복검사. 사용불가시 기존 표현 뭔지 나오도록.
-    public DictNameCheckResponseDtoNeo neoCheckDictName(DictNameCheckRequestDto dictName){
+    public DictNameCheckResponseDtoNeo neoCheckDictName(DictNameCheckRequestDto dictName) {
         Dict dict = dictRepository.findByDictName(dictName.getDictName());
-        if(dict == null){
+        if (dict == null) {
             return DictNameCheckResponseDtoNeo.builder()
                     .result(false)
                     .build();
@@ -159,7 +169,7 @@ public class DictService {
         String content = dictPostRequestDto.getContent();
 
         // 한줄요약이 너무 길 경우 예외 발생.
-        if(summary.length() > 30){
+        if (summary.length() > 30) {
             throw new IllegalArgumentException(SUMMARY_IS_TOO_BIG);
         }
 
@@ -195,7 +205,7 @@ public class DictService {
         String content = dictPutRequestDto.getContent();
 
         // 한줄요약이 너무 길 경우 예외 발생.
-        if(summary.length() > 30){
+        if (summary.length() > 30) {
             throw new IllegalArgumentException(SUMMARY_IS_TOO_BIG);
         }
 
@@ -369,6 +379,29 @@ public class DictService {
         return jwtAuthenticateProcessor.getUser(userDetails);
     }
 
+    // MyMemeList By User
+    private List<DictMyMemeResponseDto> getMyMemeList(User user) {
+        QDictLike qDictLike = QDictLike.dictLike;
+        List<Tuple> tupleList = queryFactory
+                .select(qDictLike.dict.dictId, qDictLike.dict.dictName, qDictLike.dict.content, qDictLike.dict.summary)
+                .from(qDictLike)
+                .where(qDictLike.user.eq(user))
+                .orderBy(qDictLike.createdAt.desc())
+                .fetch();
+
+        List<DictMyMemeResponseDto> dictMyMemeResponseDtoList = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            dictMyMemeResponseDtoList.add(DictMyMemeResponseDto.builder()
+                    .dictId(tuple.get(0, Long.class))
+                    .title(tuple.get(1, String.class))
+                    .meaning(tuple.get(2, String.class))
+                    .summary(tuple.get(3, String.class))
+                    .build());
+        }
+
+        return dictMyMemeResponseDtoList;
+    }
+
     // Dict
     public Dict getSafeDict(Long dictId) {
         Optional<Dict> dict = dictRepository.findById(dictId);
@@ -437,7 +470,7 @@ public class DictService {
 
     // RecommendSearch
     private List<String> getSafeRecommendSearch(String key) {
-        try{
+        try {
             List<String> result = redisService.getStringList(key);
 
             if (result == null) {
@@ -448,7 +481,7 @@ public class DictService {
                 }
             }
             return result;
-        }catch(RedisConnectionFailureException e){
+        } catch (RedisConnectionFailureException e) {
             return getRecommendSearch(20);
         }
     }
@@ -480,7 +513,7 @@ public class DictService {
     // ElasticSearch 로 변경 고려 중.
     private List<Dict> getSafeDictListBySearch(String q, int page, int size) {
 //        Optional<List<Dict>> searchResult = dictRepository.findAllByDictNameOrContentByFullText(q, page * size, size);
-        if(q.length() < 1){
+        if (q.length() < 1) {
             return new ArrayList<>();
         }
         Optional<Page<Dict>> searchResult = dictRepository.findAllByDictNameContainingOrContentContaining(q, q, PageRequest.of(page, size));
@@ -525,7 +558,7 @@ public class DictService {
         return dictResponseDtoList;
     }
 
-    public HashMap<Long,Long> getLikeCountMap(List<Dict> dictList) {
+    public HashMap<Long, Long> getLikeCountMap(List<Dict> dictList) {
         QDictLike qDictLike = QDictLike.dictLike;
         QDict qDict = QDict.dict;
 
@@ -578,7 +611,7 @@ public class DictService {
         HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictList);
         // 좋아요 개수 맵
         HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
-        
+
         for (Dict dict : dictList) {
             // likeCountMap 에 값이 없을경우 좋아요가 없음 = 0개.
             int likeCount = likeCountMap.get(dict.getDictId()) == null ? 0 : likeCountMap.get(dict.getDictId()).intValue();
