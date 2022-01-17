@@ -61,9 +61,7 @@ public class AlarmService {
     }
 
     // 알림 정보 요청
-    public List<AlarmResponseDto> receiveAlarm(UserDetailsImpl userDetails) {
-        ValidChecker.loginCheck(userDetails);
-        User user = jwtAuthenticateProcessor.getUser(userDetails);
+    public List<AlarmResponseDto> receiveAlarm(User user) {
         List<Alarm> alarmList = getSafeAlarmListByUser(user);
         // return to Dto List
         // To do : 우선 List<AlarmResponseDto>에 담아서 리턴 했습니다. 차 후에 수정 필요

@@ -1,6 +1,7 @@
 package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
+import com.teamproj.backend.dto.alarm.AlarmResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpCheckResponseDto;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
 import com.teamproj.backend.dto.user.signUp.SignUpResponseDto;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -27,6 +29,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
+    private final AlarmService alarmService;
 
     // 회원가입 기능
     public SignUpResponseDto signUp(SignUpRequestDto signUpRequestDto) {
@@ -58,12 +61,13 @@ public class UserService {
     public UserInfoResponseDto getUserInfo(UserDetailsImpl userDetails) {
         // 비로그인 사용자가 요청 시 예외 발생.
         ValidChecker.loginCheck(userDetails);
-
         User user = jwtAuthenticateProcessor.getUser(userDetails);
+        List<AlarmResponseDto> alarmResponseDto = alarmService.receiveAlarm(user);
         return UserInfoResponseDto.builder()
                 .username(userDetails.getUsername())
                 .nickname(user.getNickname())
                 .profileImage(user.getProfileImage())
+                .alarm(alarmResponseDto)
                 .build();
     }
 

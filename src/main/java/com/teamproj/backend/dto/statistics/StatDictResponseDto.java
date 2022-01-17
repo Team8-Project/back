@@ -6,13 +6,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StatDictResponseDto {
+public class StatDictResponseDto implements Serializable {
     private Long dictCountAll;
     private List<StatDictPostByDayDto> dictCountWeeks;
     private Long questionCountAll;
