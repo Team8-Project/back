@@ -231,7 +231,7 @@ public class BoardService {
                 .groupBy(qBoard)
                 .fetch();
 
-        return MemegleServiceStaticMethods.getLikeCountMap(likeCountListTuple);
+        return MemegleServiceStaticMethods.getLongLongMap(likeCountListTuple);
     }
 
     private HashMap<String, Boolean> getBoardLikeMap(List<Board> boardList) {

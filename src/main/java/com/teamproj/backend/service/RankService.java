@@ -92,7 +92,7 @@ public class RankService {
                 .groupBy(qDict)
                 .fetch();
 
-        return MemegleServiceStaticMethods.getLikeCountMap(likeCountListTuple);
+        return MemegleServiceStaticMethods.getLongLongMap(likeCountListTuple);
     }
     // 좋아요 목록 가져와서 HashMap 으로 반환
     public HashMap<String, Boolean> getDictLikeMap(List<Dict> dictList) {
