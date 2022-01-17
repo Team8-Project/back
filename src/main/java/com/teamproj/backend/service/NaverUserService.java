@@ -143,7 +143,7 @@ public class NaverUserService {
                 }
             }
          */
-        Long id = jsonNode.get("response").get("id").asLong();
+        String id = jsonNode.get("response").get("id").asText();
         String nickname = jsonNode.get("response").get("nickname").asText();
         String profileImage = jsonNode.get("response").get("profile_image").asText();
 
@@ -168,7 +168,7 @@ public class NaverUserService {
 
     private User registerNaverUserIfNeeded(NaverUserInfoDto naverUserInfoDto) {
         // DB 에 중복된 Naver Id 가 있는지 확인
-        Long naverId = naverUserInfoDto.getId();
+        String naverId = naverUserInfoDto.getId();
         Optional<User> naverUser = userRepository.findByNaverId(naverId);
 
         if (!naverUser.isPresent()) {

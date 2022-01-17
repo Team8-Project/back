@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class RestApiExceptionHandler {
 
-//    @ExceptionHandler(value = {Exception.class})
+    @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<ResponseDto<RestApiException>> handleApiRequestException(Exception ex) {
         return ResponseEntity.badRequest()
                 .body(ResponseDto.<RestApiException>builder()
