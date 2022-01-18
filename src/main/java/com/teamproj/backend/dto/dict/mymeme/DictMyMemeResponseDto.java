@@ -1,11 +1,12 @@
 package com.teamproj.backend.dto.dict.mymeme;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.teamproj.backend.dto.youtube.DictRelatedYoutubeDto;
+import lombok.*;
+
+import java.util.List;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,4 +15,5 @@ public class DictMyMemeResponseDto {
     private String title;
     private String summary;
     private String meaning;
+    private List<DictRelatedYoutubeDto> relatedYoutube;
 }

@@ -12,6 +12,7 @@ import com.teamproj.backend.dto.dict.mymeme.DictMyMemeResponseDto;
 import com.teamproj.backend.dto.dict.question.search.DictQuestionSearchResponseDto;
 import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
+import com.teamproj.backend.dto.youtube.DictRelatedYoutubeDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -140,6 +141,7 @@ public class DictService {
         // 사용자 정보가 존재할 경우 좋아요 여부 감별 실시.
         User firstWriter = dict.getFirstAuthor();
         User recentWriter = dict.getRecentModifier();
+        List<DictRelatedYoutubeDto> dictRelatedYoutubeDtoList = getDictYoutubeUrlListToDictRelatedYoutubeDtoList(dict.getDictYoutubeUrlList());
         return DictDetailResponseDto.builder()
                 .dictId(dict.getDictId())
                 .title(dict.getDictName())
@@ -153,7 +155,23 @@ public class DictService {
                 .likeCount(dict.getDictLikeList().size())
                 .createdAt(dict.getCreatedAt())
                 .modifiedAt(dict.getModifiedAt())
+                .relatedYoutube(dictRelatedYoutubeDtoList)
                 .build();
+    }
+
+    private List<DictRelatedYoutubeDto> getDictYoutubeUrlListToDictRelatedYoutubeDtoList(List<DictYoutubeUrl> dictYoutubeUrlList) {
+        List<DictRelatedYoutubeDto> result = new ArrayList<>();
+
+        for (DictYoutubeUrl dictYoutubeUrl : dictYoutubeUrlList) {
+            result.add(DictRelatedYoutubeDto.builder()
+                    .title(dictYoutubeUrl.getTitle())
+                    .thumbNail(dictYoutubeUrl.getThumbNail())
+                    .channel(dictYoutubeUrl.getChannel())
+                    .youtubeId(dictYoutubeUrl.getYoutubeUrl())
+                    .build());
+        }
+
+        return result;
     }
 
     // 사전 작성하기

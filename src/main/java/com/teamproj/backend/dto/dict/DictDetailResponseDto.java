@@ -1,5 +1,6 @@
 package com.teamproj.backend.dto.dict;
 
+import com.teamproj.backend.dto.youtube.DictRelatedYoutubeDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,5 +26,5 @@ public class DictDetailResponseDto {
     private int likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
-    private List<String> relatedYoutube;
+    private List<DictRelatedYoutubeDto> relatedYoutube;
 }
