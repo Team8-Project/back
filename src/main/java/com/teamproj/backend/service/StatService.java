@@ -55,18 +55,18 @@ public class StatService {
 
     // 사전 통계 내용 출력
     public StatDictResponseDto statDict() {
-        StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
-
-        if (statDictResponseDto == null) {
-            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
-            statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
-        }
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        return mapper.convertValue(statDictResponseDto, new TypeReference<StatDictResponseDto>() {
-        });
-//        return getStatDict();
+//        StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+//
+//        if (statDictResponseDto == null) {
+//            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
+//            statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+//        }
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//
+//        return mapper.convertValue(statDictResponseDto, new TypeReference<StatDictResponseDto>() {
+//        });
+        return getStatDict();
     }
 
     private StatDictResponseDto getStatDict() {
@@ -232,15 +232,17 @@ public class StatService {
         long count = 0L;
         for (Dict dict : weekDict.get()) {
             LocalDate dictDate = dict.getCreatedAt().toLocalDate();
+            System.out.println("dictDate.equals(date) : " + dictDate.equals(date));
             if (dictDate.equals(date)) {
                 count++;
             } else {
                 String dateName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+                System.out.println(dateName);
                 // i = 6일 경우(오늘)는 for문 바깥에서 처리하기 때문에 6회만 시행.
                 for (int i = 0; i < 6; i++) {
                     if (result.get(i).getDate().equals(dateName)) {
                         result.remove(i);
-                        result.add(StatDictPostByDayDto.builder()
+                        result.add(i, StatDictPostByDayDto.builder()
                                 .date(dateName)
                                 .count(count)
                                 .build());
@@ -253,12 +255,20 @@ public class StatService {
                 date = dictDate;
             }
         }
-        if (count > 0) {
-            result.remove(6);
-            result.add(StatDictPostByDayDto.builder()
-                    .date(date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN))
-                    .count(count)
-                    .build());
+
+        // 남은 값 처리.
+        if (count > 1) {
+            String displayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+            for(int i = 0; i < result.size(); i++){
+                if(displayName.equals(result.get(i).getDate())){
+                    result.remove(i);
+                    result.add(i, StatDictPostByDayDto.builder()
+                            .date(displayName)
+                            .count(count)
+                            .build());
+                    break;
+                }
+            }
         }
         return result;
     }
