@@ -273,6 +273,7 @@ public class DictQuestionService {
 
     //region 질문 상세 조회
     public DictQuestionDetailResponseDto getQuestionDetail(Long questionId, String token) {
+
         // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         // 2. 질문 조회
@@ -458,7 +459,7 @@ public class DictQuestionService {
         // 2. 제목에 검색어가 포함되어 있는 질문 리스트 조회
         List<DictQuestion> questionList = getSafeSearchResult(q, page * size, size);
         List<Long> questionIdList = new ArrayList<>();
-        for(DictQuestion dictQuestion : questionList){
+        for (DictQuestion dictQuestion : questionList) {
             questionIdList.add(dictQuestion.getQuestionId());
         }
         // 작성자 맵

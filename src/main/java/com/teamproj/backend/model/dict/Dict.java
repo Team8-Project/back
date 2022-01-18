@@ -2,7 +2,6 @@ package com.teamproj.backend.model.dict;
 
 
 import com.teamproj.backend.model.User;
-import com.teamproj.backend.model.alarm.Alarm;
 import com.teamproj.backend.util.Timestamped;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -53,4 +52,17 @@ public class Dict extends Timestamped {
 
     @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
     private final List<DictViewers> dictViewersList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dict", cascade = CascadeType.ALL)
+    private final List<DictYoutubeUrl> dictYoutubeUrlList = new ArrayList<>();
+
+    public void addHistory(DictHistory dictHistory) {
+        dictHistory.setDict(this);
+        dictHistoryList.add(dictHistory);
+    }
+
+    public void addDictYoutubeUrl(DictYoutubeUrl dictYoutubeUrl) {
+        dictYoutubeUrl.setDict(this);
+        dictYoutubeUrlList.add(dictYoutubeUrl);
+    }
 }
