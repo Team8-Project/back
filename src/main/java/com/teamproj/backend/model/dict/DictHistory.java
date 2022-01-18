@@ -2,15 +2,13 @@ package com.teamproj.backend.model.dict;
 
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

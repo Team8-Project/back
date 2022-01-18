@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -24,4 +25,5 @@ public class DictDetailResponseDto {
     private int likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
+    private List<String> relatedYoutube;
 }

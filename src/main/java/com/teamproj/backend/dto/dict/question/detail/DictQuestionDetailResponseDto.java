@@ -1,6 +1,5 @@
 package com.teamproj.backend.dto.dict.question.detail;
 
-import com.teamproj.backend.dto.comment.CommentResponseDto;
 import com.teamproj.backend.dto.dict.question.comment.DictQuestionCommentResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
