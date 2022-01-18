@@ -27,4 +27,7 @@ public class DictYoutubeUrl {
 
     @Column(nullable = false)
     private String youtubeUrl;
+
+    @Column
+    private String thumbNail;
 }

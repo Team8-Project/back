@@ -97,7 +97,7 @@ public class YoutubeService {
             7. 이론상 좋아.
          */
         // 검색어가 2글자보다 작을 경우 신뢰도 있는 결과를 얻기 어려우므로 생략.
-        if(query.replaceAll(" ","").length() < 2){
+        if (query.replaceAll(" ", "").length() < 2) {
             return new ArrayList<>();
         }
         List<SearchResult> searchResultList = youtubeSearch(query);
@@ -110,6 +110,8 @@ public class YoutubeService {
             if (rId.getKind().equals("youtube#video")) {
                 String title = searchResult.getSnippet().getTitle();
                 String channel = searchResult.getSnippet().getChannelTitle();
+                Thumbnail thumbnail = (Thumbnail) searchResult.getSnippet().getThumbnails().get("default");
+                String thumbNail = thumbnail.getUrl();
                 String youtubeUrl = rId.getVideoId();
 
                 // 영상의 제목과 검색어가 유사한지 비교한다. 신뢰도 높은 결과를 위해.
@@ -118,6 +120,7 @@ public class YoutubeService {
                             .dict(dict)
                             .title(title)
                             .channel(channel)
+                            .thumbNail(thumbNail)
                             .youtubeUrl(youtubeUrl)
                             .build());
                 }
@@ -241,7 +244,7 @@ public class YoutubeService {
              * This method reduces the info returned to only the fields we need and makes calls more
              * efficient.
              */
-            search.setFields("items(id/kind,id/videoId,snippet/title,snippet/channelTitle)");
+            search.setFields("items(id/kind,id/videoId,snippet/title,snippet/channelTitle,snippet/thumbnails/default/url)");
             search.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
             SearchListResponse searchResponse = search.execute();
 
