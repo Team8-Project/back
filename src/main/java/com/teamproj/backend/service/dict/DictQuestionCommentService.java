@@ -198,7 +198,10 @@ public class DictQuestionCommentService {
             Long commentId = comment.getQuestionCommentId();
 
             // likeMap 에 값이 있음 = true, 없음 = false
-            boolean isLike = likeMap.get(commentId + ":" + user.getId()) != null;
+            boolean isLike = false;
+            if(user != null){
+                isLike = likeMap.get(commentId + ":" + user.getId()) != null;
+            }
             // likeCountMap 에 값이 있음 = 개수 출력, 없음 = 0
             Long likeCountLong = likeCountMap.get(commentId);
             int likeCount = likeCountLong == null ? 0 : likeCountLong.intValue();
