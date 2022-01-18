@@ -16,6 +16,7 @@ import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.RedisService;
+import com.teamproj.backend.service.YoutubeService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.MemegleServiceStaticMethods;
 import com.teamproj.backend.util.StatisticsUtils;
@@ -36,7 +37,7 @@ import static com.teamproj.backend.util.RedisKey.DICT_RECOMMEND_SEARCH_KEY;
 @Service
 @RequiredArgsConstructor
 public class DictService {
-
+    private final YoutubeService youtubeService;
     private final DictQuestionService dictQuestionService;
     private final DictHistoryService dictHistoryService;
 
@@ -185,8 +186,25 @@ public class DictService {
                 .summary(summary)
                 .build();
 
-        dict = dictRepository.save(dict);
-        dictHistoryService.postDictHistory(dict, user);
+        // 최초 사전 수정내역 생성 후 삽입
+        DictHistory dictHistory = DictHistory.builder()
+                .prevSummary(dict.getSummary())
+                .prevContent(dict.getContent())
+                .user(user)
+                .dict(dict)
+                .build();
+        dict.addHistory(dictHistory);
+
+        // 연관동영상 리스트 받아온 후 삽입
+        List<DictYoutubeUrl> dictYoutubeUrlList = youtubeService.getYoutubeSearchResult(dict, dictName);
+        if (dictYoutubeUrlList.size() > 0) {
+            for (DictYoutubeUrl dictYoutubeUrl : dictYoutubeUrlList) {
+                dict.addDictYoutubeUrl(dictYoutubeUrl);
+            }
+        }
+
+        // 사전 저장
+        dictRepository.save(dict);
 
         return DictPostResponseDto.builder()
                 .result("작성 성공")
@@ -210,7 +228,13 @@ public class DictService {
         User user = jwtAuthenticateProcessor.getUser(userDetails);
 
         // 이전 내용 히스토리에 저장
-        dictHistoryService.postDictHistory(dict, user);
+        DictHistory dictHistory = DictHistory.builder()
+                .prevSummary(dict.getSummary())
+                .prevContent(dict.getContent())
+                .user(user)
+                .dict(dict)
+                .build();
+        dict.addHistory(dictHistory);
 
         dict.setRecentModifier(user);
         dict.setSummary(summary);
