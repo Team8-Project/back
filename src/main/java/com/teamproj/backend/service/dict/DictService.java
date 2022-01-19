@@ -1,6 +1,7 @@
 package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -40,7 +41,6 @@ import static com.teamproj.backend.util.RedisKey.DICT_RECOMMEND_SEARCH_KEY;
 public class DictService {
     private final YoutubeService youtubeService;
     private final DictQuestionService dictQuestionService;
-    private final DictHistoryService dictHistoryService;
 
     private final DictRepository dictRepository;
     private final DictLikeRepository dictLikeRepository;
@@ -50,7 +50,14 @@ public class DictService {
 
     private final RedisService redisService;
 
-    // 사전 목록 가져오기
+    /**
+     * 사전 목록 가져오기
+     *
+     * @param page  @RequestParam int page 페이지네이션용 페이지(offset)값. 현재 해당 기능의 페이지는 page*size 를 프론트엔드에서 요청해서 사용중임.
+     * @param size  @RequestParam int size 페이지네이션용 사이즈(limit)값.
+     * @param token Authorization header token.
+     * @return DictList To DictResponseDto
+     */
     public List<DictResponseDto> getDictList(int page, int size, String token) {
         // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
@@ -62,7 +69,12 @@ public class DictService {
         return dictListToDictResponseDtoList(dictTupleList, user);
     }
 
-    // 스크랩 목록 가져오기
+    /**
+     * 스크랩 목록 가져오기
+     *
+     * @param userDetails @AuthenticationPrincipal userDetails 정보.
+     * @return DictList To DictMyMemeResponseDto
+     */
     public List<DictMyMemeResponseDto> getMyMeme(UserDetailsImpl userDetails) {
         ValidChecker.loginCheck(userDetails);
         User user = getSafeUserByUserDetails(userDetails);
@@ -70,7 +82,12 @@ public class DictService {
         return getMyMemeList(user);
     }
 
-    // 사전 이름 중복검사
+    /**
+     * 사전 이름 중복검사
+     *
+     * @param dictName @RequestBody 정보값(사전 이름)
+     * @return true : 사용 가능 / false : 사용 불가
+     */
     public DictNameCheckResponseDto checkDictName(DictNameCheckRequestDto dictName) {
         return DictNameCheckResponseDto.builder()
                 .result(!dictRepository.existsByDictName(dictName.getDictName()))
@@ -78,6 +95,13 @@ public class DictService {
     }
 
     // 사전 이름 중복검사. 사용불가시 기존 표현 뭔지 나오도록.
+
+    /**
+     * 사전 이름 중복검사
+     *
+     * @param dictName @RequestBody 정보값(사전 이름)
+     * @return Dict to DictNameCheckResponseDto
+     */
     public DictNameCheckResponseDtoNeo neoCheckDictName(DictNameCheckRequestDto dictName) {
         Dict dict = dictRepository.findByDictName(dictName.getDictName());
         if (dict == null) {
@@ -94,7 +118,12 @@ public class DictService {
                 .build();
     }
 
-    // 베스트 용어 사전 가져오기
+    /**
+     * 오늘의 밈 정보 가져오기
+     *
+     * @param token Authorization header token.
+     * @return DictList To DictBestResponseDto
+     */
     public List<DictBestResponseDto> getBestDict(String token) {
         // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
@@ -106,8 +135,13 @@ public class DictService {
         return dictListToDictBestResponseDtoList(dictList, user);
     }
 
-    // 사전 총 개수 출력
-    // 프론트엔드의 총 페이지 출력을 위해.
+    /**
+     * 사전 총 개수 출력
+     * 사전 정보를 받아온 뒤 페이지네이션을 위해 사용.
+     *
+     * @param q @RequestParam String q 검색 쿼리값.
+     * @return 사전 총 개수(쿼리값 존재할 경우 검색 결과의 총 개수)
+     */
     public Long getDictTotalCount(String q) {
         // 1. 쿼리가 없을 경우 : 전체 사전의 개수 출력
         if (q == null) {
@@ -119,7 +153,13 @@ public class DictService {
         return dictRepository.count();
     }
 
-    // 사전 상세 정보 가져오기
+    /**
+     * 사전 상세정보
+     *
+     * @param dictId @PathVariable Long dictId
+     * @param token  Authorization header token
+     * @return DictDetailResponseDto
+     */
     public DictDetailResponseDto getDictDetail(Long dictId, String token) {
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = getSafeUserByUserDetails(userDetails);
@@ -159,22 +199,13 @@ public class DictService {
                 .build();
     }
 
-    private List<DictRelatedYoutubeDto> getDictYoutubeUrlListToDictRelatedYoutubeDtoList(List<DictYoutubeUrl> dictYoutubeUrlList) {
-        List<DictRelatedYoutubeDto> result = new ArrayList<>();
-
-        for (DictYoutubeUrl dictYoutubeUrl : dictYoutubeUrlList) {
-            result.add(DictRelatedYoutubeDto.builder()
-                    .title(dictYoutubeUrl.getTitle())
-                    .thumbNail(dictYoutubeUrl.getThumbNail())
-                    .channel(dictYoutubeUrl.getChannel())
-                    .youtubeId(dictYoutubeUrl.getYoutubeUrl())
-                    .build());
-        }
-
-        return result;
-    }
-
-    // 사전 작성하기
+    /**
+     * 사전 작성하기
+     *
+     * @param userDetails        @AuthenticationPrincipal UserDetailsImpl userDetails
+     * @param dictPostRequestDto @RequestBody 정보값
+     * @return DictPostResponseDto
+     */
     @Transactional
     public DictPostResponseDto postDict(UserDetailsImpl userDetails, DictPostRequestDto dictPostRequestDto) {
         // 비회원이 함수로 요청하는지 확인(JWT 토큰의 유효성으로 확인)
@@ -229,7 +260,14 @@ public class DictService {
                 .build();
     }
 
-    // 사전 수정하기 및 수정 내역에 저장
+    /**
+     * 사전 수정하기 및 수정 내역에 저장
+     *
+     * @param userDetails       @AuthenticationPrincipal UserDetailsImpl userDetails
+     * @param dictId            @PathVariable Long dictId
+     * @param dictPutRequestDto @RequestBody 정보값
+     * @return String "수정 완료"
+     */
     @Transactional
     public DictPutResponseDto putDict(UserDetailsImpl userDetails, Long dictId, DictPutRequestDto dictPutRequestDto) {
         ValidChecker.loginCheck(userDetails);
@@ -263,7 +301,13 @@ public class DictService {
                 .build();
     }
 
-    // 사전 좋아요 / 좋아요 취소
+    /**
+     * 사전 좋아요 / 좋아요 취소
+     *
+     * @param userDetails @AuthenticationPrincipal UserDetailsImpl userDetails
+     * @param dictId      @PathVariable Long dictId
+     * @return true : 좋아요 완료 / false : 좋아요 취소 완료
+     */
     @Transactional
     public DictLikeResponseDto likeDict(UserDetailsImpl userDetails, Long dictId) {
         // 로그인 체크
@@ -301,7 +345,15 @@ public class DictService {
         return result.subList(0, returnSize);
     }
 
-    // 검색 기능
+    /**
+     * 검색 기능
+     *
+     * @param token Authentication header token
+     * @param q     @RequestParam String q 쿼리값
+     * @param page  @RequestParam int page 페이지값
+     * @param size  @RequestParam int size 사이즈값
+     * @return DictSearchResponseDto
+     */
     public DictSearchResponseDto getSearchResult(String token, String q, int page, int size) {
         // 검색 결과를 좋아요 했는지 확인하기 위해 사용자 정보를 받음.
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
@@ -316,15 +368,6 @@ public class DictService {
                 .build();
     }
 
-    // 사전 검색 기능
-    public List<DictSearchResultResponseDto> getDictSearchResult(User user, String q, int page, int size) {
-        if (q.length() < 1) {
-            return new ArrayList<>();
-        }
-        List<Tuple> searchResultTupleList = getSearchResultTupleList(q, page, size);
-
-        return dictListToDictSearchResultResponseDto(searchResultTupleList, user);
-    }
 
     // region 보조 기능
     // Utils
@@ -361,7 +404,6 @@ public class DictService {
         return recommend;
     }
 
-
     // 오늘의 밈 출력
     public List<MainTodayMemeResponseDto> getTodayMeme(int size) {
         // 1. 좋아요 테이블에서 각 좋아요 개수 불러와서 내림차순으로 정렬
@@ -381,15 +423,43 @@ public class DictService {
     }
 
     // 좋아요 목록 가져와서 HashMap 으로 반환
-    public HashMap<String, Boolean> getDictLikeMap(List<Long> dictIdList) {
+    public HashMap<String, Boolean> getDictLikeMap(List<Long> dictIdList, User user) {
         QDictLike qDictLike = QDictLike.dictLike;
         List<Tuple> dictLikeListTuple = queryFactory
                 .select(qDictLike.dict.dictId, qDictLike.user.id)
                 .from(qDictLike)
-                .where(qDictLike.dict.dictId.in(dictIdList))
+                .where(eqUser(user),
+                        qDictLike.dict.dictId.in(dictIdList))
                 .fetch();
 
         return MemegleServiceStaticMethods.getLikeMap(dictLikeListTuple);
+    }
+
+    // qDictLike 와 user 를 비교하기 위한 BooleanExpression.
+    private BooleanExpression eqUser(User user) {
+        QDictLike qDictLike = QDictLike.dictLike;
+        if (user == null) {
+            return null;
+        }
+        return qDictLike.user.eq(user);
+    }
+
+    /**
+     * 검색 결과값 받아오기. getSearchResult 메소드의 보조 기능.
+     *
+     * @param user jwtAuthenticateProcessor.getUser(userDetails) 결과값. @Nullable
+     * @param q    쿼리값
+     * @param page 페이지값
+     * @param size 사이즈값
+     * @return DictList To DictSearchResultResponseDto
+     */
+    public List<DictSearchResultResponseDto> getDictSearchResult(User user, String q, int page, int size) {
+        if (q.length() < 1) {
+            return new ArrayList<>();
+        }
+        List<Tuple> searchResultTupleList = getSearchResultTupleList(q, page, size);
+
+        return dictListToDictSearchResultResponseDto(searchResultTupleList, user);
     }
 
     // Get SafeEntity
@@ -552,12 +622,11 @@ public class DictService {
         // 2. dictLike 테이블에서 dict 목록을 IN 연산한 값을 가져온다.
         // 3. 이걸 HashMap 에 저장한다. 킷값으로. 조회할 때 시간복잡도가 O(1)
         // 4. 이 키값이 존재하는지 확인하는 식으로 비교한다.
-        // 5. 성능 개선은 몰라도 N+1은 해결됨. ㄱㄱ
-        // -> 100개의 데이터를 한꺼번에 호출한 결과 성능개선 효과 있음.
+        // 5. 성능 개선은 몰라도 N+1은 해결됨.
 
         // 좋아요 맵
         List<Long> dictIdList = getDictIdListByTupleList(dictTupleList);
-        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictIdList);
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictIdList, user);
 
         for (Tuple tuple : dictTupleList) {
             Long dictId = tuple.get(0, Long.class);
@@ -603,7 +672,7 @@ public class DictService {
 
         // 좋아요 맵
         List<Long> dictIdList = getDictIdListByTupleList(dictTupleList);
-        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictIdList);
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictIdList, user);
 
         for (Tuple tuple : dictTupleList) {
             Long dictId = tuple.get(0, Long.class);
@@ -647,7 +716,7 @@ public class DictService {
         for (Dict dict : dictList) {
             li.add(dict.getDictId());
         }
-        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(li);
+        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(li, user);
         // 좋아요 개수 맵
         HashMap<Long, Long> likeCountMap = getLikeCountMap(dictList);
 
@@ -665,6 +734,22 @@ public class DictService {
                     .build());
         }
         return dictBestResponseDtoList;
+    }
+
+    // DictYoutubeUrlList To DictRelatedYoutubeDtoList
+    private List<DictRelatedYoutubeDto> getDictYoutubeUrlListToDictRelatedYoutubeDtoList(List<DictYoutubeUrl> dictYoutubeUrlList) {
+        List<DictRelatedYoutubeDto> result = new ArrayList<>();
+
+        for (DictYoutubeUrl dictYoutubeUrl : dictYoutubeUrlList) {
+            result.add(DictRelatedYoutubeDto.builder()
+                    .title(dictYoutubeUrl.getTitle())
+                    .thumbNail(dictYoutubeUrl.getThumbNail())
+                    .channel(dictYoutubeUrl.getChannel())
+                    .youtubeId(dictYoutubeUrl.getYoutubeUrl())
+                    .build());
+        }
+
+        return result;
     }
 
     // endregion
