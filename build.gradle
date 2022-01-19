@@ -9,6 +9,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id "com.ewerk.gradle.plugins.querydsl" version "1.0.10" // queryDSL (1)
     id 'java'
+    id 'jacoco'
 }
 
 group = 'com.teamproj'
@@ -86,6 +87,7 @@ jar{
 test {
     exclude '**/*'
     useJUnitPlatform()
+    finalizedBy 'jacocoTestReport' // 추가
 }
 
 def querydslDir = "$buildDir/generated/querydsl" // queryDSL (3)
@@ -111,4 +113,38 @@ configurations { // queryDSL (6)
 }
 
 
+jacoco {
+    toolVersion = '0.8.6'
+}
 
+jacocoTestReport {
+    reports {
+        html.enabled true
+        csv.enabled true
+        xml.enabled false
+    }
+    finalizedBy 'jacocoTestCoverageVerification' // 추가
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            element = 'CLASS'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+
+            excludes = []
+        }
+    }
+}
