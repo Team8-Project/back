@@ -176,6 +176,7 @@ public class StatService {
                 .select(qDictQuestion.questionId, qDictQuestion.questionName, qDictQuestion.user.profileImage)
                 .from(qDictQuestion)
                 .where(qDictQuestion.questionId.in(selectList))
+                .orderBy(qDictQuestion.questionId.desc())
                 .limit(size)
                 .fetch();
 
@@ -191,6 +192,7 @@ public class StatService {
                 .select(qDictQuestion.questionId, qDictQuestion.questionName, qDictQuestion.user.profileImage)
                 .from(qDictQuestion)
                 .where(qDictQuestion.questionId.notIn(selectList))
+                .orderBy(qDictQuestion.questionId.desc())
                 .limit(size)
                 .fetch();
 
