@@ -119,7 +119,7 @@ public class DictQuestionService {
             String title = tuple.get(1, String.class);
             String thumbNail = tuple.get(2, String.class);
             String content = tuple.get(3, String.class);
-            Long writerId = tuple.get(4, Long.class);
+//            Long writerId = tuple.get(4, Long.class);
             String username = tuple.get(5, String.class);
             String profileImage = tuple.get(6, String.class);
             String writer = tuple.get(7, String.class);
@@ -300,7 +300,7 @@ public class DictQuestionService {
         boolean isCuriousToo = getSafeCurious(user, dictQuestion);
 
         User writer = dictQuestion.getUser();
-        List<DictQuestionCommentResponseDto> commentList = commentService.getCommentList(dictQuestion, user);
+        List<DictQuestionCommentResponseDto> commentList = commentService.getCommentList(dictQuestion, user, selectedCommentId);
         return DictQuestionDetailResponseDto.builder()
                 .questionId(questionId)
                 .username(writer.getUsername())

@@ -83,7 +83,7 @@
 //        boardService.uploadBoard(userDetails, boardUploadRequestDto, category, null);
 //
 //        // 게시글 조회
-//        board = boardRepository.findByTitle(title);
+////        board = boardRepository.findByTitle(title);
 //        boardId = board.getBoardId();
 //    }
 //
