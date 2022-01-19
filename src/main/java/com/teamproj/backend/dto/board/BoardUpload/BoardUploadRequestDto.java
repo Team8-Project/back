@@ -13,5 +13,4 @@ import java.util.List;
 public class BoardUploadRequestDto {
     private String title;
     private String content;
-    private List<String> hashTags;
 }

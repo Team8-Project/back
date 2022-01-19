@@ -18,5 +18,4 @@ public class BoardUploadResponseDto {
     private String category;
     private String thumbNail;
     private LocalDateTime createdAt;
-    private List<String> hashTags;
 }

@@ -18,6 +18,6 @@ public class MyPageResponseDto {
     private int dictCount;
     private List<MyPagePostBoardResponseDto> postBoards;
     private List<MyPageDictResponseDto> dict;
-    private int qustionCount;
-    private List<DictQuestionMyPageResponseDto> qustion;
+    private int questionCount;
+    private List<DictQuestionMyPageResponseDto> question;
 }
