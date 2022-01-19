@@ -1,8 +1,7 @@
 package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.dict.DictQuestionCommentRepository;
 import com.teamproj.backend.Repository.dict.DictQuestionRepository;
@@ -12,7 +11,6 @@ import com.teamproj.backend.dto.comment.CommentDeleteResponseDto;
 import com.teamproj.backend.dto.comment.CommentPostRequestDto;
 import com.teamproj.backend.dto.comment.CommentPostResponseDto;
 import com.teamproj.backend.dto.dict.question.comment.DictQuestionCommentResponseDto;
-import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.question.*;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -24,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,11 +45,11 @@ public class DictQuestionCommentService {
     private final JPAQueryFactory queryFactory;
 
     // 댓글 목록 불러오기
-    public List<DictQuestionCommentResponseDto> getCommentList(DictQuestion dictQuestion, User user) {
-        List<DictQuestionComment> commentList = getSafeCommentList(dictQuestion);
+    public List<DictQuestionCommentResponseDto> getCommentList(DictQuestion dictQuestion, User user, Long selectedId) {
+        List<Tuple> commentTupleList = getSafeCommentTupleList(dictQuestion);
 
         // CommentList to CommentResponseDtoList
-        return commentListToCommentResponseDtoList(commentList, user);
+        return commentListToCommentResponseDtoList(commentTupleList, user, selectedId);
     }
 
     // 댓글 작성
@@ -160,113 +159,90 @@ public class DictQuestionCommentService {
     }
 
     // CommentList
-    private List<DictQuestionComment> getSafeCommentList(DictQuestion dictQuestion) {
-        if (dictQuestion == null) {
+    private List<Tuple> getSafeCommentTupleList(DictQuestion dictQuestion) {
+        if(dictQuestion == null){
             throw new NullPointerException(NOT_EXIST_BOARD);
         }
 
         QDictQuestionComment qComment = QDictQuestionComment.dictQuestionComment;
-        QUser qUser = QUser.user;
 
-        return queryFactory.selectFrom(qComment).distinct()
-                .leftJoin(qComment.user, qUser)
-                .fetchJoin()
+        return queryFactory
+                .select(qComment.questionCommentId,
+                        qComment.user.profileImage, qComment.user.username, qComment.user.nickname,
+                        qComment.content, qComment.createdAt, qComment.questionCommentLike.size())
+                .from(qComment)
                 .where(qComment.dictQuestion.eq(dictQuestion)
                         .and(qComment.enabled.eq(true)))
-                .orderBy(qComment.questionCommentLike.size().desc(), qComment.createdAt.asc())
+                .orderBy(qComment.questionCommentId.asc())
                 .fetch();
     }
 
     // Entity to Dto
     // CommentList to CommentResponseDtoList
-    private List<DictQuestionCommentResponseDto> commentListToCommentResponseDtoList(List<DictQuestionComment> commentList,
-                                                                                     User user) {
+    private List<DictQuestionCommentResponseDto> commentListToCommentResponseDtoList(List<Tuple> tupleList,
+                                                                                     User user,
+                                                                                     Long selectedId) {
         List<DictQuestionCommentResponseDto> commentResponseDtoList = new ArrayList<>();
 
-        // 작성자 맵
-        // id:username : username / id:nickname : nickname / id:profileImage : profileImage
-        HashMap<String, String> writerMap = getUserInfoMap(commentList);
+        List<Long> commentIdList = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            commentIdList.add(tuple.get(0, Long.class));
+        }
         // 좋아요 목록 맵
         // commentId:userId : 값이 존재할 시 좋아요, 아니면 아님
-        HashMap<String, Boolean> likeMap = getLikeMap(commentList);
-        // 좋아요 개수 맵
-        HashMap<Long, Long> likeCountMap = getLikeCountMap(commentList);
-        // 채택 여부
-        Long selectedComment = getSelectedComment(commentList);
+        HashMap<String, Boolean> likeMap = getLikeMap(commentIdList, user);
 
-        for (DictQuestionComment comment : commentList) {
-            Long commentId = comment.getQuestionCommentId();
+        for (Tuple tuple : tupleList) {
+            Long commentId = tuple.get(0, Long.class);
+            String profileImage = tuple.get(1, String.class);
+            String writerId = tuple.get(2, String.class);
+            String writer = tuple.get(3, String.class);
+            String content = tuple.get(4, String.class);
+            LocalDateTime createdAt = tuple.get(5, LocalDateTime.class);
+            Integer likeCountInteger = tuple.get(6, Integer.class);
+            int likeCount = likeCountInteger == null ? 0 : likeCountInteger;
 
             // likeMap 에 값이 있음 = true, 없음 = false
             boolean isLike = false;
-            if(user != null){
+            if (user != null) {
                 isLike = likeMap.get(commentId + ":" + user.getId()) != null;
             }
-            // likeCountMap 에 값이 있음 = 개수 출력, 없음 = 0
-            Long likeCountLong = likeCountMap.get(commentId);
-            int likeCount = likeCountLong == null ? 0 : likeCountLong.intValue();
 
             commentResponseDtoList.add(DictQuestionCommentResponseDto.builder()
-                    .commentId(comment.getQuestionCommentId())
-                    .commentWriterId(writerMap.get(commentId + ":username"))
-                    .commentWriter(writerMap.get(commentId + ":nickname"))
-                    .profileImageUrl(writerMap.get(commentId + ":profileImage"))
-                    .commentContent(comment.getContent())
-                    .createdAt(comment.getCreatedAt())
+                    .commentId(commentId)
+                    .commentWriterId(writerId)
+                    .commentWriter(writer)
+                    .profileImageUrl(profileImage)
+                    .commentContent(content)
+                    .createdAt(createdAt)
                     .isLike(isLike)
                     .likeCount(likeCount)
-                    .isSelected(commentId.equals(selectedComment))
+                    .isSelected(commentId.equals(selectedId))
                     .build());
         }
 
         return commentResponseDtoList;
     }
 
-    private Long getSelectedComment(List<DictQuestionComment> commentList) {
-        Optional<QuestionSelect> questionSelect = questionSelectRepository.findByQuestionCommentIn(commentList);
-
-        if(questionSelect.isPresent()){
-            return questionSelect.get().getQuestionComment().getQuestionCommentId();
-        }else{
-            return 0L;
-        }
-    }
-
-    private HashMap<Long, Long> getLikeCountMap(List<DictQuestionComment> commentList) {
-        QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
-        NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
-        List<Tuple> likeCountTuple = queryFactory
-                .select(qQuestionCommentLike.comment.questionCommentId, qQuestionCommentLike.user.count().as(count))
-                .from(qQuestionCommentLike)
-                .where(qQuestionCommentLike.comment.in(commentList)
-                        .and(qQuestionCommentLike.comment.enabled.eq(true)))
-                .groupBy(qQuestionCommentLike.comment.questionCommentId)
-                .fetch();
-
-        return MemegleServiceStaticMethods.getLongLongMap(likeCountTuple);
-    }
-
-    private HashMap<String, Boolean> getLikeMap(List<DictQuestionComment> commentList) {
+    private HashMap<String, Boolean> getLikeMap(List<Long> commentIdList, User user) {
         QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
         List<Tuple> likeTuple = queryFactory
                 .select(qQuestionCommentLike.comment.questionCommentId, qQuestionCommentLike.user.id)
                 .from(qQuestionCommentLike)
-                .where(qQuestionCommentLike.comment.in(commentList))
+                .where(eqUser(user),
+                        qQuestionCommentLike.comment.questionCommentId.in(commentIdList))
                 .fetch();
 
         return MemegleServiceStaticMethods.getLikeMap(likeTuple);
     }
 
-    private HashMap<String, String> getUserInfoMap(List<DictQuestionComment> commentList) {
-        // 얻어오는 정보 : 사용자 아이디, 사용자 닉네임, 사용자 프로필이미지
-        QDictQuestionComment qDictQuestionComment = QDictQuestionComment.dictQuestionComment;
-        List<Tuple> userInfoTuple = queryFactory
-                .select(qDictQuestionComment.questionCommentId, qDictQuestionComment.user.username, qDictQuestionComment.user.nickname, qDictQuestionComment.user.profileImage)
-                .from(qDictQuestionComment)
-                .where(qDictQuestionComment.in(commentList))
-                .fetch();
-
-        return MemegleServiceStaticMethods.getUserInfoMap(userInfoTuple);
+    // qQuestionCommentLike 와 user 를 비교하기 위한 BooleanExpression.
+    private BooleanExpression eqUser(User user) {
+        QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
+        if (user == null) {
+            return null;
+        }
+        return qQuestionCommentLike.user.eq(user);
     }
     // endregion
 }

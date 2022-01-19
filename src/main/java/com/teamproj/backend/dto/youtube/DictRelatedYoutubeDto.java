@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class YoutubeSearchResultDto {
+public class DictRelatedYoutubeDto {
     private String title;
     private String channel;
-    private String youtubeUrl;
+    private String thumbNail;
+    private String youtubeId;
 }
