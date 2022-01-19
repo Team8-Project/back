@@ -54,9 +54,6 @@ public class Board extends Timestamped {
     private final List<Comment> commentList = new ArrayList<>();
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
-    private final List<BoardHashTag> boardHashTagList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     private final List<BoardLike> Likes = new ArrayList<>();
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)

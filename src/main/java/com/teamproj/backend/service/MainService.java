@@ -2,11 +2,9 @@ package com.teamproj.backend.service;
 
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainPageResponseDto;
-import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.board.BoardService;
 import com.teamproj.backend.service.dict.DictService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import lombok.RequiredArgsConstructor;

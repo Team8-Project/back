@@ -3,16 +3,12 @@ package com.teamproj.backend.service;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.UserRepository;
-import com.teamproj.backend.Repository.board.BoardRepository;
-import com.teamproj.backend.Repository.dict.DictQuestionRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
-import com.teamproj.backend.dto.dict.question.DictQuestionResponseDto;
 import com.teamproj.backend.dto.dict.question.mypage.DictQuestionMyPageResponseDto;
 import com.teamproj.backend.dto.mypage.MyPageDictResponseDto;
 import com.teamproj.backend.dto.mypage.MyPagePostBoardResponseDto;
-import com.teamproj.backend.dto.mypage.MyPageResponseDto;
 import com.teamproj.backend.dto.mypage.MyPageProfileImageModifyResponseDto;
-import com.teamproj.backend.exception.ExceptionMessages;
+import com.teamproj.backend.dto.mypage.MyPageResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.dict.Dict;
@@ -33,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_USER;
 
@@ -89,8 +84,8 @@ public class MyPageService {
                 .dictCount(dictCount)               // 유저가 작성한 사전 정보
                 .postBoards(postBoards)             // 유저가 작성한 게시글 정보
                 .dict(userDictResponseList)         // 유저가 작성한 사전 정보
-                .qustionCount(dictQuestionMyPageResponseDtoArrayList.size())
-                .qustion(dictQuestionMyPageResponseDtoArrayList)
+                .questionCount(dictQuestionMyPageResponseDtoArrayList.size())
+                .question(dictQuestionMyPageResponseDtoArrayList)
                 .build();
     }
     
@@ -114,8 +109,6 @@ public class MyPageService {
                                 .views(board.getViews())
                                 .likeCnt(board.getLikes().size())
                                 .commentCnt(commentService.getCommentList(board).size())
-                                .hashTags(board.getBoardHashTagList().stream().map(
-                                        e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new)))
                                 .build()
                     );
                 }
