@@ -66,8 +66,8 @@ public class DictQuestionCommentService {
                 .enabled(true)
                 .build());
 
-        // 질문 작성자에게 알람
-        alarmService.sendAlarm(RECEIVE_COMMENT, dictQuestion.getQuestionId(), dictQuestion.getUser());
+        // 댓글 작성 시 질문 작성자에게 알림
+        sendAlarmToDictQuestionWriter(user, dictQuestion);
 
         // Comment to CommentPostResponseDto
         return CommentPostResponseDto.builder()
@@ -78,6 +78,14 @@ public class DictQuestionCommentService {
                 .commentContent(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .build();
+    }
+
+    // 댓글 작성 시 질문 작성자에게 알림
+    private void sendAlarmToDictQuestionWriter(User user, DictQuestion dictQuestion) {
+        // - 질문 작성자가 자기 질문에 댓글 달 때는 알림 X
+        if (!dictQuestion.getUser().getId().equals(user.getId())) {
+            alarmService.sendAlarm(RECEIVE_COMMENT, dictQuestion.getQuestionId(), dictQuestion.getUser());
+        }
     }
 
     private DictQuestion getSafeQuestion(Long questionId) {
