@@ -23,5 +23,4 @@ public class MyPagePostBoardResponseDto {
     private int views;
     private int likeCnt;
     private int commentCnt;
-    private List<String> hashTags;
 }

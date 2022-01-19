@@ -6,7 +6,6 @@ import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.dto.quiz.QuizResponseDto;
 import com.teamproj.backend.dto.statistics.StatDictResponseDto;
-import com.teamproj.backend.model.board.BoardHashTag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,7 +13,6 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -85,24 +83,6 @@ public class RedisService {
         return null;
     }
 
-    //region 추천 해시태그
-    public void setRecommendHashTag(String key, List<BoardHashTag> boardHashTagList) {
-        redisTemplate.delete(key);
-        ListOperations<String, String> list = redisStringTemplate.opsForList();
-        list.leftPushAll(key, hashTagListToStringList(boardHashTagList));
-        redisStringTemplate.expire(key, 10, TimeUnit.MINUTES);
-    }
-
-    public List<String> getRecommendHashTag(String key) {
-        ListOperations<String, String> list = redisStringTemplate.opsForList();
-
-        if (list.size(key) > 0) {
-            return list.range(key, 0, list.size(key) - 1);
-        }
-        return null;
-    }
-    //endregion
-
     public List<MainMemeImageResponseDto> getTodayMemeImageList(String key) {
         ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
 
@@ -153,15 +133,6 @@ public class RedisService {
 
     // Utils
 
-
-    public List<String> hashTagListToStringList(List<BoardHashTag> boardHashTagList) {
-        List<String> result = new ArrayList<>();
-        for (BoardHashTag boardHashTag : boardHashTagList) {
-            result.add(boardHashTag.getHashTagName());
-        }
-
-        return result;
-    }
 
     //region 명예의 밈짤
     public List<BoardMemeBestResponseDto> getBestMemeImgList(String key) {

@@ -12,7 +12,7 @@ import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.board.BoardService;
+import com.teamproj.backend.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

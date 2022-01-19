@@ -1,7 +1,7 @@
 //package com.teamproj.backend.controller;
 //
 //import com.teamproj.backend.security.WebSecurityConfig;
-//import com.teamproj.backend.service.board.BoardService;
+//import com.teamproj.backend.service.BoardService;
 //import org.junit.jupiter.api.DisplayName;
 //import org.junit.jupiter.api.Test;
 //import org.junit.jupiter.api.extension.ExtendWith;

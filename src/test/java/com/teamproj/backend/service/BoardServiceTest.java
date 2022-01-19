@@ -6,7 +6,6 @@
 //import com.teamproj.backend.Repository.board.BoardCategoryRepository;
 //import com.teamproj.backend.Repository.board.BoardRepository;
 //import com.teamproj.backend.config.S3MockConfig;
-//import com.teamproj.backend.dto.BoardHashTag.BoardHashTagResponseDto;
 //import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 //import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
 //import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
@@ -23,8 +22,6 @@
 //import com.teamproj.backend.model.board.BoardCategory;
 //import com.teamproj.backend.security.UserDetailsImpl;
 //import com.teamproj.backend.security.jwt.JwtTokenUtils;
-//import com.teamproj.backend.service.board.BoardHashTagService;
-//import com.teamproj.backend.service.board.BoardService;
 //import io.findify.s3mock.S3Mock;
 //import org.junit.jupiter.api.*;
 //import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +38,6 @@
 //import org.springframework.web.context.request.ServletRequestAttributes;
 //
 //import java.io.IOException;
-//import java.util.ArrayList;
 //import java.util.List;
 //import java.util.Optional;
 //
@@ -72,8 +68,6 @@
 //    @Autowired
 //    private UserRepository userRepository;
 //
-//    @Autowired
-//    private BoardHashTagService boardHashTagService;
 //
 //    @Mock
 //    private ServletRequestAttributes attributes;
@@ -157,16 +151,9 @@
 //            BoardCategory boardCategory = new BoardCategory("카테고리");
 //            boardCategoryRepository.save(boardCategory);
 //
-//            List<String> hashTags = new ArrayList<>();
-//            hashTags.add("tag1");
-//            hashTags.add("tag2");
-//
-//
-//
 //            BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
 //                    .title(boardTitle)
 //                    .content(boardContent)
-//                    .hashTags(hashTags)
 //                    .build();
 //
 //            MockMultipartFile mockMultipartFile = new MockMultipartFile(
@@ -260,43 +247,6 @@
 //                // then
 //                assertEquals(ExceptionMessages.NOT_EXIST_CATEGORY, exception.getMessage());
 //            }
-//
-//
-//            @Test
-//            @DisplayName("실패4 / 해쉬태그 5개까지 입력 가능")
-//            void uploadBoard_sucess() throws IOException {
-//                // givien
-//                BoardCategory boardCategory = new BoardCategory("카테고리");
-//                boardCategoryRepository.save(boardCategory);
-//
-//                List<String> hashTags = new ArrayList<>();
-//                hashTags.add("tag1");
-//                hashTags.add("tag2");
-//                hashTags.add("tag3");
-//                hashTags.add("tag4");
-//                hashTags.add("tag5");
-//                hashTags.add("tag6");
-//
-//                BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
-//                        .title(boardTitle)
-//                        .content(boardContent)
-//                        .hashTags(hashTags)
-//                        .build();
-//
-//                MockMultipartFile mockMultipartFile = new MockMultipartFile(
-//                        "testJunit", "originalName", null, "image".getBytes()
-//                );
-//
-//                // when
-//                Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-//                    boardService.uploadBoard(userDetails, boardUploadRequestDto,
-//                            boardCategory.getCategoryName(), mockMultipartFile);
-//                });
-//
-//
-//                // then
-//                assertEquals(ExceptionMessages.HASHTAG_MAX_FIVE, exception.getMessage());
-//            }
 //        }
 //    }
 //    //endregion
@@ -387,7 +337,6 @@
 //            BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
 //                    .title(board.getTitle())
 //                    .content(board.getContent())
-//                    .hashTags(new ArrayList<>())
 //                    .build();
 //
 //            MockMultipartFile mockMultipartFile = new MockMultipartFile(
@@ -675,51 +624,6 @@
 //                // then
 //                assertEquals(ExceptionMessages.SEARCH_IS_EMPTY, exception.getMessage());
 //            }
-//        }
-//    }
-//    //endregion
-//
-//    //region 추천 해시태그
-//    @Nested
-//    @DisplayName("추천 해시태그")
-//    class getRecommendHashTag {
-//
-//        @Test
-//        @DisplayName("성공")
-//        void getRecommendHashTag_success() throws IOException {
-//            // given
-//            BoardCategory boardCategory = new BoardCategory("카테고리");
-//            boardCategoryRepository.save(boardCategory);
-//
-//            List<String> hashTags = new ArrayList<>();
-//            hashTags.add("tag1");
-//            hashTags.add("tag2");
-//            hashTags.add("tag3");
-//            hashTags.add("tag4");
-//            hashTags.add("tag5");
-//
-//
-//
-//            BoardUploadRequestDto boardUploadRequestDto = BoardUploadRequestDto.builder()
-//                    .title(boardTitle)
-//                    .content(boardContent)
-//                    .hashTags(hashTags)
-//                    .build();
-//
-//            MockMultipartFile mockMultipartFile = new MockMultipartFile(
-//                    "testJunit", "originalName", null, "image".getBytes()
-//            );
-//
-//
-//            boardService.uploadBoard(userDetails, boardUploadRequestDto, boardCategory.getCategoryName(), mockMultipartFile);
-//
-//
-//            // when
-//            BoardHashTagResponseDto boardHashTagResponseDto = boardHashTagService.getRecommendHashTag();
-//
-//
-//            // then
-//            assertNotEquals(0, boardHashTagResponseDto.getHashTags().size());
 //        }
 //    }
 //    //endregion

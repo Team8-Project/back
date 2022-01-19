@@ -1,4 +1,4 @@
-package com.teamproj.backend.service.board;
+package com.teamproj.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,9 +26,6 @@ import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.*;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.CommentService;
-import com.teamproj.backend.service.RedisService;
-import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,7 +43,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
 import static com.teamproj.backend.util.RedisKey.BEST_MEME_JJAL_KEY;
@@ -58,7 +54,6 @@ public class BoardService {
     private final BoardCategoryRepository boardCategoryRepository;
     private final BoardLikeRepository boardLikeRepository;
     private final BoardImageRepository boardImageRepository;
-    private final BoardHashTagRepository boardHashTagRepository;
     private final BoardViewersRepository boardViewersRepository;
     private final BoardTodayLikeRepository boardTodayLikeRepository;
 
@@ -111,8 +106,6 @@ public class BoardService {
         HashMap<Long, Long> likeCountMap = getLikeCountMap(boardList);
         // 댓글 개수 맵
         HashMap<Long, Long> commentCountMap = getCommentCountMap(boardList);
-        // 해시태그 맵
-        HashMap<Long, List<String>> boardHashTagMap = getBoardHashTagMap(boardList);
 
         for (Board board : boardList) {
             // Map 에 사용 될 id 키값
@@ -122,11 +115,6 @@ public class BoardService {
             Long likeCountLong = likeCountMap.get(boardId);
             int likeCount = likeCountLong == null ? 0 : likeCountLong.intValue();
 
-            // boardHashTagMap 에 값이 없음 = 해시태그가 없음. 빈 리스트
-            List<String> boardHashTagList = new ArrayList<>();
-            if (boardHashTagMap.get(boardId) != null) {
-                boardHashTagList = boardHashTagMap.get(boardId);
-            }
 
             // CommentCountMap 에 값이 없을 경우 댓글이 없음 = 0개.
             Long commentCountLong = commentCountMap.get(boardId);
@@ -146,57 +134,11 @@ public class BoardService {
                     .likeCnt(likeCount)
                     .commentCnt(commentCount)
                     .isLike(user != null && boardLikeMap.get(boardId + ":" + user.getId()) != null)
-                    .hashTags(boardHashTagList)
                     .build());
         }
         return boardResponseDtoList;
     }
 
-    private HashMap<Long, List<String>> getBoardHashTagMap(List<Board> boardList) {
-        QBoardHashTag qBoardHashTag = QBoardHashTag.boardHashTag;
-
-        List<Tuple> boardHashTagListTuple = queryFactory
-                .select(qBoardHashTag.board.boardId, qBoardHashTag.hashTagName)
-                .from(qBoardHashTag)
-                .where(qBoardHashTag.board.in(boardList))
-                .fetch();
-
-        HashMap<Long, List<String>> boardHashTagMap = new HashMap<>();
-
-        // 튜플을 돌면서 List<String> 값 수집.
-        // 출력은 항상 boardId 오름차순. boardId가 달라지는 시점에 List를 Map에 넣고 초기화시키면 됨.
-        // boardId를 저장할 변수를 for문 외부에 만들고 이 값과 비교하면서 달라지면 Map에 삽입. 같을경우 List에 삽입.
-        // 이론상 완벽해 ㄱㄱ
-
-        Long recentBoardId = 0L;
-        if (boardHashTagListTuple.size() > 0) {
-            recentBoardId = boardHashTagListTuple.get(0).get(0, Long.class);
-        }
-
-        List<String> hashTagList = new ArrayList<>();
-        for(int i = 0; i < boardHashTagListTuple.size(); i++){
-            Long boardId = boardHashTagListTuple.get(i).get(0, Long.class);
-
-            if (recentBoardId.longValue() != boardId.longValue()) {
-                // 최근 boardId와 일치하지 않을 경우 맵에 저장 후 clear.
-                List<String> copyList = new ArrayList<>(hashTagList);
-                boardHashTagMap.put(recentBoardId, copyList);
-                recentBoardId = boardId;
-                hashTagList.clear();
-            }
-
-            hashTagList.add(boardHashTagListTuple.get(i).get(1, String.class));
-
-            if(i == boardHashTagListTuple.size() - 1){
-                // 마지막 리스트일 경우 한 번 더 추가.
-                List<String> copyList = new ArrayList<>(hashTagList);
-                boardHashTagMap.put(boardId, copyList);
-                hashTagList.clear();
-            }
-        }
-
-        return boardHashTagMap;
-    }
 
     private HashMap<Long, Long> getCommentCountMap(List<Board> boardList) {
         QComment qComment = QComment.comment;
@@ -293,19 +235,15 @@ public class BoardService {
             throw new IllegalArgumentException(CONTENT_IS_EMPTY);
         }
 
-        // 2. 게시글에 해당하는 해시태그들 List 형식에 할당
-        List<String> boardRequestHashTagList = boardUploadRequestDto.getHashTags();
-        // 3. 입력된 해시태그가 5개 넘는지 체크
-        HashTagIsMaxFiveCheck(boardRequestHashTagList);
-        // 4. Request로 넘어온 카테고리 네임 DB에서 조회
+        // 2. Request로 넘어온 카테고리 네임 DB에서 조회
         BoardCategory boardCategory = getSafeBoardCategory(categoryName);
-        // 5. multipartFile로 넘어온 이미지 데이터 null 체크 => null이 아니면 S3 버킷에 저장
+        // 3. multipartFile로 넘어온 이미지 데이터 null 체크 => null이 아니면 S3 버킷에 저장
         String imageUrl = "";
         if (!multipartFile.isEmpty()) {
             imageUrl = s3Uploader.upload(multipartFile, S3dirName);
         }
 
-        // 6. 게시글 데이터 DB에 저장
+        // 4. 게시글 데이터 DB에 저장
         Board board = Board.builder()
                 .title(boardTitle)                                    // 제목
                 .content(boardContent)                                // 내용
@@ -316,27 +254,15 @@ public class BoardService {
                 .build();
         boardRepository.save(board);
 
-        // 7. Request로 넘어온 해시태그가 null이 아니면 해시태그 데이터 저장
-        if (boardRequestHashTagList != null) {
-            for (String hashTag : boardRequestHashTagList) {
-                BoardHashTag boardHashTag = BoardHashTag.builder()
-                        .hashTagName(hashTag)
-                        .board(board)
-                        .build();
 
-                board.getBoardHashTagList().add(boardHashTag);
-            }
-            boardHashTagRepository.saveAll(board.getBoardHashTagList());
-        }
-
-        // 8. 작성한 게시글에 맞는 이미지 저장
+        // 5. 작성한 게시글에 맞는 이미지 저장
         BoardImage boardImage = BoardImage.builder()
                 .board(board)
                 .imageUrl(imageUrl)
                 .build();
         boardImageRepository.save(boardImage);
 
-        // 9. 저장한 데이터 기반으로 Response(게시글번호, 제목, 내용, 카테고리, 이미지URL, 생성날짜, 해시태그 리스트)
+        // 6. 저장한 데이터 기반으로 Response(게시글번호, 제목, 내용, 카테고리, 이미지URL, 생성날짜)
         return BoardUploadResponseDto.builder()
                 .boardId(board.getBoardId())                                            // 게시글아이디
                 .title(board.getTitle())                                                // 제목
@@ -344,9 +270,6 @@ public class BoardService {
                 .category(board.getBoardCategory().getCategoryName())                   // 카테고리
                 .thumbNail(board.getThumbNail())                                        // 이미지URL
                 .createdAt(board.getCreatedAt() == null ? null : board.getCreatedAt())  // 게시글 생성 날짜
-                .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
-                        e -> e.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
-                )                                                                       // 게시글 해시태그 리스트
                 .build();
     }
     //endregion
@@ -402,9 +325,6 @@ public class BoardService {
                 .isLike(isLike)                                         // 로그인한 유저 게시글 좋아요 여부
                 .commentList(commentList)                               // 댓글 리스트
                 .commentCnt(commentList.size())                         // 댓글 갯수
-                .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
-                        h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
-                )                                                       // 게시글 해시태그 리스트
                 .build();
     }
 
@@ -425,25 +345,8 @@ public class BoardService {
         Board board = getSafeBoard(boardId);
         // 2. 게시글 수정 권한 체크
         checkPermissionToBoard(userDetails, board);
-        // 3. 수정할 해시태그 Request
-        List<String> inputHashTagStrList = boardUpdateRequestDto.getHashTags();
-        // 4. 입력된 해시태그가 5개 넘는지 체크
-        HashTagIsMaxFiveCheck(inputHashTagStrList);
 
-        // 5. 개시글의 기존 해시태그 리스트 삭제 후 새로운 해시태그 저장
-        boardHashTagRepository.deleteAllByIdInQuery(board);
-        List<BoardHashTag> boardHashTagList = new ArrayList<>();
-
-        for (String tempStr : inputHashTagStrList) {
-            BoardHashTag boardHashTag = BoardHashTag.builder()
-                    .hashTagName(tempStr)
-                    .board(board)
-                    .build();
-            boardHashTagList.add(boardHashTag);
-        }
-        boardHashTagRepository.saveAll(boardHashTagList);
-
-        // 6. multipartFile로 넘어온 이미지 파일 저장
+        // 3. multipartFile로 넘어온 이미지 파일 저장
         // - 기존에 S3에 저장되어 있는 이미지 삭제 후
         String imageUrl = "";
         if (!multipartFile.isEmpty()) {
@@ -458,7 +361,7 @@ public class BoardService {
         // 수정내역 통계에 저장(수정 내용은 보관되지 않음)
         statService.statBoardModify(board);
 
-        // 7. 게시글 저장 및 Response 전송
+        // 4. 게시글 저장 및 Response 전송
         boardRepository.save(board);
         return BoardUpdateResponseDto.builder()
                 .result("게시글 수정 완료")
@@ -572,13 +475,6 @@ public class BoardService {
             throw new NullPointerException(SEARCH_IS_EMPTY);
         }
 
-//        RecentSearch recentSearch = RecentSearch.builder()
-//                .viewerIp(StatisticsUtils.getClientIp())
-//                .query(q)
-//                .type(QueryTypeEnum.BOARD)
-//                .build();
-//        recentSearchRepository.save(recentSearch);
-
         // 2. 제목에 검색어가 포함되어 있는 게시글 리스트 조회
         int page = 0;
         int size = 1000;
@@ -601,9 +497,6 @@ public class BoardService {
                             .views(board.getViews())
                             .likeCnt(board.getLikes().size())
                             .commentCnt(commentService.getCommentList(board).size())
-                            .hashTags(board.getBoardHashTagList().size() == 0 ? null : board.getBoardHashTagList().stream().map(
-                                    h -> h.getHashTagName()).collect(Collectors.toCollection(ArrayList::new))
-                            )
                             .build()
             );
         }
@@ -824,13 +717,6 @@ public class BoardService {
     private void checkPermissionToBoard(UserDetailsImpl userDetails, Board board) {
         if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
             throw new IllegalArgumentException(NOT_MY_BOARD);
-        }
-    }
-
-
-    private void HashTagIsMaxFiveCheck(List<String> inputHashTagStrList) {
-        if (inputHashTagStrList != null && inputHashTagStrList.size() > 5) {
-            throw new IllegalArgumentException(HASHTAG_MAX_FIVE);
         }
     }
     //endregion
