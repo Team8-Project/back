@@ -60,4 +60,7 @@ public final class ExceptionMessages {
     // Alarm
     public static final String NOT_EXIST_ALARM = "유효하지 않은 알람입니다.";
     public static final String NOT_YOUR_ALARM = "당신의 알람이 아닙니다.";
+
+    // OAuth2 Login
+    public static final String NOT_VALID_CODE = "유효하지 않거나 잘못된 코드입니다.";
 }

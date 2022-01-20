@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.teamproj.backend.exception.ExceptionMessages.*;
 /*
     NAVER SOCIAL LOGIN SERVICE
     공식 문서 : https://developers.naver.com/docs/login/devguide/devguide.md
@@ -45,7 +46,12 @@ public class NaverUserService {
 
     public ResponseEntity<ResponseDto<NaverUserResponseDto>> naverLogin(String code, String state) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
-        String accessToken = getAccessToken(code, state);
+        String accessToken;
+        try{
+            accessToken = getAccessToken(code, state);
+        }catch(NullPointerException e){
+            throw new NullPointerException(NOT_VALID_CODE);
+        }
 
         // 2. "액세스 토큰"으로 "네이버 사용자 정보" 가져오기
         NaverUserInfoDto snsUserInfoDto = getNaverUserInfo(accessToken);
