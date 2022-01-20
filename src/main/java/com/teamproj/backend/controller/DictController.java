@@ -24,6 +24,13 @@ public class DictController {
     private final DictService dictService;
     private final DictHistoryService dictHistoryService;
 
+    /**
+     * 사전 목록 조회
+     * @param token Authorization header token
+     * @param page page : 0부터 시작함.
+     * @param size size
+     * @return DictResponseDto List
+     */
     @GetMapping("/api/dict")
     public ResponseDto<List<DictResponseDto>> getDictList(@RequestHeader(value = "Authorization", required = false) String token,
                                                           @RequestParam int page,

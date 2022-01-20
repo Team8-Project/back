@@ -1,5 +1,6 @@
 package com.teamproj.backend.util;
 
+import com.teamproj.backend.Repository.ViewersRepository;
 import com.teamproj.backend.Repository.board.BoardTodayLikeRepository;
 import com.teamproj.backend.Repository.board.BoardViewersRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
@@ -28,6 +29,7 @@ public class Scheduler {
     private final BoardViewersRepository boardViewersRepository;
     private final DictViewersRepository dictViewersRepository;
     private final BoardTodayLikeRepository boardTodayLikeRepository;
+    private final ViewersRepository viewersRepository;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -49,6 +51,7 @@ public class Scheduler {
         boardViewersRepository.deleteAll();
         redisService.setBestDict(BEST_DICT_KEY, dictService.getSafeBestDict());
         dictViewersRepository.deleteAll();
+        viewersRepository.deleteAll();
     }
 
     @Scheduled(cron = "0 0 0 * * 0")

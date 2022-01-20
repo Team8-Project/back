@@ -1,6 +1,7 @@
 package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -21,6 +22,7 @@ import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.question.*;
 import com.teamproj.backend.model.image.Image;
 import com.teamproj.backend.model.image.ImageTypeEnum;
+import com.teamproj.backend.model.viewers.QViewers;
 import com.teamproj.backend.model.viewers.ViewTypeEnum;
 import com.teamproj.backend.model.viewers.Viewers;
 import com.teamproj.backend.security.UserDetailsImpl;
@@ -73,7 +75,9 @@ public class DictQuestionService {
         // 2. 받아온 회원 정보로 User 정보 받아오기
         User user = getSafeUserByUserDetails(userDetails);
         // 3. 카테고리와 enabled(삭제 안된) 데이터를 페이지네이션 조건에 맞게 리스트형식으로 가져오기
-        return getQuestionProc(user, true, page, size);
+        List<Tuple> tupleList = getQuestionProc(user, true, page, size);
+        // 4. 리스트를 알맞은 DTO 형식으로 변환하여 return.
+        return getDictQuestionResponseDtoList(tupleList);
     }
 
     private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
@@ -83,38 +87,79 @@ public class DictQuestionService {
         return jwtAuthenticateProcessor.getUser(userDetails);
     }
 
-    private List<DictQuestionResponseDto> getQuestionProc(User user, boolean enabled, int page, int size) {
+    private List<Tuple> getQuestionProc(User user, boolean enabled, int page, int size) {
         QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
+        QDictQuestionComment qDictQuestionComment = QDictQuestionComment.dictQuestionComment;
+        QDictCuriousToo qDictCuriousToo = QDictCuriousToo.dictCuriousToo;
+        QQuestionSelect qQuestionSelect = QQuestionSelect.questionSelect;
+
+        /*
+            튜블 인덱스 열람
+            ***** dictQuestion *****
+            0 : 질문번호 - Long questionId
+            1 : 제목 - String questionName
+            2 : 이미지 - String thumbNail
+            3 : 내용 - String content
+            8 : 작성일 - LocalDateTime createdAt
+            9 : 조회수 - Integer views
+            ***** user *****
+            4 : 작성자번호 - Long userId
+            5 : 작성자 계정명 - String username
+            6 : 작성자 프로필사진 - String userProfileImage
+            7 : 작성자 닉네임 - String userNickname
+            ***** dictCuriousToo *****
+            10 : 나도궁금해요 개수 - Integer dictCuriousTooCount
+            12 : 나도궁금해요 여부 - Long isDictCuriousToo // 0일 경우 false, 0 이상일 경우 true
+            ***** comment *****
+            11 : 댓글 개수 - Long commentSize
+            ***** questionSelect *****
+            13 : 채택된 댓글 - Long selectedCommentId
+         */
         int offset = page * size;
-        List<Tuple> tupleList = queryFactory
-                .select(qDictQuestion.questionId, qDictQuestion.questionName, qDictQuestion.thumbNail, qDictQuestion.content,
-                        qDictQuestion.user.id, qDictQuestion.user.username, qDictQuestion.user.profileImage, qDictQuestion.user.nickname,
-                        qDictQuestion.createdAt, qDictQuestion.views, qDictQuestion.dictCuriousTooList.size())
+        return queryFactory
+                .select(qDictQuestion.questionId,
+                        qDictQuestion.questionName,
+                        qDictQuestion.thumbNail,
+                        qDictQuestion.content,
+                        qDictQuestion.user.id,
+                        qDictQuestion.user.username,
+                        qDictQuestion.user.profileImage,
+                        qDictQuestion.user.nickname,
+                        qDictQuestion.createdAt,
+                        qDictQuestion.views,
+                        qDictQuestion.dictCuriousTooList.size(),
+                        queryFactory
+                                .select(qDictQuestionComment.count())
+                                .from(qDictQuestionComment)
+                                .join(qDictQuestionComment.dictQuestion, qDictQuestion)
+                                .where(qDictQuestionComment.enabled.eq(true)),
+                        queryFactory
+                                .select(qDictCuriousToo.count())
+                                .from(qDictCuriousToo)
+                                .join(qDictCuriousToo.dictQuestion, qDictQuestion)
+                                .where(eqUser(user)),
+                        queryFactory
+                                .select(qQuestionSelect.questionComment.questionCommentId)
+                                .from(qQuestionSelect)
+                                .where(qQuestionSelect.dictQuestion.eq(qDictQuestion))
+                )
                 .from(qDictQuestion)
                 .where(qDictQuestion.enabled.eq(enabled))
                 .orderBy(qDictQuestion.questionId.desc())
                 .offset(offset)
                 .limit(size)
                 .fetch();
-
-        return getDictQuestionResponseDtoList(user, tupleList);
     }
 
-    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(User user, List<Tuple> tupleList) {
-        List<Long> questionIdList = new ArrayList<>();
-        for (Tuple tuple : tupleList) {
-            questionIdList.add(tuple.get(0, Long.class));
-        }
-        // 댓글 개수 맵
-        HashMap<Long, Long> commentCountMap = getDictQuestionCommentCountMapByIdList(questionIdList);
-        // 나도 궁금해요 맵
-        HashMap<String, Boolean> curiousTooMap = getCuriousTooMap(questionIdList);
-        // 채택 여부 맵
-        HashMap<Long, Long> completeMap = getIsComplete(questionIdList);
-        // 5. DB 에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
-        List<DictQuestionResponseDto> dictQuestionResponseDtoList = new ArrayList<>();
+    private BooleanExpression eqUser(User user) {
+        return user == null ?
+                QDictCuriousToo.dictCuriousToo.curiousTooId.eq(0L) :
+                QDictCuriousToo.dictCuriousToo.user.eq(user);
+    }
 
-        Long userId = user == null ? 0L : user.getId();
+    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(List<Tuple> tupleList) {
+        // DB 에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
+        List<DictQuestionResponseDto> dictQuestionResponseDtoList = new ArrayList<>();
         for (Tuple tuple : tupleList) {
             Long questionId = tuple.get(0, Long.class);
             String title = tuple.get(1, String.class);
@@ -127,10 +172,11 @@ public class DictQuestionService {
             LocalDateTime createdAt = tuple.get(8, LocalDateTime.class);
             Integer views = tuple.get(9, Integer.class);
             Integer curiousTooCnt = tuple.get(10, Integer.class);
-            Long commentCnt = commentCountMap.get(questionId);
-
-            Boolean isCuriousToo = curiousTooMap.get(questionId + ":" + userId);
-            Long isComplete = completeMap.get(questionId);
+            Long commentCnt = tuple.get(11, Long.class);
+            Long isCuriousTooLong = tuple.get(12, Long.class);
+            Boolean isCuriousToo = isCuriousTooLong != null && isCuriousTooLong > 0;
+            Long isCompleteLong = tuple.get(13, Long.class);
+            Boolean isComplete = isCompleteLong != null && isCompleteLong > 0;
 
             dictQuestionResponseDtoList.add(DictQuestionResponseDto.builder()
                     .questionId(questionId)
@@ -144,28 +190,13 @@ public class DictQuestionService {
                     .views(views == null ? 0 : views)
                     .curiousTooCnt(curiousTooCnt == null ? 0 : curiousTooCnt)
                     .commentCnt(commentCnt == null ? 0 : commentCnt.intValue())
-                    .isCuriousToo(isCuriousToo != null)
-                    .isComplete(isComplete != null)
+                    .isCuriousToo(isCuriousToo)
+                    .isComplete(isComplete)
                     .build()
             );
         }
 
         return dictQuestionResponseDtoList;
-    }
-
-    // 댓글 개수 받아오기 기능(questionId로 검색)
-    private HashMap<Long, Long> getDictQuestionCommentCountMapByIdList(List<Long> questionIdList) {
-        QDictQuestionComment qComment = QDictQuestionComment.dictQuestionComment;
-        NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
-        List<Tuple> commentCountListTuple = queryFactory
-                .select(qComment.dictQuestion.questionId, qComment.count().as(count))
-                .from(qComment)
-                .where(qComment.dictQuestion.questionId.in(questionIdList)
-                        .and(qComment.enabled.eq(true)))
-                .groupBy(qComment.dictQuestion.questionId)
-                .fetch();
-
-        return MemegleServiceStaticMethods.getLongLongMap(commentCountListTuple);
     }
 
     // 채택 여부 받아오기 기능
@@ -289,69 +320,119 @@ public class DictQuestionService {
 
     //region 질문 상세 조회
     public DictQuestionDetailResponseDto getQuestionDetail(Long questionId, String token) {
-
         // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        // 2. 질문 조회
-        DictQuestion dictQuestion = getSafeQuestionById(questionId);
-        // 3. 질문 좋아요 여부 조회(로그인한 유저만)
+        // 2. 질문 좋아요 여부 조회(로그인한 유저만)
         User user = getSafeUserByUserDetails(userDetails);
+        // 3. 질문 조회
+        Tuple dictQuestionTuple = getSafeQuestionTupleById(questionId, user);
+        // 4. 알맞은 DTO 형식으로 변환하여 return.
+        return dictQuestionTupleToDictQuestionDetailResponseDto(questionId, dictQuestionTuple, user);
+    }
+
+    private DictQuestionDetailResponseDto dictQuestionTupleToDictQuestionDetailResponseDto(Long questionId,
+                                                                                           Tuple dictQuestionTuple,
+                                                                                           User user) {
+        String username = dictQuestionTuple.get(0, String.class);
+        String writer = dictQuestionTuple.get(1, String.class);
+        String profileImageUrl = dictQuestionTuple.get(2, String.class);
+        String title = dictQuestionTuple.get(3, String.class);
+        String content = dictQuestionTuple.get(4, String.class);
+        String thumbNail = dictQuestionTuple.get(5, String.class);
+        LocalDateTime createdAt = dictQuestionTuple.get(6, LocalDateTime.class);
+        Integer viewsInteger = dictQuestionTuple.get(7, Integer.class);
+        int views = viewsInteger == null ? 0 : viewsInteger;
+        Integer curiousTooCntInteger = dictQuestionTuple.get(8, Integer.class);
+        int curiousTooCnt = curiousTooCntInteger == null ? 0 : curiousTooCntInteger;
+        Long isCuriousTooLong = dictQuestionTuple.get(9, Long.class);
+        Boolean isCuriousToo = isCuriousTooLong != null && isCuriousTooLong > 0;
+        Long selectedComment = dictQuestionTuple.get(10, Long.class);
+        selectedComment = selectedComment == null ? 0L : selectedComment;
+        Long viewerIpLong = dictQuestionTuple.get(11, Long.class);
+        boolean isView = viewerIpLong != null && viewerIpLong > 0;
 
         // 4. 게시글 조회수 관련 처리 로직
         // - 조회하는 유저 IP를 통해 조회수 새로고침과 같은 중복 처리 방지
-        String userIp = StatisticsUtils.getClientIp();
-        if (isView(dictQuestion, userIp)) {
+        if (!isView) {
             viewersRepository.save(Viewers.builder()
                     .viewTypeEnum(ViewTypeEnum.DICT_QUESTION)
                     .targetId(questionId)
-                    .viewerIp(userIp)
+                    .viewerIp(StatisticsUtils.getClientIp())
                     .build());
             dictQuestionRepository.updateView(questionId);
         }
 
-        // 채택 여부
-        QuestionSelect questionSelect = dictQuestion.getQuestionSelect();
-        Long selectedCommentId = questionSelect == null ? 0L : questionSelect.getQuestionComment().getQuestionCommentId();
-        // 좋아요 여부
-        boolean isCuriousToo = getSafeCurious(user, dictQuestion);
-
-        User writer = dictQuestion.getUser();
-        List<DictQuestionCommentResponseDto> commentList = commentService.getCommentList(dictQuestion, user, selectedCommentId);
+        List<DictQuestionCommentResponseDto> commentList = commentService.getCommentList(questionId, user, selectedComment);
         return DictQuestionDetailResponseDto.builder()
                 .questionId(questionId)
-                .username(writer.getUsername())
-                .writer(writer.getNickname())
-                .profileImageUrl(writer.getProfileImage())
-                .title(dictQuestion.getQuestionName())
-                .content(dictQuestion.getContent())
-                .thumbNail(dictQuestion.getThumbNail())
-                .createdAt(dictQuestion.getCreatedAt())
-                .views(dictQuestion.getViews())
-                .curiousTooCnt(dictQuestion.getDictCuriousTooList().size())
+                .username(username)
+                .writer(writer)
+                .profileImageUrl(profileImageUrl)
+                .title(title)
+                .content(content)
+                .thumbNail(thumbNail)
+                .createdAt(createdAt)
+                .views(views)
+                .curiousTooCnt(curiousTooCnt)
                 .isCuriousToo(isCuriousToo)
                 .commentList(commentList)
                 .commentCnt(commentList.size())
-                .selectedComment(selectedCommentId)
+                .selectedComment(selectedComment)
                 .build();
     }
 
-    private boolean getSafeCurious(User user, DictQuestion dictQuestion) {
-        if (user == null) {
-            return false;
+    private Tuple getSafeQuestionTupleById(Long questionId, User user) {
+        QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
+        QDictCuriousToo qDictCuriousToo = QDictCuriousToo.dictCuriousToo;
+        QViewers qViewers = QViewers.viewers;
+        QQuestionSelect qQuestionSelect = QQuestionSelect.questionSelect;
+
+        String userIp = StatisticsUtils.getClientIp();
+
+        Tuple result = queryFactory
+                .select(qDictQuestion.user.username,
+                        qDictQuestion.user.nickname,
+                        qDictQuestion.user.profileImage,
+                        qDictQuestion.questionName,
+                        qDictQuestion.content,
+                        qDictQuestion.thumbNail,
+                        qDictQuestion.createdAt,
+                        qDictQuestion.views,
+                        qDictQuestion.dictCuriousTooList.size(),
+                        queryFactory
+                                .select(qDictCuriousToo.count())
+                                .from(qDictCuriousToo)
+                                .where(qDictCuriousToo.dictQuestion.eq(qDictQuestion),
+                                        isCuriousToo(user)),
+                        queryFactory
+                                .select(qQuestionSelect.questionComment.questionCommentId.max())
+                                .from(qQuestionSelect)
+                                .where(qQuestionSelect.dictQuestion.eq(qDictQuestion)),
+                        queryFactory
+                                .select(qViewers.count())
+                                .from(qViewers)
+                                .where(qViewers.targetId.eq(questionId), qViewers.viewerIp.eq(userIp), qViewers.viewTypeEnum.eq(ViewTypeEnum.DICT_QUESTION))
+                )
+                .from(qDictQuestion)
+                .where(qDictQuestion.questionId.eq(questionId),
+                        qDictQuestion.enabled.eq(true))
+                .fetchFirst();
+
+        if(result == null){
+            throw new NullPointerException(NOT_EXIST_QUESTION);
         }
-        return dictCuriousTooRepository.existsByUserAndDictQuestion(user, dictQuestion);
+        return result;
+    }
+
+    private BooleanExpression isCuriousToo(User user){
+        return user == null ?
+                QDictCuriousToo.dictCuriousToo.curiousTooId.eq(0L) :
+                QDictCuriousToo.dictCuriousToo.user.eq(user);
     }
 
     private DictQuestion getSafeQuestionById(Long questionId) {
         Optional<DictQuestion> dictQuestion = dictQuestionRepository.findById(questionId);
         return dictQuestion.orElseThrow(() -> new NullPointerException(NOT_EXIST_QUESTION));
-    }
-
-    private boolean isView(DictQuestion dictQuestion, String ip) {
-        ViewTypeEnum type = ViewTypeEnum.DICT_QUESTION;
-        Long dictId = dictQuestion.getQuestionId();
-        Optional<Viewers> viewers = viewersRepository.findByViewerIpAndViewTypeEnumAndTargetId(ip, type, dictId);
-        return !viewers.isPresent();
     }
     //endregion
 
@@ -538,6 +619,7 @@ public class DictQuestionService {
     //endregion
 
     //region 질문 채택
+    @Transactional
     public String selectAnswer(UserDetailsImpl userDetails, Long commentId) {
         ValidChecker.loginCheck(userDetails);
         DictQuestionComment comment = getSafeDictQuestionComment(commentId);
@@ -552,11 +634,12 @@ public class DictQuestionService {
         // 내가 작성한 댓글은 채택할 수 없음
         checkSelectMine(userDetails, comment);
 
-
-        questionSelectRepository.save(QuestionSelect.builder()
+        QuestionSelect questionSelect = QuestionSelect.builder()
                 .dictQuestion(dictQuestion)
                 .questionComment(comment)
-                .build());
+                .build();
+
+        dictQuestion.questionSelect(questionSelect);
 
         // 질문 채택 후 질문 작성자에게 알림
         alarmService.sendAlarm(SELECT_USER, dictQuestion.getQuestionId(), comment.getUser());
