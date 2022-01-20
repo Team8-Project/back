@@ -447,7 +447,11 @@ public class DictService {
 
         // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않고 사용하기로 함
         return queryFactory
-                .select(qDict.dictId, qDict.dictName, qDict.summary, qDict.firstAuthor.nickname, qDict.createdAt,
+                .select(qDict.dictId,
+                        qDict.dictName,
+                        qDict.summary,
+                        qDict.firstAuthor.nickname,
+                        qDict.createdAt,
                         qDict.dictLikeList.size(),
                         queryFactory
                                 .select(qDictLike.count())
@@ -589,7 +593,9 @@ public class DictService {
                         queryFactory
                                 .select(qViewers.count())
                                 .from(qViewers)
-                                .where(qViewers.targetId.eq(dictId), qViewers.viewerIp.eq(userIp), qViewers.viewTypeEnum.eq(ViewTypeEnum.DICT))
+                                .where(qViewers.targetId.eq(dictId),
+                                        qViewers.viewerIp.eq(userIp),
+                                        qViewers.viewTypeEnum.eq(ViewTypeEnum.DICT))
                 )
                 .from(qDict)
                 .where(qDict.dictId.eq(dictId))
