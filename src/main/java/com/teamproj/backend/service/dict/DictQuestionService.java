@@ -89,8 +89,7 @@ public class DictQuestionService {
         List<Tuple> tupleList = queryFactory
                 .select(qDictQuestion.questionId, qDictQuestion.questionName, qDictQuestion.thumbNail, qDictQuestion.content,
                         qDictQuestion.user.id, qDictQuestion.user.username, qDictQuestion.user.profileImage, qDictQuestion.user.nickname,
-                        qDictQuestion.createdAt, qDictQuestion.views, qDictQuestion.dictCuriousTooList.size(),
-                        qDictQuestion.questionCommentList.size())
+                        qDictQuestion.createdAt, qDictQuestion.views, qDictQuestion.dictCuriousTooList.size())
                 .from(qDictQuestion)
                 .where(qDictQuestion.enabled.eq(enabled))
                 .orderBy(qDictQuestion.questionId.desc())
@@ -106,6 +105,8 @@ public class DictQuestionService {
         for (Tuple tuple : tupleList) {
             questionIdList.add(tuple.get(0, Long.class));
         }
+        // 댓글 개수 맵
+        HashMap<Long, Long> commentCountMap = getDictQuestionCommentCountMapByIdList(questionIdList);
         // 나도 궁금해요 맵
         HashMap<String, Boolean> curiousTooMap = getCuriousTooMap(questionIdList);
         // 채택 여부 맵
@@ -126,7 +127,7 @@ public class DictQuestionService {
             LocalDateTime createdAt = tuple.get(8, LocalDateTime.class);
             Integer views = tuple.get(9, Integer.class);
             Integer curiousTooCnt = tuple.get(10, Integer.class);
-            Integer commentCnt = tuple.get(11, Integer.class);
+            Long commentCnt = commentCountMap.get(questionId);
 
             Boolean isCuriousToo = curiousTooMap.get(questionId + ":" + userId);
             Long isComplete = completeMap.get(questionId);
@@ -142,7 +143,7 @@ public class DictQuestionService {
                     .createdAt(createdAt)
                     .views(views == null ? 0 : views)
                     .curiousTooCnt(curiousTooCnt == null ? 0 : curiousTooCnt)
-                    .commentCnt(commentCnt == null ? 0 : commentCnt)
+                    .commentCnt(commentCnt == null ? 0 : commentCnt.intValue())
                     .isCuriousToo(isCuriousToo != null)
                     .isComplete(isComplete != null)
                     .build()
@@ -150,6 +151,21 @@ public class DictQuestionService {
         }
 
         return dictQuestionResponseDtoList;
+    }
+
+    // 댓글 개수 받아오기 기능(questionId로 검색)
+    private HashMap<Long, Long> getDictQuestionCommentCountMapByIdList(List<Long> questionIdList) {
+        QDictQuestionComment qComment = QDictQuestionComment.dictQuestionComment;
+        NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
+        List<Tuple> commentCountListTuple = queryFactory
+                .select(qComment.dictQuestion.questionId, qComment.count().as(count))
+                .from(qComment)
+                .where(qComment.dictQuestion.questionId.in(questionIdList)
+                        .and(qComment.enabled.eq(true)))
+                .groupBy(qComment.dictQuestion.questionId)
+                .fetch();
+
+        return MemegleServiceStaticMethods.getLongLongMap(commentCountListTuple);
     }
 
     // 채택 여부 받아오기 기능
