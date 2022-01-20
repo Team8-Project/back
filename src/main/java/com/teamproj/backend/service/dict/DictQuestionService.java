@@ -131,13 +131,13 @@ public class DictQuestionService {
                         queryFactory
                                 .select(qDictQuestionComment.count())
                                 .from(qDictQuestionComment)
-                                .join(qDictQuestionComment.dictQuestion, qDictQuestion)
-                                .where(qDictQuestionComment.enabled.eq(true)),
+                                .where(qDictQuestionComment.dictQuestion.eq(qDictQuestion),
+                                        qDictQuestionComment.enabled.eq(true)),
                         queryFactory
                                 .select(qDictCuriousToo.count())
                                 .from(qDictCuriousToo)
-                                .join(qDictCuriousToo.dictQuestion, qDictQuestion)
-                                .where(eqUser(user)),
+                                .where(qDictCuriousToo.dictQuestion.eq(qDictQuestion),
+                                        eqUser(user)),
                         queryFactory
                                 .select(qQuestionSelect.questionComment.questionCommentId)
                                 .from(qQuestionSelect)
