@@ -11,5 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class KakaoUserResponseDto {
     private String token;
-    private String result;
+    private Long userId;
+    private String nickname;
+    private String profileImage;
 }
