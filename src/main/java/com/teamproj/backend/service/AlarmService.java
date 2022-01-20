@@ -9,7 +9,9 @@ import com.teamproj.backend.model.alarm.AlarmTypeEnum;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
+import io.micrometer.core.instrument.config.validate.Validated;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -125,10 +127,26 @@ public class AlarmService {
         // 알람 읽음 처리
         alarm.setChecked(true);
         // 읽음 처리 완료 메시지 Response
-        return "읾음 처리 완료";
+        return "읽음 처리 완료";
     }
     // endregion
 
+    // region 모든 알림 읽음으로 처리
+    @Transactional
+    public String readCheckAllAlarm(UserDetailsImpl userDetails) {
+        // 로그인 체크
+        ValidChecker.loginCheck(userDetails);
+        // 알람 아이디로 알람 정보 가져오기
+        User user = jwtAuthenticateProcessor.getUser(userDetails);
+        // 알람 읽음 처리
+        List<Alarm> alarmList = getSafeAlarmListByUserNotRead(user);
+        for(Alarm alarm : alarmList){
+            alarm.setChecked(true);
+        }
+        // 읽음 처리 완료 메시지 Response
+        return "읽음 처리 완료";
+    }
+    // endregion
 
     // Get Safe Entity
     // Alarm
@@ -139,6 +157,12 @@ public class AlarmService {
 
     // AlarmListByUser
     private List<Alarm> getSafeAlarmListByUser(User user) {
+        Optional<List<Alarm>> alarmList = alarmRepository.findAllByUserOrderByCreatedAtDesc(user);
+        return alarmList.orElseGet(ArrayList::new);
+    }
+
+    // AlarmListByUserNotRead
+    private List<Alarm> getSafeAlarmListByUserNotRead(User user) {
         Optional<List<Alarm>> alarmList = alarmRepository.findAllByUserAndCheckedOrderByCreatedAtDesc(user, false);
         return alarmList.orElseGet(ArrayList::new);
     }
