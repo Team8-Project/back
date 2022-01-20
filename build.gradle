@@ -82,6 +82,10 @@ dependencies {
     // Youtube Data Api v3
     // https://mvnrepository.com/artifact/com.google.apis/google-api-services-youtube
     implementation 'com.google.apis:google-api-services-youtube:v3-rev222-1.25.0'
+
+    // Sentry
+    implementation 'io.sentry:sentry-spring-boot-starter:5.5.3'
+    implementation 'io.sentry:sentry-logback:5.5.3'
 }
 
 jar{

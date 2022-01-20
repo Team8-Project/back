@@ -3,24 +3,20 @@
 //import com.teamproj.backend.Repository.UserRepository;
 //import com.teamproj.backend.Repository.dict.DictQuestionCommentRepository;
 //import com.teamproj.backend.Repository.dict.DictQuestionRepository;
-//import com.teamproj.backend.config.S3MockConfig;
 //import com.teamproj.backend.dto.comment.CommentDeleteResponseDto;
 //import com.teamproj.backend.dto.comment.CommentPostRequestDto;
 //import com.teamproj.backend.dto.comment.CommentPostResponseDto;
 //import com.teamproj.backend.dto.dict.question.comment.DictQuestionCommentResponseDto;
-//import com.teamproj.backend.exception.ExceptionMessages;
 //import com.teamproj.backend.model.User;
 //import com.teamproj.backend.model.dict.question.DictQuestion;
 //import com.teamproj.backend.model.dict.question.DictQuestionComment;
 //import com.teamproj.backend.security.UserDetailsImpl;
-//import io.findify.s3mock.S3Mock;
 //import org.junit.jupiter.api.*;
 //import org.junit.jupiter.api.extension.ExtendWith;
 //import org.mockito.Mock;
 //import org.mockito.junit.jupiter.MockitoExtension;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.context.annotation.Import;
 //import org.springframework.mock.web.MockHttpServletRequest;
 //import org.springframework.test.annotation.Rollback;
 //import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +26,11 @@
 //import java.util.List;
 //
 //import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.junit.jupiter.api.Assertions.assertThrows;
 //
 //
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
-//@Import(S3MockConfig.class)
 //
 //@Transactional
 //@Rollback
@@ -57,9 +51,6 @@
 //
 //    @Mock
 //    private ServletRequestAttributes attributes;
-//
-//    @Autowired
-//    S3Mock s3Mock;
 //
 //    UserDetailsImpl userDetails;
 //
@@ -119,28 +110,13 @@
 //
 //            // when
 //            List<DictQuestionCommentResponseDto> commentResponseDtoList = dictQuestionCommentService.getCommentList(
-//                    dictQuestion, user, 1L
+//                    dictQuestion.getQuestionId(), user, 1L
 //            );
 //
 //            // then
 //            assertEquals(commentResponseDtoList.get(0).getCommentId(), dictQuestionComment.getQuestionCommentId());
 //            assertEquals(commentResponseDtoList.get(0).getCommentContent(), dictQuestionComment.getContent());
 //            assertEquals(commentResponseDtoList.get(0).getCommentWriter(), dictQuestionComment.getUser().getNickname());
-//        }
-//
-//        @Test
-//        @DisplayName("실패")
-//        void getCommentList_fail() {
-//            // given
-//            DictQuestion dictQuestion = null;
-//
-//            // when
-//            Exception exception = assertThrows(NullPointerException.class, () -> {
-//                dictQuestionCommentService.getCommentList(dictQuestion, user, 1L);
-//            });
-//
-//            // then
-//            assertEquals(ExceptionMessages.NOT_EXIST_BOARD, exception.getMessage());
 //        }
 //    }
 //
@@ -177,12 +153,10 @@
 //                    .content("내용")
 //                    .build();
 //
-//
 //            // when
 //            CommentPostResponseDto commentPostResponseDto = dictQuestionCommentService.postComment(
 //                    userDetails, dictQuestion.getQuestionId(), commentPostRequestDto
 //            );
-//
 //
 //            // then
 //            assertEquals(commentPostRequestDto.getContent(), commentPostResponseDto.getCommentContent());
@@ -238,7 +212,36 @@
 //
 //        @Test
 //        @DisplayName("댓글 좋아요")
-//        void likeComment_success() {
+//        void likeComment_success1() {
+//            // given
+//            DictQuestion dictQuestion = DictQuestion.builder()
+//                    .questionName(dictQuestionName)
+//                    .content(dictQuestionContent)
+//                    .enabled(true)
+//                    .user(user)
+//                    .thumbNail("thumbNail")
+//                    .build();
+//            dictQuestionRepository.save(dictQuestion);
+//
+//            DictQuestionComment dictQuestionComment = DictQuestionComment.builder()
+//                    .dictQuestion(dictQuestion)
+//                    .user(user)
+//                    .content("내용")
+//                    .enabled(true)
+//                    .build();
+//            dictQuestionCommentRepository.save(dictQuestionComment);
+//
+//            // when
+//            boolean result = dictQuestionCommentService.likeComment(userDetails, dictQuestionComment.getQuestionCommentId());
+//
+//            // then
+//            assertEquals(true, result);
+//        }
+//
+//
+//        @Test
+//        @DisplayName("댓글 좋아요 취소")
+//        void likeComment_success2() {
 //            // given
 //            DictQuestion dictQuestion = DictQuestion.builder()
 //                    .questionName(dictQuestionName)
@@ -258,9 +261,9 @@
 //            dictQuestionCommentRepository.save(dictQuestionComment);
 //
 //
+//
 //            // when
 //            boolean result = dictQuestionCommentService.likeComment(userDetails, dictQuestionComment.getQuestionCommentId());
-//
 //
 //            // then
 //            assertEquals(true, result);
