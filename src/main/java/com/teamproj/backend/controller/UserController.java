@@ -38,8 +38,13 @@ public class UserController {
     }
 
     @GetMapping("/api/user/kakao/callback")
-    public ResponseEntity<KakaoUserResponseDto> kakaoLogin(@RequestParam String code) throws JsonProcessingException {
-        return kakaoUserService.kakaoLogin(code);
+    public ResponseDto<KakaoUserResponseDto> kakaoLogin(@RequestParam String code) throws JsonProcessingException {
+
+        return ResponseDto.<KakaoUserResponseDto>builder()
+                .status(HttpStatus.OK.toString())
+                .message("카카오 소셜 로그인 요청")
+                .data(kakaoUserService.kakaoLogin(code))
+                .build();
     }
 
     @GetMapping("/api/user/naver/callback")

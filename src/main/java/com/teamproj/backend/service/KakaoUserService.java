@@ -36,7 +36,7 @@ public class KakaoUserService {
     private String clientId;
     private String accessToken;
 
-    public ResponseEntity<KakaoUserResponseDto> kakaoLogin(String code) throws JsonProcessingException {
+    public KakaoUserResponseDto kakaoLogin(String code) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getAccessToken(code);
 
@@ -54,14 +54,14 @@ public class KakaoUserService {
         HttpHeaders headers = new HttpHeaders();
         headers.set(AUTH_HEADER, TOKEN_TYPE + " " + jwt_token);
         KakaoUserResponseDto kakaoUserResponseDto = KakaoUserResponseDto.builder()
-                .result("로그인 성공")
                 .token(TOKEN_TYPE + " " + jwt_token)
+                .userId(kakaoUser.getId())
+                .nickname(kakaoUser.getNickname())
+                .profileImage(kakaoUser.getProfileImage())
                 .build();
         System.out.println("kakao user's token : " + TOKEN_TYPE + " " + jwt_token);
         System.out.println("LOGIN SUCCESS!");
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(kakaoUserResponseDto);
+        return kakaoUserResponseDto;
     }
 
     private String getAccessToken(
