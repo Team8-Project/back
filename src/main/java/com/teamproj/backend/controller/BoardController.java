@@ -1,11 +1,11 @@
 package com.teamproj.backend.controller;
 
 import com.teamproj.backend.dto.ResponseDto;
-import com.teamproj.backend.dto.board.*;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
 import com.teamproj.backend.dto.board.BoardMemeBest.BoardMemeBestResponseDto;
+import com.teamproj.backend.dto.board.BoardResponseDto;
 import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
