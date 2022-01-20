@@ -37,4 +37,13 @@ public class AlarmController {
                 .data(alarmService.readCheckAlarm(alarmId, userDetails))
                 .build();
     }
+
+    @GetMapping("/api/alarm/read")
+    public ResponseDto<String> readCheckAllAlarm(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseDto.<String>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(alarmService.readCheckAllAlarm(userDetails))
+                .build();
+    }
 }
