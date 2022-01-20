@@ -5,9 +5,11 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.teamproj.backend.Repository.ViewersRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
 import com.teamproj.backend.Repository.dict.DictViewersRepository;
+import com.teamproj.backend.Repository.dict.DictYoutubeUrlRepository;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.dto.dict.mymeme.DictMyMemeResponseDto;
 import com.teamproj.backend.dto.dict.question.search.DictQuestionSearchResponseDto;
@@ -16,6 +18,9 @@ import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.dto.youtube.DictRelatedYoutubeDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
+import com.teamproj.backend.model.viewers.QViewers;
+import com.teamproj.backend.model.viewers.ViewTypeEnum;
+import com.teamproj.backend.model.viewers.Viewers;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.service.YoutubeService;
@@ -44,7 +49,9 @@ public class DictService {
 
     private final DictRepository dictRepository;
     private final DictLikeRepository dictLikeRepository;
-    private final DictViewersRepository dictViewersRepository;
+    private final ViewersRepository viewersRepository;
+    private final DictYoutubeUrlRepository dictYoutubeUrlRepository;
+
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
     private final JPAQueryFactory queryFactory;
 
@@ -64,9 +71,9 @@ public class DictService {
         // 2. 받아온 회원 정보로 User 정보 받아오기 - 좋아요 했는지 여부 판단하기 위해 (select from user 시행 지점)
         User user = getSafeUserByUserDetails(userDetails);
         // 3. 사전 목록 가져오기 - 현재 페이지네이션이 잘못 되어있는데 프론트엔드 분들이 교정해서 쓰고 계셔서 수정 하지 않음.
-        List<Tuple> dictTupleList = getSafeDictTupleList(page, size);
+        List<Tuple> dictTupleList = getSafeDictTupleList(page, size, user);
         // 4. 사전 목록을 알맞은 반환 양식으로 변환하여 return.
-        return dictListToDictResponseDtoList(dictTupleList, user);
+        return dictListToDictResponseDtoList(dictTupleList);
     }
 
     /**
@@ -78,8 +85,8 @@ public class DictService {
     public List<DictMyMemeResponseDto> getMyMeme(UserDetailsImpl userDetails) {
         ValidChecker.loginCheck(userDetails);
         User user = getSafeUserByUserDetails(userDetails);
-
-        return getMyMemeList(user);
+        List<Tuple> tupleList = getMyMemeList(user);
+        return myMemeListToDictMyMemeResponseDtoList(tupleList);
     }
 
     /**
@@ -94,10 +101,8 @@ public class DictService {
                 .build();
     }
 
-    // 사전 이름 중복검사. 사용불가시 기존 표현 뭔지 나오도록.
-
     /**
-     * 사전 이름 중복검사
+     * 사전 이름 중복검사 new : 사용 불가시 기존의 표현은 뭔지 나오도록.
      *
      * @param dictName @RequestBody 정보값(사전 이름)
      * @return Dict to DictNameCheckResponseDto
@@ -148,9 +153,7 @@ public class DictService {
             return dictRepository.count();
         }
         // 2. 쿼리가 있을 경우 : 쿼리의 검색결과의 개수 출력
-//        String query = q + "*";
-//        return dictRepository.countByDictNameOrContentByFullText(query);
-        return dictRepository.count();
+        return dictRepository.countByDictNameContainingOrContentContaining(q, q);
     }
 
     /**
@@ -161,42 +164,13 @@ public class DictService {
      * @return DictDetailResponseDto
      */
     public DictDetailResponseDto getDictDetail(Long dictId, String token) {
+        // 1. 로그인한 사용자일 경우 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = getSafeUserByUserDetails(userDetails);
-        Dict dict = getSafeDict(dictId);
-
-        // 조회수 증가
-        // 1. 조회수 테이블 열람
-        // 2. 조회수 테이블에 내가 확인했다는 기록(IP로 판단)이 존재할 경우 조회수 상승하지 않음
-        // 3. 존재하지 않을 경우 조회수 상승하고 조회수 테이블에 사용자 정보 등록.
-        // 조회수 테이블은 매일 0시에 초기화 됨.
-        if (!isView(dict)) {
-            dictViewersRepository.save(DictViewers.builder()
-                    .viewerIp(StatisticsUtils.getClientIp())
-                    .dict(dict)
-                    .build());
-            dictRepository.updateView(dictId);
-        }
-
-        // 사용자 정보가 존재할 경우 좋아요 여부 감별 실시.
-        User firstWriter = dict.getFirstAuthor();
-        User recentWriter = dict.getRecentModifier();
-        List<DictRelatedYoutubeDto> dictRelatedYoutubeDtoList = getDictYoutubeUrlListToDictRelatedYoutubeDtoList(dict.getDictYoutubeUrlList());
-        return DictDetailResponseDto.builder()
-                .dictId(dict.getDictId())
-                .title(dict.getDictName())
-                .summary(dict.getSummary())
-                .meaning(dict.getContent())
-                .firstWriter(firstWriter.getNickname())
-                .firstWriterProfileImage(firstWriter.getProfileImage())
-                .recentWriter(recentWriter.getNickname())
-                .recentWriterProfileImage(recentWriter.getProfileImage())
-                .isLike(user != null && isDictLike(dict, user))
-                .likeCount(dict.getDictLikeList().size())
-                .createdAt(dict.getCreatedAt())
-                .modifiedAt(dict.getModifiedAt())
-                .relatedYoutube(dictRelatedYoutubeDtoList)
-                .build();
+        // 2. 사전 정보 받아오기
+        Tuple dictTuple = getSafeDictTuple(dictId, user);
+        // 3. 알맞은 DTO 형식으로 전환하여 반환.
+        return dictTupleToDictDetailResponseDto(dictId, dictTuple);
     }
 
     /**
@@ -371,24 +345,6 @@ public class DictService {
 
     // region 보조 기능
     // Utils
-    // 사전 상세보기 열람했는지 확인
-    private boolean isView(Dict dict) {
-        return dictViewersRepository.existsByViewerIpAndDict(StatisticsUtils.getClientIp(), dict);
-    }
-
-    // 사전 좋아요 표시했는지 확인
-    private boolean isDictLike(Dict dict, User user) {
-        // 1. 로그인하지 않았으면 무조건 false.
-        // 2. dictLikeList 가 비어있으면 무조건 false.
-        // 3. 사용자의 dictLike 목록에 해당 dict 가 포함되어있지 않으면 false.
-        // 4. 포함되어있을시 true.
-        for (DictLike dictLike : dict.getDictLikeList()) {
-            if (dictLike.getUser().getId().equals(user.getId())) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     // 사전 추천 검색어 출력
     public List<String> getRecommendSearch(int size) {
@@ -437,11 +393,7 @@ public class DictService {
 
     // qDictLike 와 user 를 비교하기 위한 BooleanExpression.
     private BooleanExpression eqUser(User user) {
-        QDictLike qDictLike = QDictLike.dictLike;
-        if (user == null) {
-            return null;
-        }
-        return qDictLike.user.eq(user);
+        return user == null ? QDictLike.dictLike.dictLikeId.eq(0L) : QDictLike.dictLike.user.eq(user);
     }
 
     /**
@@ -472,26 +424,14 @@ public class DictService {
     }
 
     // MyMemeList By User
-    private List<DictMyMemeResponseDto> getMyMemeList(User user) {
+    private List<Tuple> getMyMemeList(User user) {
         QDictLike qDictLike = QDictLike.dictLike;
-        List<Tuple> tupleList = queryFactory
+        return queryFactory
                 .select(qDictLike.dict.dictId, qDictLike.dict.dictName, qDictLike.dict.content, qDictLike.dict.summary)
                 .from(qDictLike)
                 .where(qDictLike.user.eq(user))
                 .orderBy(qDictLike.createdAt.desc())
                 .fetch();
-
-        List<DictMyMemeResponseDto> dictMyMemeResponseDtoList = new ArrayList<>();
-        for (Tuple tuple : tupleList) {
-            dictMyMemeResponseDtoList.add(DictMyMemeResponseDto.builder()
-                    .dictId(tuple.get(0, Long.class))
-                    .title(tuple.get(1, String.class))
-                    .meaning(tuple.get(2, String.class))
-                    .summary(tuple.get(3, String.class))
-                    .build());
-        }
-
-        return dictMyMemeResponseDtoList;
     }
 
     // Dict
@@ -501,12 +441,20 @@ public class DictService {
     }
 
     // DictTupleList
-    private List<Tuple> getSafeDictTupleList(int page, int size) {
+    private List<Tuple> getSafeDictTupleList(int page, int size, User user) {
         QDict qDict = QDict.dict;
+        QDictLike qDictLike = QDictLike.dictLike;
 
         // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않고 사용하기로 함
         return queryFactory
-                .select(qDict.dictId, qDict.dictName, qDict.summary, qDict.firstAuthor.nickname, qDict.createdAt, qDict.dictLikeList.size())
+                .select(qDict.dictId, qDict.dictName, qDict.summary, qDict.firstAuthor.nickname, qDict.createdAt,
+                        qDict.dictLikeList.size(),
+                        queryFactory
+                                .select(qDictLike.count())
+                                .from(qDictLike)
+                                .where(eqUser(user),
+                                        qDictLike.dict.eq(qDict))
+                )
                 .from(qDict)
                 .orderBy(qDict.createdAt.desc())
                 .offset(page)
@@ -613,20 +561,56 @@ public class DictService {
                 .fetch();
     }
 
+    // 사전 상세정보 Tuple
+    private Tuple getSafeDictTuple(Long dictId, User user) {
+        QDict qDict = QDict.dict;
+        QDictLike qDictLike = QDictLike.dictLike;
+        QViewers qViewers = QViewers.viewers;
+
+        String userIp = StatisticsUtils.getClientIp();
+
+        Tuple result = queryFactory
+                .select(qDict.dictId.as("id"),
+                        qDict.dictName.as("title"),
+                        qDict.summary.as("summary"),
+                        qDict.content.as("meaning"),
+                        qDict.firstAuthor.nickname.as("first_author_name"),
+                        qDict.firstAuthor.profileImage.as("first_author_profile_image"),
+                        qDict.recentModifier.nickname.as("recent_modifier_name"),
+                        qDict.recentModifier.profileImage.as("recent_modifier_profile_image"),
+                        queryFactory
+                                .select(qDictLike.dictLikeId.count())
+                                .from(qDictLike)
+                                .where(qDictLike.dict.eq(qDict),
+                                        isLikeExp(user)),
+                        qDict.dictLikeList.size().as("like_count"),
+                        qDict.createdAt.as("created_at"),
+                        qDict.modifiedAt.as("modified_at"),
+                        queryFactory
+                                .select(qViewers.count())
+                                .from(qViewers)
+                                .where(qViewers.targetId.eq(dictId), qViewers.viewerIp.eq(userIp), qViewers.viewTypeEnum.eq(ViewTypeEnum.DICT))
+                )
+                .from(qDict)
+                .where(qDict.dictId.eq(dictId))
+                .fetchFirst();
+
+        if (result == null) {
+            throw new NullPointerException(NOT_EXIST_DICT);
+        }
+
+        return result;
+    }
+
+    // 좋아요 어부 확인 BooleanExpression
+    private BooleanExpression isLikeExp(User user) {
+        return user == null ? QDictLike.dictLike.dictLikeId.eq(0L) : QDictLike.dictLike.user.eq(user);
+    }
+
     // Entity To Dto
     // DictDtoList to DictResponseDtoList
-    private List<DictResponseDto> dictListToDictResponseDtoList(List<Tuple> dictTupleList, User user) {
+    private List<DictResponseDto> dictListToDictResponseDtoList(List<Tuple> dictTupleList) {
         List<DictResponseDto> dictResponseDtoList = new ArrayList<>();
-
-        // 1. dict 목록을 저장한다.
-        // 2. dictLike 테이블에서 dict 목록을 IN 연산한 값을 가져온다.
-        // 3. 이걸 HashMap 에 저장한다. 킷값으로. 조회할 때 시간복잡도가 O(1)
-        // 4. 이 키값이 존재하는지 확인하는 식으로 비교한다.
-        // 5. 성능 개선은 몰라도 N+1은 해결됨.
-
-        // 좋아요 맵
-        List<Long> dictIdList = getDictIdListByTupleList(dictTupleList);
-        HashMap<String, Boolean> dictLikeMap = getDictLikeMap(dictIdList, user);
 
         for (Tuple tuple : dictTupleList) {
             Long dictId = tuple.get(0, Long.class);
@@ -636,6 +620,8 @@ public class DictService {
             LocalDateTime createdAt = tuple.get(4, LocalDateTime.class);
             Integer likeCountInteger = tuple.get(5, Integer.class);
             int likeCount = likeCountInteger == null ? 0 : likeCountInteger;
+            Long isDictLikeLong = tuple.get(6, Long.class);
+            boolean isDictLike = isDictLikeLong != null && isDictLikeLong > 0;
 
             dictResponseDtoList.add(DictResponseDto.builder()
                     .dictId(dictId)
@@ -643,7 +629,7 @@ public class DictService {
                     .summary(summary)
                     .firstWriter(firstWriter)
                     .createdAt(createdAt)
-                    .isLike(user != null && dictLikeMap.get(dictId + ":" + user.getId()) != null)
+                    .isLike(isDictLike)
                     .likeCount(likeCount)
                     .build());
         }
@@ -752,5 +738,71 @@ public class DictService {
         return result;
     }
 
+    // MyMemeList To DictMyMemeResponseDtoList
+    public List<DictMyMemeResponseDto> myMemeListToDictMyMemeResponseDtoList(List<Tuple> tupleList) {
+        List<DictMyMemeResponseDto> dictMyMemeResponseDtoList = new ArrayList<>();
+        for (Tuple tuple : tupleList) {
+            dictMyMemeResponseDtoList.add(DictMyMemeResponseDto.builder()
+                    .dictId(tuple.get(0, Long.class))
+                    .title(tuple.get(1, String.class))
+                    .meaning(tuple.get(2, String.class))
+                    .summary(tuple.get(3, String.class))
+                    .build());
+        }
+
+        return dictMyMemeResponseDtoList;
+    }
+
+    // DictTuple To DictDetailResponseDto
+    private DictDetailResponseDto dictTupleToDictDetailResponseDto(Long dictId, Tuple dictTuple) {
+        String title = dictTuple.get(1, String.class);
+        String summary = dictTuple.get(2, String.class);
+        String meaning = dictTuple.get(3, String.class);
+        String firstWriterNickname = dictTuple.get(4, String.class);
+        String firstWriterProfileImage = dictTuple.get(5, String.class);
+        String recentWriterNickname = dictTuple.get(6, String.class);
+        String recentWriterProfileImage = dictTuple.get(7, String.class);
+        Long isLikeLong = dictTuple.get(8, Long.class);
+        boolean isLike = isLikeLong != null && isLikeLong > 0;
+        Integer likeCountInteger = dictTuple.get(9, Integer.class);
+        int likeCount = likeCountInteger == null ? 0 : likeCountInteger;
+        LocalDateTime createdAt = dictTuple.get(10, LocalDateTime.class);
+        LocalDateTime modifiedAt = dictTuple.get(11, LocalDateTime.class);
+        Long viewerIpLong = dictTuple.get(12, Long.class);
+        boolean isView = viewerIpLong != null && viewerIpLong > 0;
+
+        // 조회수 증가
+        // 1. 조회수 테이블 열람
+        // 2. 조회수 테이블에 내가 확인했다는 기록(IP로 판단)이 존재할 경우 조회수 상승하지 않음
+        // 3. 존재하지 않을 경우 조회수 상승하고 조회수 테이블에 사용자 정보 등록.
+        // 조회수 테이블은 매일 0시에 초기화 됨.
+        if (!isView) {
+            viewersRepository.save(Viewers.builder()
+                    .viewTypeEnum(ViewTypeEnum.DICT)
+                    .targetId(dictId)
+                    .viewerIp(StatisticsUtils.getClientIp())
+                    .build());
+            dictRepository.updateView(dictId);
+        }
+
+        // 사용자 정보가 존재할 경우 좋아요 여부 감별 실시.
+        List<DictYoutubeUrl> dictYoutubeUrlList = dictYoutubeUrlRepository.findAllByDict_DictId(dictId);
+        List<DictRelatedYoutubeDto> dictRelatedYoutubeDtoList = getDictYoutubeUrlListToDictRelatedYoutubeDtoList(dictYoutubeUrlList);
+        return DictDetailResponseDto.builder()
+                .dictId(dictId)
+                .title(title)
+                .summary(summary)
+                .meaning(meaning)
+                .firstWriter(firstWriterNickname)
+                .firstWriterProfileImage(firstWriterProfileImage)
+                .recentWriter(recentWriterNickname)
+                .recentWriterProfileImage(recentWriterProfileImage)
+                .isLike(isLike)
+                .likeCount(likeCount)
+                .createdAt(createdAt)
+                .modifiedAt(modifiedAt)
+                .relatedYoutube(dictRelatedYoutubeDtoList)
+                .build();
+    }
     // endregion
 }

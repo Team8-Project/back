@@ -1,6 +1,7 @@
 package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.dict.DictQuestionCommentRepository;
@@ -45,11 +46,11 @@ public class DictQuestionCommentService {
     private final JPAQueryFactory queryFactory;
 
     // 댓글 목록 불러오기
-    public List<DictQuestionCommentResponseDto> getCommentList(DictQuestion dictQuestion, User user, Long selectedId) {
-        List<Tuple> commentTupleList = getSafeCommentTupleList(dictQuestion);
+    public List<DictQuestionCommentResponseDto> getCommentList(Long questionId, User user, Long selectedId) {
+        List<Tuple> commentTupleList = getSafeCommentTupleList(questionId, user);
 
         // CommentList to CommentResponseDtoList
-        return commentListToCommentResponseDtoList(commentTupleList, user, selectedId);
+        return commentListToCommentResponseDtoList(commentTupleList, selectedId);
     }
 
     // 댓글 작성
@@ -167,38 +168,41 @@ public class DictQuestionCommentService {
     }
 
     // CommentList
-    private List<Tuple> getSafeCommentTupleList(DictQuestion dictQuestion) {
-        if(dictQuestion == null){
-            throw new NullPointerException(NOT_EXIST_BOARD);
-        }
-
+    private List<Tuple> getSafeCommentTupleList(Long questionId, User user) {
         QDictQuestionComment qComment = QDictQuestionComment.dictQuestionComment;
+        QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
 
         return queryFactory
                 .select(qComment.questionCommentId,
-                        qComment.user.profileImage, qComment.user.username, qComment.user.nickname,
-                        qComment.content, qComment.createdAt, qComment.questionCommentLike.size())
+                        qComment.user.profileImage,
+                        qComment.user.username,
+                        qComment.user.nickname,
+                        qComment.content,
+                        qComment.createdAt,
+                        qComment.questionCommentLike.size(),
+                        queryFactory
+                                .select(qQuestionCommentLike.count())
+                                .from(qQuestionCommentLike)
+                                .where(qQuestionCommentLike.comment.eq(qComment),
+                                        isCommentLike(user)))
                 .from(qComment)
-                .where(qComment.dictQuestion.eq(dictQuestion)
+                .where(qComment.dictQuestion.questionId.eq(questionId)
                         .and(qComment.enabled.eq(true)))
                 .orderBy(qComment.questionCommentId.asc())
                 .fetch();
     }
 
+    private BooleanExpression isCommentLike(User user) {
+        return user == null ?
+                QQuestionCommentLike.questionCommentLike.dictLikeId.eq(0L) :
+                QQuestionCommentLike.questionCommentLike.user.eq(user);
+    }
+
     // Entity to Dto
     // CommentList to CommentResponseDtoList
     private List<DictQuestionCommentResponseDto> commentListToCommentResponseDtoList(List<Tuple> tupleList,
-                                                                                     User user,
                                                                                      Long selectedId) {
         List<DictQuestionCommentResponseDto> commentResponseDtoList = new ArrayList<>();
-
-        List<Long> commentIdList = new ArrayList<>();
-        for (Tuple tuple : tupleList) {
-            commentIdList.add(tuple.get(0, Long.class));
-        }
-        // 좋아요 목록 맵
-        // commentId:userId : 값이 존재할 시 좋아요, 아니면 아님
-        HashMap<String, Boolean> likeMap = getLikeMap(commentIdList, user);
 
         for (Tuple tuple : tupleList) {
             Long commentId = tuple.get(0, Long.class);
@@ -209,12 +213,8 @@ public class DictQuestionCommentService {
             LocalDateTime createdAt = tuple.get(5, LocalDateTime.class);
             Integer likeCountInteger = tuple.get(6, Integer.class);
             int likeCount = likeCountInteger == null ? 0 : likeCountInteger;
-
-            // likeMap 에 값이 있음 = true, 없음 = false
-            boolean isLike = false;
-            if (user != null) {
-                isLike = likeMap.get(commentId + ":" + user.getId()) != null;
-            }
+            Long isLikeLong = tuple.get(7, Long.class);
+            Boolean isLike = isLikeLong != null && isLikeLong > 0;
 
             commentResponseDtoList.add(DictQuestionCommentResponseDto.builder()
                     .commentId(commentId)
