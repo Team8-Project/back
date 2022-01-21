@@ -9,7 +9,6 @@ import com.teamproj.backend.model.alarm.Alarm;
 import com.teamproj.backend.model.alarm.AlarmTypeEnum;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
-import com.teamproj.backend.util.RedisKey;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -85,7 +84,9 @@ public class AlarmService {
 
         List<Alarm> list = getSafeAlarmListByUser(user);
         alarmList = getAlarmListToResponseDto(list);
-        redisService.setAlarm(redisKey, alarmList);
+        if (alarmList.size() > 0) {
+            redisService.setAlarm(redisKey, alarmList);
+        }
 
         user.setAlarmCheck(true);
         userRepository.save(user);
