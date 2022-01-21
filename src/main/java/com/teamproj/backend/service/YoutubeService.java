@@ -110,7 +110,7 @@ public class YoutubeService {
             if (rId.getKind().equals("youtube#video")) {
                 String title = searchResult.getSnippet().getTitle();
                 String channel = searchResult.getSnippet().getChannelTitle();
-                Thumbnail thumbnail = (Thumbnail) searchResult.getSnippet().getThumbnails().get("default");
+                Thumbnail thumbnail = (Thumbnail) searchResult.getSnippet().getThumbnails().get("medium");
                 String thumbNail = thumbnail.getUrl();
                 String youtubeUrl = rId.getVideoId();
 
@@ -244,7 +244,7 @@ public class YoutubeService {
              * This method reduces the info returned to only the fields we need and makes calls more
              * efficient.
              */
-            search.setFields("items(id/kind,id/videoId,snippet/title,snippet/channelTitle,snippet/thumbnails/default/url)");
+            search.setFields("items(id/kind,id/videoId,snippet/title,snippet/channelTitle,snippet/thumbnails/medium/url)");
             search.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
             SearchListResponse searchResponse = search.execute();
 
