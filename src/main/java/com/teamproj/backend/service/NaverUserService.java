@@ -185,6 +185,22 @@ public class NaverUserService {
             // username: naver nickname
             String nickname = naverUserInfoDto.getNickname();
 
+            Optional<User> user = userRepository.findByNickname(nickname);
+            if(user.isPresent()) {
+                String dbUserNickname = user.get().getNickname();
+
+                int beginIndex= nickname.length();
+                String nicknameIndex = dbUserNickname.substring(beginIndex, dbUserNickname.length());
+
+                if (!nicknameIndex.isEmpty()) {
+                    int newIndex = Integer.parseInt(nicknameIndex) + 1;
+                    nickname = nickname + newIndex;
+                } else {
+                    nickname = dbUserNickname + 1;
+                }
+            }
+
+
             // profileImage : 프로필사진
             String profileImage = naverUserInfoDto.getProfileImage();
 

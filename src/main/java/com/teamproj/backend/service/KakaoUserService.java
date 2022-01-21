@@ -24,6 +24,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -75,8 +76,8 @@ public class KakaoUserService {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", clientId);
-        body.add("redirect_uri", "http://localhost:3000/redirect/kakao");
-//        body.add("redirect_uri", "http://localhost:3000/api/user/kakao/callback");
+        body.add("redirect_uri", "https://www.memegle.xyz/redirect/kakao");
+//        body.add("redirect_uri", "http://localhost:3000/redirect/kakao");
 //        body.add("redirect_uri", "http://localhost:8080/api/user/kakao/callback");
         // https://kauth.kakao.com/oauth/authorize?client_id=your_code&redirect_uri=http://localhost:8080/oauth/kakao/callback&response_type=code
         body.add("code", code);
@@ -154,6 +155,21 @@ public class KakaoUserService {
 
             // username: kakao nickname
             String nickname = kakaoUserInfoDto.getNickname();
+            Optional<User> user = userRepository.findByNickname(nickname);
+            if(user.isPresent()) {
+                String dbUserNickname = user.get().getNickname();
+
+                int beginIndex= nickname.length();
+                String nicknameIndex = dbUserNickname.substring(beginIndex, dbUserNickname.length());
+
+                if (!nicknameIndex.isEmpty()) {
+                    int newIndex = Integer.parseInt(nicknameIndex) + 1;
+                    nickname = nickname + newIndex;
+                } else {
+                    nickname = dbUserNickname + 1;
+                }
+            }
+
 
             // profileImage: kakao profile image
             String profileImage = kakaoUserInfoDto.getProfileImage();
