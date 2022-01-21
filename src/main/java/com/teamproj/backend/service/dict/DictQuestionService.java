@@ -454,13 +454,12 @@ public class DictQuestionService {
         // 3. multipartFile로 넘어온 이미지 파일 저장
         // - 기존에 S3에 저장되어 있는 이미지 삭제 후
         String imageUrl = "";
-        if (multipartFile != null && !multipartFile.isEmpty()) {
+        if (!multipartFile.isEmpty()) {
             imageUrl = s3Uploader.upload(multipartFile, S3dirName);
             deleteImg(dictQuestion);
         }
 
         // 수정
-        deleteImg(dictQuestion);
         dictQuestion.update(dictQuestionUpdateRequestDto, imageUrl);
         // 수정내역 통계에 저장(수정 내용은 보관되지 않음)
         statService.statQuestionModify(dictQuestion);

@@ -54,7 +54,9 @@ public class DictQuestion extends Timestamped {
     public void update(DictQuestionUpdateRequestDto dictQuestionUpdateRequestDto,String imageUrl){
         this.questionName = dictQuestionUpdateRequestDto.getTitle();
         this.content = dictQuestionUpdateRequestDto.getContent();
-        this.thumbNail = imageUrl;
+        if(!imageUrl.isEmpty()) {
+            this.thumbNail = imageUrl;
+        }
     }
 
     public void questionSelect(QuestionSelect questionSelect){
