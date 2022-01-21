@@ -1,8 +1,5 @@
 package com.teamproj.backend.security;
 
-import com.teamproj.backend.OAuth2.CustomOAuth2UserService;
-import com.teamproj.backend.OAuth2.handler.CustomAuthenticationFailureHandler;
-import com.teamproj.backend.OAuth2.handler.CustomAuthenticationSuccessHandler;
 import com.teamproj.backend.security.filter.FormLoginFilter;
 import com.teamproj.backend.security.filter.JwtAuthFilter;
 import com.teamproj.backend.security.jwt.HeaderTokenExtractor;
@@ -35,10 +32,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    private final JwtTokenProvider jwtTokenProvider;
     private final JWTAuthProvider jwtAuthProvider;
     private final HeaderTokenExtractor headerTokenExtractor;
-
-    private final CustomOAuth2UserService principalOauth2UserService;
-    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
-    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
     //JWT부분 종료
 
@@ -90,12 +83,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/user").permitAll()
                 // 그 외 어떤 요청이든 '인증'
                 .anyRequest()
-                .permitAll()
-                .and()
-                .oauth2Login()
-                .successHandler(customAuthenticationSuccessHandler)
-                .failureHandler(customAuthenticationFailureHandler)
-                .userInfoEndpoint().userService(principalOauth2UserService);;
+                .permitAll();
     }
 
     @Bean

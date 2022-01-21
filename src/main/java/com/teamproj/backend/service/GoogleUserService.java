@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -83,7 +84,8 @@ public class GoogleUserService {
                 .clientId(clientId)
                 .clientSecret(clientSecret)
                 .code(code)
-                .redirectUri("http://localhost:3000/redirect/google")
+                .redirectUri("https://www.memegle.xyz/redirect/google")
+//                .redirectUri("http://localhost:3000/redirect/google")
 //                .redirectUri("http://localhost:8080/api/user/google/callback")
                 .grantType("authorization_code").build();
 
@@ -144,7 +146,7 @@ public class GoogleUserService {
 
     private User registerGoogleUserIfNeeded(GoogleUserInfoDto googleUserInfoDto) {
 
-        // DB 에 중복된 Kakao Id 가 있는지 확인
+        // DB 에 중복된 google Id 가 있는지 확인
         String googleUserId = googleUserInfoDto.getUsername();
         User googleUser = userRepository.findByUsername(googleUserId)
                 .orElse(null);
@@ -156,6 +158,20 @@ public class GoogleUserService {
 
             // nickname: google name
             String nickname = googleUserInfoDto.getNickname();
+            Optional<User> user = userRepository.findByNickname(nickname);
+            if(user.isPresent()) {
+                String dbUserNickname = user.get().getNickname();
+
+                int beginIndex= nickname.length();
+                String nicknameIndex = dbUserNickname.substring(beginIndex, dbUserNickname.length());
+
+                if (!nicknameIndex.isEmpty()) {
+                    int newIndex = Integer.parseInt(nicknameIndex) + 1;
+                    nickname = nickname + newIndex;
+                } else {
+                    nickname = dbUserNickname + 1;
+                }
+            }
 
             // profileImage: google profile image
             String profileImage = googleUserInfoDto.getProfileImage();
