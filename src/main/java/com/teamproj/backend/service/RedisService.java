@@ -30,7 +30,7 @@ public class RedisService {
     private final RedisTemplate<String, StatDictResponseDto> redisStatDictResponseDtoTemplate;
     private final RedisTemplate<String, AlarmResponseDto> redisAlarmResponseDtoTemplate;
 
-    public void setRedis(String key, List<AlarmResponseDto> object){
+    public void setAlarm(String key, List<AlarmResponseDto> object){
         redisTemplate.delete(key);
         ListOperations<String, AlarmResponseDto> redis = redisAlarmResponseDtoTemplate.opsForList();
         redis.leftPushAll(key, object);

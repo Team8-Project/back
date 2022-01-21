@@ -82,7 +82,7 @@ public class AlarmService {
 
         List<Alarm> list = getSafeAlarmListByUser(user);
         alarmList = getAlarmListToResponseDto(list);
-        redisService.setRedis(redisKey, alarmList);
+        redisService.setAlarm(redisKey, alarmList);
 
         user.setAlarmCheck(true);
         userRepository.save(user);
