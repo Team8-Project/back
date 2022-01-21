@@ -1,5 +1,6 @@
 package com.teamproj.backend.OAuth2.handler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamproj.backend.OAuth2.OAuth2UserProvider;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.model.User;
@@ -48,10 +49,10 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         OAuth2UserProvider OAuth2UserProvider = (OAuth2UserProvider) authentication.getPrincipal();
 
-        String jwt_token = forceLogin(OAuth2UserProvider); // 로그인처리 후 토큰 받아오기
+        UserDetailsImpl userDetails = getUserDetail(OAuth2UserProvider); // 로그인처리 후 토큰 받아오기
+        String jwt_token = JwtTokenUtils.generateJwtToken(userDetails);
         String tokenResult =  TOKEN_TYPE + " " + jwt_token;
         response.setHeader(AUTH_HEADER, tokenResult);
-
 
         Cookie cookie = new Cookie(COOKIE_SUBJECT, jwt_token);
         cookie.setSecure(true);
@@ -60,10 +61,15 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 //        cookie.setDomain(COOKIE_DOMAIN);
         response.addCookie(cookie);
 
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        String result = mapper.writeValueAsString(userDetails);
+        response.getWriter().write(result);
         response.sendRedirect("http://localhost:8080/api/board/536");
     }
 
-    private String forceLogin(OAuth2UserProvider oAuth2UserProvider) {
+    private UserDetailsImpl getUserDetail(OAuth2UserProvider oAuth2UserProvider) {
         String email = oAuth2UserProvider.getEmail();
         User user = userRepository.findByUsername(email)
                 .orElseThrow(
@@ -77,7 +83,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return JwtTokenUtils.generateJwtToken(userDetails);
+        return userDetails;
     }
 
 }
