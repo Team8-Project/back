@@ -9,8 +9,10 @@ import com.teamproj.backend.model.alarm.Alarm;
 import com.teamproj.backend.model.alarm.AlarmTypeEnum;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.util.RedisKey;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -26,6 +28,7 @@ import static com.teamproj.backend.util.RedisKey.USER_ALARM_KEY;
 @RequiredArgsConstructor
 public class AlarmService {
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     private final RedisService redisService;
 
@@ -164,6 +167,7 @@ public class AlarmService {
         for (Alarm alarm : alarmList) {
             alarm.setChecked(true);
         }
+        redisTemplate.delete(USER_ALARM_KEY+":"+user.getId());
         // 읽음 처리 완료 메시지 Response
         return "읽음 처리 완료";
     }
