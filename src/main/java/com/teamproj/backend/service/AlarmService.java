@@ -1,5 +1,6 @@
 package com.teamproj.backend.service;
 
+import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.alarm.AlarmRepository;
 import com.teamproj.backend.dto.alarm.AlarmNavResponseDto;
 import com.teamproj.backend.dto.alarm.AlarmResponseDto;
@@ -9,9 +10,7 @@ import com.teamproj.backend.model.alarm.AlarmTypeEnum;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
-import io.micrometer.core.instrument.config.validate.Validated;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -21,13 +20,17 @@ import java.util.Optional;
 
 import static com.teamproj.backend.exception.ExceptionMessages.NOT_EXIST_ALARM;
 import static com.teamproj.backend.exception.ExceptionMessages.NOT_YOUR_ALARM;
+import static com.teamproj.backend.util.RedisKey.USER_ALARM_KEY;
 
 @Service
 @RequiredArgsConstructor
 public class AlarmService {
     private final JwtAuthenticateProcessor jwtAuthenticateProcessor;
 
+    private final RedisService redisService;
+
     private final AlarmRepository alarmRepository;
+    private final UserRepository userRepository;
 
     /*
         알림 송신 지점
@@ -54,7 +57,9 @@ public class AlarmService {
                 .checked(false)
                 .build();
 
+        user.setAlarmCheck(false);
         alarmRepository.save(alarm);
+        userRepository.save(user);
     }
 
     private Alarm getSafeAlarmByNavIdAndUser(Long navId, User user) {
@@ -63,11 +68,27 @@ public class AlarmService {
     }
 
     // 알림 정보 요청
+    @Transactional
     public List<AlarmResponseDto> receiveAlarm(User user) {
-        List<Alarm> alarmList = getSafeAlarmListByUser(user);
+        String redisKey = USER_ALARM_KEY + ":" + user.getId();
+        List<AlarmResponseDto> alarmList;
+
+        if (user.isAlarmCheck()) {
+            alarmList = redisService.getAlarm(redisKey);
+            if (alarmList != null) {
+                return alarmList;
+            }
+        }
+
+        List<Alarm> list = getSafeAlarmListByUser(user);
+        alarmList = getAlarmListToResponseDto(list);
+        redisService.setRedis(redisKey, alarmList);
+
+        user.setAlarmCheck(true);
+        userRepository.save(user);
         // return to Dto List
         // To do : 우선 List<AlarmResponseDto>에 담아서 리턴 했습니다. 차 후에 수정 필요
-        return getAlarmListToResponseDto(alarmList);
+        return alarmList;
     }
 
     // 알림 정보들(AlarmList) Dto에 담아서 리턴
@@ -140,7 +161,7 @@ public class AlarmService {
         User user = jwtAuthenticateProcessor.getUser(userDetails);
         // 알람 읽음 처리
         List<Alarm> alarmList = getSafeAlarmListByUserNotRead(user);
-        for(Alarm alarm : alarmList){
+        for (Alarm alarm : alarmList) {
             alarm.setChecked(true);
         }
         // 읽음 처리 완료 메시지 Response

@@ -44,6 +44,9 @@ public class User extends Timestamped {
     @Column(unique = true)
     private String naverId;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean alarmCheck = false;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private final List<Board> boardList = new ArrayList<>();
 
@@ -76,6 +79,10 @@ public class User extends Timestamped {
 
     public void setProfileImage(String profileImage) {
         this.profileImage = profileImage;
+    }
+
+    public void setAlarmCheck(boolean alarmCheck) {
+        this.alarmCheck = alarmCheck;
     }
 
     public User(SignUpRequestDto signUpRequestDto, String encodedPassword) {
