@@ -1,5 +1,6 @@
 package com.teamproj.backend.service;
 
+import com.teamproj.backend.dto.alarm.AlarmResponseDto;
 import com.teamproj.backend.dto.board.BoardMemeBest.BoardMemeBestResponseDto;
 import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.dto.main.MainTodayBoardResponseDto;
@@ -27,15 +28,31 @@ public class RedisService {
     private final RedisTemplate<String, QuizResponseDto> redisQuizResponseDtoTemplate;
     private final RedisTemplate<String, BoardMemeBestResponseDto> redisMemeBestResponseDtoTemplate;
     private final RedisTemplate<String, StatDictResponseDto> redisStatDictResponseDtoTemplate;
+    private final RedisTemplate<String, AlarmResponseDto> redisAlarmResponseDtoTemplate;
 
-    public void setStatDict(String key, StatDictResponseDto object){
+    public void setAlarm(String key, List<AlarmResponseDto> object){
+        redisTemplate.delete(key);
+        ListOperations<String, AlarmResponseDto> redis = redisAlarmResponseDtoTemplate.opsForList();
+        redis.leftPushAll(key, object);
+    }
+    public List<AlarmResponseDto> getAlarm(String key) {
+        ListOperations<String, AlarmResponseDto> list = redisAlarmResponseDtoTemplate.opsForList();
+
+        if (list.size(key) > 0) {
+            return list.range(key, 0, list.size(key) - 1);
+        }
+
+        return null;
+    }
+
+    public void setStatDict(String key, StatDictResponseDto object) {
         redisTemplate.delete(key);
         ValueOperations<String, Object> redis = redisTemplate.opsForValue();
         redis.set(key, object);
         redisTemplate.expire(key, 10, TimeUnit.MINUTES);
     }
 
-    public StatDictResponseDto getStatDict(String key){
+    public StatDictResponseDto getStatDict(String key) {
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(StatDictResponseDto.class));
         ValueOperations<String, StatDictResponseDto> redis = redisStatDictResponseDtoTemplate.opsForValue();
         StatDictResponseDto data = redis.get(key);
@@ -115,7 +132,7 @@ public class RedisService {
         list.leftPushAll(key, mainTodayBoardResponseDtoList);
     }
 
-    public void setRandomQuiz(String key, List<QuizResponseDto> quizResponseDtoList){
+    public void setRandomQuiz(String key, List<QuizResponseDto> quizResponseDtoList) {
         redisTemplate.delete(key);
         ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
         list.leftPushAll(key, quizResponseDtoList);
@@ -124,7 +141,7 @@ public class RedisService {
 
     public List<QuizResponseDto> getRandomQuiz(String key) {
         ListOperations<String, QuizResponseDto> list = redisQuizResponseDtoTemplate.opsForList();
-        if(list.size(key) > 0){
+        if (list.size(key) > 0) {
             return list.range(key, 0, list.size(key) - 1);
         }
 

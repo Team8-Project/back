@@ -55,18 +55,17 @@ public class StatService {
 
     // 사전 통계 내용 출력
     public StatDictResponseDto statDict() {
-//        StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
-//
-//        if (statDictResponseDto == null) {
-//            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
-//            statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
-//        }
-//
-//        ObjectMapper mapper = new ObjectMapper();
-//
-//        return mapper.convertValue(statDictResponseDto, new TypeReference<StatDictResponseDto>() {
-//        });
-        return getStatDict();
+        StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+
+        if (statDictResponseDto == null) {
+            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
+            statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        return mapper.convertValue(statDictResponseDto, new TypeReference<StatDictResponseDto>() {
+        });
     }
 
     private StatDictResponseDto getStatDict() {
