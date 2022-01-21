@@ -190,7 +190,8 @@ public class StatService {
         List<Tuple> tupleList = queryFactory
                 .select(qDictQuestion.questionId, qDictQuestion.questionName, qDictQuestion.user.profileImage)
                 .from(qDictQuestion)
-                .where(qDictQuestion.questionId.notIn(selectList))
+                .where(qDictQuestion.questionId.notIn(selectList),
+                        qDictQuestion.enabled.eq(true))
                 .orderBy(qDictQuestion.questionId.desc())
                 .limit(size)
                 .fetch();
