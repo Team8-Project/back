@@ -76,7 +76,7 @@ public class KakaoUserService {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", clientId);
-        body.add("redirect_uri", "https://www.memegle.xyz/redirect/kakao");
+        body.add("redirect_uri", "https://memegle.xyz/redirect/kakao");
 //        body.add("redirect_uri", "http://localhost:3000/redirect/kakao");
 //        body.add("redirect_uri", "http://localhost:8080/api/user/kakao/callback");
         // https://kauth.kakao.com/oauth/authorize?client_id=your_code&redirect_uri=http://localhost:8080/oauth/kakao/callback&response_type=code
