@@ -167,7 +167,7 @@ public class AlarmService {
         for (Alarm alarm : alarmList) {
             alarm.setChecked(true);
         }
-        redisTemplate.delete(USER_ALARM_KEY+":"+user.getId());
+        user.setAlarmCheck(false);
         // 읽음 처리 완료 메시지 Response
         return "읽음 처리 완료";
     }
