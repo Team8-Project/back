@@ -1,5 +1,6 @@
 package com.teamproj.backend.dto.board.BoardDetail;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.teamproj.backend.dto.comment.CommentResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import java.util.List;
 @Getter
 @Builder
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BoardDetailResponseDto {
     private Long boardId;
     private String title;

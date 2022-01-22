@@ -174,7 +174,8 @@ public class StatService {
         List<Tuple> tupleList = queryFactory
                 .select(qDictQuestion.questionId, qDictQuestion.questionName, qDictQuestion.user.profileImage)
                 .from(qDictQuestion)
-                .where(qDictQuestion.questionId.in(selectList))
+                .where(qDictQuestion.questionId.in(selectList),
+                        qDictQuestion.enabled.eq(true))
                 .orderBy(qDictQuestion.questionId.desc())
                 .limit(size)
                 .fetch();
