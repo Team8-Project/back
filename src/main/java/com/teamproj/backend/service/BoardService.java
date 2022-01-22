@@ -238,7 +238,7 @@ public class BoardService {
     public BoardDetailResponseDto getBoardDetail(Long boardId, String token) {
         // 1. 회원 정보가 존재할 시 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        User user = jwtAuthenticateProcessor.getUser(userDetails);
+        User user = getSafeUserByUserDetails(userDetails);
         // 2. 게시글 조회
         Tuple boardTuple = getSafeBoardTuple(boardId, user);
 
