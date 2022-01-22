@@ -169,8 +169,12 @@ public class DictService {
         User user = getSafeUserByUserDetails(userDetails);
         // 2. 사전 정보 받아오기
         Tuple dictTuple = getSafeDictTuple(dictId, user);
-        // 3. 알맞은 DTO 형식으로 전환하여 반환.
-        return dictTupleToDictDetailResponseDto(dictId, dictTuple);
+        // 3. 알맞은 DTO 형식으로 전환.
+        DictDetailResponseDto result = dictTupleToDictDetailResponseDto(dictId, dictTuple);
+        // 4. 조회수 증가 여부 판단 후 증가.
+        viewProc(dictTuple);
+        // 5. 반환.
+        return result;
     }
 
     /**
@@ -376,6 +380,27 @@ public class DictService {
         }
 
         return recommend;
+    }
+
+    // 사전 상세보기시 조회수 증가 로직
+    private void viewProc(Tuple dictTuple) {
+        Long dictId = dictTuple.get(0, Long.class);
+        Long viewerIpLong = dictTuple.get(12, Long.class);
+        boolean isView = viewerIpLong != null && viewerIpLong > 0;
+
+        // 조회수 증가
+        // 1. 조회수 테이블 열람
+        // 2. 조회수 테이블에 내가 확인했다는 기록(IP로 판단)이 존재할 경우 조회수 상승하지 않음
+        // 3. 존재하지 않을 경우 조회수 상승하고 조회수 테이블에 사용자 정보 등록.
+        // 조회수 테이블은 매일 0시에 초기화 됨.
+        if (!isView) {
+            viewersRepository.save(Viewers.builder()
+                    .viewTypeEnum(ViewTypeEnum.DICT)
+                    .targetId(dictId)
+                    .viewerIp(StatisticsUtils.getClientIp())
+                    .build());
+            dictRepository.updateView(dictId);
+        }
     }
 
     // 좋아요 목록 가져와서 HashMap 으로 반환
@@ -774,22 +799,6 @@ public class DictService {
         int likeCount = likeCountInteger == null ? 0 : likeCountInteger;
         LocalDateTime createdAt = dictTuple.get(10, LocalDateTime.class);
         LocalDateTime modifiedAt = dictTuple.get(11, LocalDateTime.class);
-        Long viewerIpLong = dictTuple.get(12, Long.class);
-        boolean isView = viewerIpLong != null && viewerIpLong > 0;
-
-        // 조회수 증가
-        // 1. 조회수 테이블 열람
-        // 2. 조회수 테이블에 내가 확인했다는 기록(IP로 판단)이 존재할 경우 조회수 상승하지 않음
-        // 3. 존재하지 않을 경우 조회수 상승하고 조회수 테이블에 사용자 정보 등록.
-        // 조회수 테이블은 매일 0시에 초기화 됨.
-        if (!isView) {
-            viewersRepository.save(Viewers.builder()
-                    .viewTypeEnum(ViewTypeEnum.DICT)
-                    .targetId(dictId)
-                    .viewerIp(StatisticsUtils.getClientIp())
-                    .build());
-            dictRepository.updateView(dictId);
-        }
 
         // 사용자 정보가 존재할 경우 좋아요 여부 감별 실시.
         List<DictYoutubeUrl> dictYoutubeUrlList = dictYoutubeUrlRepository.findAllByDict_DictId(dictId);

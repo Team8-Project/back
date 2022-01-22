@@ -16,7 +16,8 @@ class MvcConfig implements WebMvcConfigurer {
                                 "https://kauth.kakao.com/oauth/authorize/**",
                                 "https://accounts.kakao.com/**",
                                 "https://memegle.xyz",
-                                "https://www.memegle.xyz")
+                                "https://www.memegle.xyz",
+                                "https://memeglememegle.xyz")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .exposedHeaders(HttpHeaders.AUTHORIZATION);
