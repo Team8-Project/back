@@ -8,7 +8,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.teamproj.backend.Repository.ViewersRepository;
 import com.teamproj.backend.Repository.dict.DictLikeRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
-import com.teamproj.backend.Repository.dict.DictViewersRepository;
 import com.teamproj.backend.Repository.dict.DictYoutubeUrlRepository;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.dto.dict.mymeme.DictMyMemeResponseDto;
@@ -26,7 +25,6 @@ import com.teamproj.backend.service.RedisService;
 import com.teamproj.backend.service.YoutubeService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.MemegleServiceStaticMethods;
-import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -111,7 +109,7 @@ public class DictService {
         Dict dict = dictRepository.findByDictName(dictName.getDictName());
         if (dict == null) {
             return DictNameCheckResponseDtoNeo.builder()
-                    .result(false)
+                    .result(true)
                     .build();
         }
 
@@ -119,7 +117,7 @@ public class DictService {
                 .dictId(dict.getDictId())
                 .dictName(dict.getDictName())
                 .meaning(dict.getContent())
-                .result(true)
+                .result(false)
                 .build();
     }
 
@@ -163,16 +161,16 @@ public class DictService {
      * @param token  Authorization header token
      * @return DictDetailResponseDto
      */
-    public DictDetailResponseDto getDictDetail(Long dictId, String token) {
+    public DictDetailResponseDto getDictDetail(Long dictId, String token, String viewerIp) {
         // 1. 로그인한 사용자일 경우 로그인 처리
         UserDetailsImpl userDetails = jwtAuthenticateProcessor.forceLogin(token);
         User user = getSafeUserByUserDetails(userDetails);
         // 2. 사전 정보 받아오기
-        Tuple dictTuple = getSafeDictTuple(dictId, user);
+        Tuple dictTuple = getSafeDictTuple(dictId, user, viewerIp);
         // 3. 알맞은 DTO 형식으로 전환.
         DictDetailResponseDto result = dictTupleToDictDetailResponseDto(dictId, dictTuple);
         // 4. 조회수 증가 여부 판단 후 증가.
-        viewProc(dictTuple);
+        viewProc(dictTuple, viewerIp);
         // 5. 반환.
         return result;
     }
@@ -383,7 +381,7 @@ public class DictService {
     }
 
     // 사전 상세보기시 조회수 증가 로직
-    private void viewProc(Tuple dictTuple) {
+    private void viewProc(Tuple dictTuple, String viewerIp) {
         Long dictId = dictTuple.get(0, Long.class);
         Long viewerIpLong = dictTuple.get(12, Long.class);
         boolean isView = viewerIpLong != null && viewerIpLong > 0;
@@ -397,7 +395,7 @@ public class DictService {
             viewersRepository.save(Viewers.builder()
                     .viewTypeEnum(ViewTypeEnum.DICT)
                     .targetId(dictId)
-                    .viewerIp(StatisticsUtils.getClientIp())
+                    .viewerIp(viewerIp)
                     .build());
             dictRepository.updateView(dictId);
         }
@@ -550,16 +548,22 @@ public class DictService {
 
     // BestDict
     private List<Dict> getSafeBestDict(String key) {
-        List<String> bestDictIdList = redisService.getStringList(key);
-
-        if (bestDictIdList == null) {
-            redisService.setBestDict(key, getSafeBestDict());
+        List<String> bestDictIdList;
+        try {
             bestDictIdList = redisService.getStringList(key);
 
             if (bestDictIdList == null) {
-                return dictRepository.findAllByOrderByViewsDesc(PageRequest.of(0, 5)).toList();
+                redisService.setBestDict(key, getSafeBestDict());
+                bestDictIdList = redisService.getStringList(key);
+
+                if (bestDictIdList == null) {
+                    return dictRepository.findAllByOrderByViewsDesc(PageRequest.of(0, 5)).toList();
+                }
             }
+        } catch (RedisConnectionFailureException e) {
+            bestDictIdList = getSafeBestDict();
         }
+
 
         Collections.shuffle(bestDictIdList);
         List<Long> nums = new ArrayList<>();
@@ -591,12 +595,10 @@ public class DictService {
     }
 
     // 사전 상세정보 Tuple
-    private Tuple getSafeDictTuple(Long dictId, User user) {
+    private Tuple getSafeDictTuple(Long dictId, User user, String userIp) {
         QDict qDict = QDict.dict;
         QDictLike qDictLike = QDictLike.dictLike;
         QViewers qViewers = QViewers.viewers;
-
-        String userIp = StatisticsUtils.getClientIp();
 
         Tuple result = queryFactory
                 .select(qDict.dictId.as("id"),
