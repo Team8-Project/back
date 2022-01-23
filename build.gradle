@@ -93,7 +93,7 @@ jar{
 }
 
 test {
-    exclude '**/*'
+//    exclude '**/*'
     useJUnitPlatform()
     finalizedBy 'jacocoTestReport' // 추가
 }
@@ -135,6 +135,12 @@ jacocoTestReport {
 }
 
 jacocoTestCoverageVerification {
+    def Qdomains = []
+
+    for (qPattern in '*.QA'..'*.QZ') { // qPattern = '*.QA', '*.QB', ... '*.QZ'
+        Qdomains.add(qPattern + '*')
+    }
+
     violationRules {
         rule {
             enabled = true
@@ -152,7 +158,7 @@ jacocoTestCoverageVerification {
                 minimum = 0.80
             }
 
-            excludes = []
+            excludes = [] + Qdomains // 제외할 Qdomains 패턴 추가
         }
     }
 }
