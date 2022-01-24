@@ -31,7 +31,7 @@ public class MemegleServiceStaticMethods {
     public static HashMap<String, Boolean> getLikeMap(List<Tuple> likeListTuple) {
         HashMap<String, Boolean> likeMap = new HashMap<>();
         for (Tuple tuple : likeListTuple) {
-            // 키값을 "BoardId":"UserId"
+            // 키값 형식은 "questionId":"userId"
             String genString = tuple.get(0, Long.class) + ":" + tuple.get(1, Long.class);
             likeMap.put(genString, true);
         }
@@ -41,6 +41,7 @@ public class MemegleServiceStaticMethods {
     public static HashMap<Long, Long> getLongLongMap(List<Tuple> tupleList) {
         HashMap<Long, Long> map = new HashMap<>();
         for (Tuple tuple : tupleList) {
+            // 키값은 targetId, 밸류는 Long data.
             Long key = tuple.get(0, Long.class);
             Long value = tuple.get(1, Long.class);
             map.put(key, value);
