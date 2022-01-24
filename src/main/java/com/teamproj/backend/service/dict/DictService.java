@@ -516,13 +516,14 @@ public class DictService {
 
     // DictBestTuple
     private List<Tuple> getSafeBestDictTuple() {
-        QDictViewers qDictViewers = QDictViewers.dictViewers;
+        QViewers qViewers = QViewers.viewers;
 
         NumberPath<Long> count = Expressions.numberPath(Long.class, "c");
         return queryFactory
-                .select(qDictViewers.dict.dictId, qDictViewers.dict.count().as(count))
-                .from(qDictViewers)
-                .groupBy(qDictViewers.dict)
+                .select(qViewers.targetId, qViewers.count().as(count))
+                .from(qViewers)
+                .where(qViewers.viewTypeEnum.eq(ViewTypeEnum.DICT))
+                .groupBy(qViewers.targetId)
                 .orderBy(count.desc())
                 .limit(20)
                 .fetch();

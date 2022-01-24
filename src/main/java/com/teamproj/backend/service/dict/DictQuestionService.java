@@ -75,9 +75,11 @@ public class DictQuestionService {
         // 2. 받아온 회원 정보로 User 정보 받아오기
         User user = getSafeUserByUserDetails(userDetails);
         // 3. 카테고리와 enabled(삭제 안된) 데이터를 페이지네이션 조건에 맞게 리스트형식으로 가져오기
-        List<Tuple> tupleList = getQuestionProc(user, true, page, size);
+//        List<Tuple> tupleList = getQuestionProc(user, true, page, size);
+        List<DictQuestion> tupleList = getQuestionProc(true, page, size);
         // 4. 리스트를 알맞은 DTO 형식으로 변환하여 return.
-        return getDictQuestionResponseDtoList(tupleList);
+//        return getDictQuestionResponseDtoList(tupleList);
+        return getDictQuestionResponseDtoList(user, tupleList);
     }
 
     private User getSafeUserByUserDetails(UserDetailsImpl userDetails) {
@@ -87,6 +89,7 @@ public class DictQuestionService {
         return jwtAuthenticateProcessor.getUser(userDetails);
     }
 
+    // 대량의 데이터를 처리할 때 나눠 호출하는게 더 빨라서 질문 조회에 한해서는 한방쿼리 제외.....
     private List<Tuple> getQuestionProc(User user, boolean enabled, int page, int size) {
         QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
         QDictQuestionComment qDictQuestionComment = QDictQuestionComment.dictQuestionComment;
@@ -151,47 +154,118 @@ public class DictQuestionService {
                 .fetch();
     }
 
+    private List<DictQuestion> getQuestionProc(boolean enabled, int page, int size) {
+        QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
+
+        int offset = page * size;
+        return queryFactory
+                .selectFrom(qDictQuestion)
+                .where(qDictQuestion.enabled.eq(enabled))
+                .orderBy(qDictQuestion.questionId.desc())
+                .offset(offset)
+                .limit(size)
+                .fetch();
+    }
+
     private BooleanExpression eqUser(User user) {
         return user == null ?
                 QDictCuriousToo.dictCuriousToo.curiousTooId.eq(0L) :
                 QDictCuriousToo.dictCuriousToo.user.eq(user);
     }
 
-    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(List<Tuple> tupleList) {
+//    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(List<Tuple> tupleList) {
+//        // DB 에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
+//        List<DictQuestionResponseDto> dictQuestionResponseDtoList = new ArrayList<>();
+//        for (Tuple tuple : tupleList) {
+//            Long questionId = tuple.get(0, Long.class);
+//            String title = tuple.get(1, String.class);
+//            String thumbNail = tuple.get(2, String.class);
+//            String content = tuple.get(3, String.class);
+////            Long writerId = tuple.get(4, Long.class);
+//            String username = tuple.get(5, String.class);
+//            String profileImage = tuple.get(6, String.class);
+//            String writer = tuple.get(7, String.class);
+//            LocalDateTime createdAt = tuple.get(8, LocalDateTime.class);
+//            Integer views = tuple.get(9, Integer.class);
+//            Integer curiousTooCnt = tuple.get(10, Integer.class);
+//            Long commentCnt = tuple.get(11, Long.class);
+//            Long isCuriousTooLong = tuple.get(12, Long.class);
+//            Boolean isCuriousToo = isCuriousTooLong != null && isCuriousTooLong > 0;
+//            Long isCompleteLong = tuple.get(13, Long.class);
+//            Boolean isComplete = isCompleteLong != null && isCompleteLong > 0;
+//
+//            dictQuestionResponseDtoList.add(DictQuestionResponseDto.builder()
+//                    .questionId(questionId)
+//                    .title(title)
+//                    .thumbNail(thumbNail)
+//                    .content(content)
+//                    .username(username)
+//                    .profileImageUrl(profileImage)
+//                    .writer(writer)
+//                    .createdAt(createdAt)
+//                    .views(views == null ? 0 : views)
+//                    .curiousTooCnt(curiousTooCnt == null ? 0 : curiousTooCnt)
+//                    .commentCnt(commentCnt == null ? 0 : commentCnt.intValue())
+//                    .isCuriousToo(isCuriousToo)
+//                    .isComplete(isComplete)
+//                    .build()
+//            );
+//        }
+//
+//        return dictQuestionResponseDtoList;
+//    }
+
+    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(User user, List<DictQuestion> questionList) {
+        List<Long> questionIdList = new ArrayList<>();
+        for (DictQuestion dictQuestion : questionList) {
+            questionIdList.add(dictQuestion.getQuestionId());
+        }
+
+        // 작성자 맵
+        HashMap<String, String> userInfoMap = getUserInfoMap(questionList);
+        // 나도 궁금해요 맵
+        HashMap<String, Boolean> curiousTooMap = getCuriousTooMap(questionIdList);
+        // 좋아요 개수 맵
+        HashMap<Long, Long> curiousTooCountMap = getCuriousTooCountMap(questionList);
+        // 댓글 개수 맵
+        HashMap<Long, Long> commentCountMap = getDictQuestionCommentCountMap(questionList);
+        // 채택 여부 맵
+        HashMap<Long, Long> completeMap = getIsComplete(questionIdList);
+
+        Long userId = user.getId();
         // DB 에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
         List<DictQuestionResponseDto> dictQuestionResponseDtoList = new ArrayList<>();
-        for (Tuple tuple : tupleList) {
-            Long questionId = tuple.get(0, Long.class);
-            String title = tuple.get(1, String.class);
-            String thumbNail = tuple.get(2, String.class);
-            String content = tuple.get(3, String.class);
-//            Long writerId = tuple.get(4, Long.class);
-            String username = tuple.get(5, String.class);
-            String profileImage = tuple.get(6, String.class);
-            String writer = tuple.get(7, String.class);
-            LocalDateTime createdAt = tuple.get(8, LocalDateTime.class);
-            Integer views = tuple.get(9, Integer.class);
-            Integer curiousTooCnt = tuple.get(10, Integer.class);
-            Long commentCnt = tuple.get(11, Long.class);
-            Long isCuriousTooLong = tuple.get(12, Long.class);
-            Boolean isCuriousToo = isCuriousTooLong != null && isCuriousTooLong > 0;
-            Long isCompleteLong = tuple.get(13, Long.class);
-            Boolean isComplete = isCompleteLong != null && isCompleteLong > 0;
+        for (DictQuestion d : questionList) {
+            Long questionId = d.getQuestionId();
 
+            Long curiousTooCntLong = curiousTooCountMap.get(questionId);
+            int curiousTooCnt;
+            if(curiousTooCntLong == null){
+                curiousTooCnt = 0;
+            }else{
+                curiousTooCnt = curiousTooCntLong.intValue();
+            }
+            Long commentCntLong = commentCountMap.get(questionId);
+            int commentCnt;
+            if(commentCntLong == null){
+                commentCnt = 0;
+            }else{
+                commentCnt = commentCntLong.intValue();
+            }
             dictQuestionResponseDtoList.add(DictQuestionResponseDto.builder()
                     .questionId(questionId)
-                    .title(title)
-                    .thumbNail(thumbNail)
-                    .content(content)
-                    .username(username)
-                    .profileImageUrl(profileImage)
-                    .writer(writer)
-                    .createdAt(createdAt)
-                    .views(views == null ? 0 : views)
-                    .curiousTooCnt(curiousTooCnt == null ? 0 : curiousTooCnt)
-                    .commentCnt(commentCnt == null ? 0 : commentCnt.intValue())
-                    .isCuriousToo(isCuriousToo)
-                    .isComplete(isComplete)
+                    .title(d.getQuestionName())
+                    .thumbNail(d.getThumbNail())
+                    .content(d.getContent())
+                    .username(userInfoMap.get(questionId+":username"))
+                    .profileImageUrl(userInfoMap.get(questionId+":profileImage"))
+                    .writer(userInfoMap.get(questionId+":nickname"))
+                    .createdAt(d.getCreatedAt())
+                    .views(d.getViews())
+                    .curiousTooCnt(curiousTooCnt)
+                    .commentCnt(commentCnt)
+                    .isCuriousToo(curiousTooMap.get(questionId + ":" + userId) != null)
+                    .isComplete(completeMap.get(questionId) != null)
                     .build()
             );
         }
