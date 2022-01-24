@@ -112,8 +112,6 @@ public class AlarmService {
                     .alarmType(alarm.getAlarmTypeEnum().name())
                     .checked(alarm.isChecked())
                     .navId(alarm.getNavId())
-                    .username(alarm.getUser().getUsername())
-                    .nickname(alarm.getUser().getNickname())
                     .build()
             );
         }
