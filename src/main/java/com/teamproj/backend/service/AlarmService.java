@@ -145,20 +145,20 @@ public class AlarmService {
     }
 
     // region 알림 읽음으로 처리
-    @Transactional
-    public String readCheckAlarm(Long alarmId, UserDetailsImpl userDetails) {
-        // 알람 아이디로 알람 정보 가져오기
-        Alarm alarm = getSafeAlarmById(alarmId);
-        User user = jwtAuthenticateProcessor.getUser(userDetails);
-        // 자신의 알람이 아닐 경우 튕겨냄.
-        if (!user.getId().equals(alarm.getUser().getId())) {
-            throw new IllegalArgumentException(NOT_YOUR_ALARM);
-        }
-        // 알람 읽음 처리
-        alarm.setChecked(true);
-        // 읽음 처리 완료 메시지 Response
-        return "읽음 처리 완료";
-    }
+//    @Transactional
+//    public String readCheckAlarm(Long alarmId, UserDetailsImpl userDetails) {
+//        // 알람 아이디로 알람 정보 가져오기
+//        Alarm alarm = getSafeAlarmById(alarmId);
+//        User user = jwtAuthenticateProcessor.getUser(userDetails);
+//        // 자신의 알람이 아닐 경우 튕겨냄.
+//        if (!user.getId().equals(alarm.getUser().getId())) {
+//            throw new IllegalArgumentException(NOT_YOUR_ALARM);
+//        }
+//        // 알람 읽음 처리
+//        alarm.setChecked(true);
+//        // 읽음 처리 완료 메시지 Response
+//        return "읽음 처리 완료";
+//    }
     // endregion
 
     // region 모든 알림 읽음으로 처리

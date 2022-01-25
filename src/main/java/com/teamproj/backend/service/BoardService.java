@@ -38,7 +38,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,7 +59,6 @@ public class BoardService {
     private final BoardTodayLikeRepository boardTodayLikeRepository;
     private final ViewersRepository viewersRepository;
 
-    private final CommentService commentService;
     private final RedisService redisService;
     private final StatService statService;
 
@@ -488,7 +486,7 @@ public class BoardService {
                             .createdAt(board.getCreatedAt())
                             .views(board.getViews())
                             .likeCnt(board.getLikes().size())
-                            .commentCnt(commentService.getCommentList(board).size())
+//                            .commentCnt(commentService.getCommentList(board).size())
                             .build()
             );
         }

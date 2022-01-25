@@ -39,8 +39,6 @@ public class MyPageService {
     private final DictRepository dictRepository;
     private final UserRepository userRepository;
 
-    private final CommentService commentService;
-
     private final S3Uploader s3Uploader;
     private final JPAQueryFactory queryFactory;
 
@@ -108,7 +106,7 @@ public class MyPageService {
                                 .createdAt(board.getCreatedAt())
                                 .views(board.getViews())
                                 .likeCnt(board.getLikes().size())
-                                .commentCnt(commentService.getCommentList(board).size())
+//                                .commentCnt(commentService.getCommentList(board).size())
                                 .build()
                     );
                 }

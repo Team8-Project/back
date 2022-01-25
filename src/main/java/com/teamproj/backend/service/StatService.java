@@ -20,6 +20,7 @@ import com.teamproj.backend.model.dict.question.QQuestionSelect;
 import com.teamproj.backend.model.statistics.*;
 import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -55,11 +56,16 @@ public class StatService {
 
     // 사전 통계 내용 출력
     public StatDictResponseDto statDict() {
-        StatDictResponseDto statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
-
-        if (statDictResponseDto == null) {
-            redisService.setStatDict(STAT_DICT_KEY, getStatDict());
+        StatDictResponseDto statDictResponseDto;
+        try{
             statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+
+            if (statDictResponseDto == null) {
+                redisService.setStatDict(STAT_DICT_KEY, getStatDict());
+                statDictResponseDto = redisService.getStatDict(STAT_DICT_KEY);
+            }
+        }catch(RedisConnectionFailureException e){
+            statDictResponseDto = getStatDict();
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -116,8 +122,8 @@ public class StatService {
     // 일일 방문자 통계
     // 하루 지나면 삭제됩니다.
     // 원래 데이터 전부 쌓아놓고 싶었는데 용량과 속도를 고려하여.....
-    public long statVisitor() {
-        StatVisitor statVisitor = getSafeStatVisitorByVisitorIp(StatisticsUtils.getClientIp(), StatisticsUtils.getClientReferer());
+    public long statVisitor(String clientIp, String referer) {
+        StatVisitor statVisitor = getSafeStatVisitorByVisitorIp(clientIp, referer);
         statVisitorRepository.save(statVisitor); // modifiedAt(최근 방문시간) 기록하기 위해
 
         return statVisitorRepository.count();
@@ -129,18 +135,18 @@ public class StatService {
     }
 
     // 퀴즈 시작한사람 통계
-    public void statQuizStarter(String category) {
+    public void statQuizStarter(String category, String clientIp) {
         statQuizStarterRepository.save(StatQuizStarter.builder()
                 .type(category)
-                .starterIp(StatisticsUtils.getClientIp())
+                .starterIp(clientIp)
                 .build());
     }
 
     // 퀴즈 푼 사람 통계. 점수도.
-    public void statQuizSolver(String category, int score) {
+    public void statQuizSolver(String category, int score, String clientIp) {
         statQuizSolverRepository.save(StatQuizSolver.builder()
                 .type(category)
-                .solverIp(StatisticsUtils.getClientIp())
+                .solverIp(clientIp)
                 .score(score)
                 .build());
     }
