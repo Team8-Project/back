@@ -1,7 +1,6 @@
 package com.teamproj.backend.model.dict.question;
 
 import com.teamproj.backend.dto.dict.question.update.DictQuestionUpdateRequestDto;
-import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
 import lombok.*;

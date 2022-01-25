@@ -8,6 +8,7 @@ import com.teamproj.backend.model.quiz.QQuizBank;
 import com.teamproj.backend.model.quiz.Quiz;
 import com.teamproj.backend.model.quiz.QuizBank;
 import com.teamproj.backend.util.MySqlJpaTemplates;
+import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,8 @@ public class QuizService {
         List<QuizResponseDto> quizResponseDtoList = getSafeQuizResponseDtoList(RANDOM_QUIZ_KEY, count, category);
 
         // 통계 구문. 쓰레드로 동작... 하게 할 예정;;
-        statService.statQuizStarter(category);
+        String clientIp = StatisticsUtils.getClientIp();
+        statService.statQuizStarter(category, clientIp);
 
         return quizResponseDtoList;
     }

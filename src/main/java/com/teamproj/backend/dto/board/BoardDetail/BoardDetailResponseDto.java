@@ -1,13 +1,11 @@
 package com.teamproj.backend.dto.board.BoardDetail;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.teamproj.backend.dto.comment.CommentResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Builder
@@ -25,6 +23,6 @@ public class BoardDetailResponseDto {
     private int views;
     private int likeCnt;
     private Boolean isLike;
-    private List<CommentResponseDto> commentList;
+//    private List<CommentResponseDto> commentList;
     private int commentCnt;
 }

@@ -1,6 +1,5 @@
 package com.teamproj.backend.model.dict.question;
 
-import com.teamproj.backend.model.Comment;
 import lombok.*;
 
 import javax.persistence.*;

@@ -27,16 +27,16 @@ public class AlarmController {
                 .build();
     }
 
-    @GetMapping("/api/alarm/{alarmId}/read")
-    public ResponseDto<String> readCheckAlarm(@PathVariable Long alarmId,
-                                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
-
-        return ResponseDto.<String>builder()
-                .status(HttpStatus.OK.toString())
-                .message("success")
-                .data(alarmService.readCheckAlarm(alarmId, userDetails))
-                .build();
-    }
+//    @GetMapping("/api/alarm/{alarmId}/read")
+//    public ResponseDto<String> readCheckAlarm(@PathVariable Long alarmId,
+//                                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
+//
+//        return ResponseDto.<String>builder()
+//                .status(HttpStatus.OK.toString())
+//                .message("success")
+//                .data(alarmService.readCheckAlarm(alarmId, userDetails))
+//                .build();
+//    }
 
     @GetMapping("/api/alarm/read")
     public ResponseDto<String> readCheckAllAlarm(@AuthenticationPrincipal UserDetailsImpl userDetails) {
