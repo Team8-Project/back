@@ -11,6 +11,7 @@ import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.service.dict.DictHistoryService;
 import com.teamproj.backend.service.dict.DictService;
+import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -75,7 +76,7 @@ public class DictController {
         return ResponseDto.<DictDetailResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 상세")
-                .data(dictService.getDictDetail(dictId, token))
+                .data(dictService.getDictDetail(dictId, token, StatisticsUtils.getClientIp()))
                 .build();
     }
 

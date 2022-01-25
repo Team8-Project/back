@@ -11,6 +11,7 @@ import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -74,18 +75,24 @@ public class AlarmService {
     public List<AlarmResponseDto> receiveAlarm(User user) {
         String redisKey = USER_ALARM_KEY + ":" + user.getId();
         List<AlarmResponseDto> alarmList;
+        List<Alarm> list;
 
-        if (user.isAlarmCheck()) {
-            alarmList = redisService.getAlarm(redisKey);
-            if (alarmList != null) {
-                return alarmList;
+        try{
+            if (user.isAlarmCheck()) {
+                alarmList = redisService.getAlarm(redisKey);
+                if (alarmList != null) {
+                    return alarmList;
+                }
             }
-        }
 
-        List<Alarm> list = getSafeAlarmListByUser(user);
-        alarmList = getAlarmListToResponseDto(list);
-        if (alarmList.size() > 0) {
-            redisService.setAlarm(redisKey, alarmList);
+            list = getSafeAlarmListByUser(user);
+            alarmList = getAlarmListToResponseDto(list);
+            if (alarmList.size() > 0) {
+                redisService.setAlarm(redisKey, alarmList);
+            }
+        }catch(RedisConnectionFailureException e){
+            list = getSafeAlarmListByUser(user);
+            alarmList = getAlarmListToResponseDto(list);
         }
 
         user.setAlarmCheck(true);
@@ -105,8 +112,6 @@ public class AlarmService {
                     .alarmType(alarm.getAlarmTypeEnum().name())
                     .checked(alarm.isChecked())
                     .navId(alarm.getNavId())
-                    .username(alarm.getUser().getUsername())
-                    .nickname(alarm.getUser().getNickname())
                     .build()
             );
         }
