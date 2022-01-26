@@ -313,13 +313,13 @@ public class DictService {
     }
 
     // 추천 검색어 기능. 현재 활용되지 않고 있음.
-    public List<String> getSearchInfo() {
-        List<String> result = getSafeRecommendSearch(DICT_RECOMMEND_SEARCH_KEY);
-
-        Collections.shuffle(result);
-        int returnSize = Math.min(result.size(), 7);
-        return result.subList(0, returnSize);
-    }
+//    public List<String> getSearchInfo() {
+//        List<String> result = getSafeRecommendSearch(DICT_RECOMMEND_SEARCH_KEY);
+//
+//        Collections.shuffle(result);
+//        int returnSize = Math.min(result.size(), 7);
+//        return result.subList(0, returnSize);
+//    }
 
     /**
      * 검색 기능

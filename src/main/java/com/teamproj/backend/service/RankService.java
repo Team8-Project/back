@@ -152,9 +152,6 @@ public class RankService {
         List<RankResponseDto> rankResponseDtoList = new ArrayList<>();
         for (Tuple tuple : tupleList) {
             Long userId = tuple.get(0, Long.class);
-            if(userId.equals(1L)){
-                continue;
-            }
             String profileImage = tuple.get(1, String.class);
             String nickname = tuple.get(2, String.class);
             Long postCount = tuple.get(3, Long.class);

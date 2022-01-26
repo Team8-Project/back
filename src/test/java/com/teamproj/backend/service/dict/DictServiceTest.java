@@ -137,40 +137,68 @@ public class DictServiceTest {
         }
     }
 
-//    @Nested
-//    @DisplayName("사전 생성")
-//    class postDict {
-//        @Test
-//        @DisplayName("성공")
-//        void postDict_success() {
-//            // given
-//            String title = "test";
-//
-//            // when
-//            postDict(title, summary, content);
-//
-//            // then
-//            assertTrue(dictRepository.existsByDictName(title));
-//        }
-//
-//        @Nested
-//        @DisplayName("실패")
-//        class postDict_fail {
-//            @Test
-//            @DisplayName("중복된 사전이름")
-//            void postDict_fail_already_dictName() {
-//                // given
-//
-//                // when
-//                Exception exception = assertThrows(IllegalArgumentException.class,
-//                        () -> postDict(title, summary, content)
-//                );
-//
-//                // then
-//                assertEquals(EXIST_DICT, exception.getMessage());
-//            }
-//        }
-//    }
+    @Nested
+    @DisplayName("사전 생성")
+    class postDict {
+        @Test
+        @DisplayName("성공")
+        void postDict_success() {
+            // given
+            DictPostRequestDto dto = DictPostRequestDto.builder()
+                    .title("jazz")
+                    .summary("요약")
+                    .content("내용")
+                    .build();
+
+            // when
+            DictPostResponseDto result = dictService.postDict(userDetails, dto);
+
+            // then
+            assertEquals("작성 성공", result.getResult());
+        }
+
+        @Nested
+        @DisplayName("실패")
+        class postDict_fail {
+            @Test
+            @DisplayName("중복된 사전이름")
+            void postDict_fail_already_dictName() {
+                // given
+                DictPostRequestDto dto = DictPostRequestDto.builder()
+                        .title(title)
+                        .summary(summary)
+                        .content(content)
+                        .build();
+
+                // when
+                Exception exception = assertThrows(IllegalArgumentException.class,
+                        () -> dictService.postDict(userDetails, dto)
+                );
+
+                // then
+                assertEquals(EXIST_DICT, exception.getMessage());
+            }
+
+            @Test
+            @DisplayName("30자 이상의 한줄요약 작성 시도")
+            void postDict_fail_too_long_sumamry() {
+                // given
+                DictPostRequestDto dto = DictPostRequestDto.builder()
+                        .title("재즈")
+                        .summary(UUID.randomUUID().toString())
+                        .content(content)
+                        .build();
+
+                // when
+                Exception exception = assertThrows(IllegalArgumentException.class,
+                        () -> dictService.postDict(userDetails, dto)
+                );
+
+                // then
+                assertEquals(SUMMARY_IS_TOO_BIG, exception.getMessage());
+            }
+        }
+    }
 
     @Nested
     @DisplayName("용어사전 수정")
@@ -418,22 +446,22 @@ public class DictServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("추천 검색어")
-    class RecommendKeyword {
-        @Test
-        @DisplayName("성공")
-        void getRecommendKeyword() {
-            // given
-            dictService.likeDict(userDetails, dictId);
-
-            // when
-            List<String> recommendList = dictService.getSearchInfo();
-
-            // then
-            assertTrue(recommendList.size() > 0);
-        }
-    }
+//    @Nested
+//    @DisplayName("추천 검색어")
+//    class RecommendKeyword {
+//        @Test
+//        @DisplayName("성공")
+//        void getRecommendKeyword() {
+//            // given
+//            dictService.likeDict(userDetails, dictId);
+//
+//            // when
+//            List<String> recommendList = dictService.getSearchInfo();
+//
+//            // then
+//            assertTrue(recommendList.size() > 0);
+//        }
+//    }
 
     @Nested
     @DisplayName("스크랩한 사전 목록")

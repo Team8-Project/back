@@ -4,6 +4,7 @@ import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
 import com.teamproj.backend.dto.quiz.QuizResponseDto;
 import com.teamproj.backend.service.QuizService;
+import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -23,10 +24,12 @@ public class QuizController {
     @GetMapping("/api/quiz/{category}")
     public ResponseDto<List<QuizResponseDto>> getQuizList(@RequestParam int count,
                                                           @PathVariable String category){
+        String clientIp = StatisticsUtils.getClientIp();
+
         return ResponseDto.<List<QuizResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("퀴즈 불러오기")
-                .data(quizService.getQuizList(count, category.toUpperCase()))
+                .data(quizService.getQuizList(count, category.toUpperCase(), clientIp))
                 .build();
     }
 }

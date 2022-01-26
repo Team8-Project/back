@@ -120,33 +120,33 @@ public class DictController {
                 .build();
     }
 
-    @GetMapping("/api/dict/history/{historyId}")
-    public ResponseDto<DictHistoryDetailResponseDto> getDictHistoryDetail(@PathVariable Long historyId) {
-        return ResponseDto.<DictHistoryDetailResponseDto>builder()
-                .status(HttpStatus.OK.toString())
-                .message("사전 역사 상세")
-                .data(dictHistoryService.getDictHistoryDetail(historyId))
-                .build();
-    }
+//    @GetMapping("/api/dict/history/{historyId}")
+//    public ResponseDto<DictHistoryDetailResponseDto> getDictHistoryDetail(@PathVariable Long historyId) {
+//        return ResponseDto.<DictHistoryDetailResponseDto>builder()
+//                .status(HttpStatus.OK.toString())
+//                .message("사전 역사 상세")
+//                .data(dictHistoryService.getDictHistoryDetail(historyId))
+//                .build();
+//    }
 
-    @GetMapping("/api/dict/revert/{historyId}")
-    public ResponseDto<DictRevertResponseDto> revertDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                         @PathVariable Long historyId) {
-        return ResponseDto.<DictRevertResponseDto>builder()
-                .status(HttpStatus.OK.toString())
-                .message("사전 롤백")
-                .data(dictHistoryService.revertDict(historyId, userDetails))
-                .build();
-    }
+//    @GetMapping("/api/dict/revert/{historyId}")
+//    public ResponseDto<DictRevertResponseDto> revertDict(@AuthenticationPrincipal UserDetailsImpl userDetails,
+//                                                         @PathVariable Long historyId) {
+//        return ResponseDto.<DictRevertResponseDto>builder()
+//                .status(HttpStatus.OK.toString())
+//                .message("사전 롤백")
+//                .data(dictHistoryService.revertDict(historyId, userDetails))
+//                .build();
+//    }
 
-    @GetMapping("/api/searchInfo/dict")
-    public ResponseDto<List<String>> getSearchInfo() {
-        return ResponseDto.<List<String>>builder()
-                .status(HttpStatus.OK.toString())
-                .message("추천 검색어 요청")
-                .data(dictService.getSearchInfo())
-                .build();
-    }
+//    @GetMapping("/api/searchInfo/dict")
+//    public ResponseDto<List<String>> getSearchInfo() {
+//        return ResponseDto.<List<String>>builder()
+//                .status(HttpStatus.OK.toString())
+//                .message("추천 검색어 요청")
+//                .data(dictService.getSearchInfo())
+//                .build();
+//    }
 
     @GetMapping("/api/bestDict/dict")
     public ResponseDto<List<DictBestResponseDto>> getBestDict(@RequestHeader(value = "Authorization", required = false) String token) {

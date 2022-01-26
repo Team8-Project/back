@@ -1,4 +1,4 @@
-package com.teamproj.backend.service;
+package com.teamproj.backend.service.user;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +13,7 @@ import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyRequestDto;
 import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.security.UserDetailsImpl;
+import com.teamproj.backend.service.UserService;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
