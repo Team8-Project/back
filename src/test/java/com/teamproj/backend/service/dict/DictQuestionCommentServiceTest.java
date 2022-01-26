@@ -80,15 +80,15 @@ class DictQuestionCommentServiceTest {
         dictQuestionContent = "내용";
 
         user = User.builder()
-                .username("유저네임")
-                .nickname("닉네임")
+                .username("테스트유저")
+                .nickname("테스트닉네임")
                 .password("Q1234567")
                 .build();
 
         userRepository.save(user);
         userDetails = UserDetailsImpl.builder()
-                .username("유저네임")
-                .password("q1w2E#")
+                .username("테스트유저")
+                .password("Q1234567")
                 .build();
     }
 
