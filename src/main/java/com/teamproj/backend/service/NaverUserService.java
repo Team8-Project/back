@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.dto.ResponseDto;
-import com.teamproj.backend.dto.user.social.kakao.KakaoUserInfoDto;
-import com.teamproj.backend.dto.user.social.kakao.KakaoUserResponseDto;
 import com.teamproj.backend.dto.user.social.naver.NaverUserInfoDto;
 import com.teamproj.backend.dto.user.social.naver.NaverUserResponseDto;
 import com.teamproj.backend.model.User;
@@ -27,7 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.teamproj.backend.exception.ExceptionMessages.*;
+import static com.teamproj.backend.exception.ExceptionMessages.NOT_VALID_CODE;
 /*
     NAVER SOCIAL LOGIN SERVICE
     공식 문서 : https://developers.naver.com/docs/login/devguide/devguide.md
