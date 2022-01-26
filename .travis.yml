@@ -1,0 +1,56 @@
+language: java
+jdk:
+  - openjdk8
+
+branches:
+  only:
+    - travis-deploy # Git Push할 Branch
+
+before_install:
+  - chmod +x gradlew # gradlew 권한 추가
+
+cache:
+  directories: # Travis CI 서버의 Home
+    - "$HOME/.m2/repository"
+    - "$HOME/.gradle"
+
+script: "./gradlew clean build"
+
+before_deploy: # 배포 설정값
+  - zip -r team8-deploy *
+  - mkdir -p deploy
+  - mv team8-deploy.zip deploy/team8-deploy.zip
+
+deploy:
+  - provider: s3
+    access_key_id: "$AWS_ACCESS_KEY" # Travis-ci 웹 repo settings에서 설정해줘야 함.
+    secret_access_key: "$AWS_SECRET_KEY" # Travis-ci 웹 repo settings에서 설정해줘야 함.
+    bucket: team8-deploy # 생성한 S3 버킷
+    region: ap-northeast-2
+    skip_cleanup: true
+    acl: public_read
+    wait-until-deployed: true
+    on:
+      repo: Team8-Project/back #Github 주소
+      branch: travis-deploy
+    local_dir: deploy # before_deploy에서 생성한 디렉토리
+
+  - provider: codedeploy
+    access_key_id: "$AWS_ACCESS_KEY" # Travis-ci 웹 repo settings에서 설정해줘야 함.
+    secret_access_key: "$AWS_SECRET_KEY" # Travis-ci 웹 repo settings에서 설정해줘야 함.
+    bucket: team8-deploy # 생성한 S3 버킷
+    key: team8-deploy.zip
+    bundle_type: zip
+    application: memeglememegle-deploy # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
+    deployment_group: memeglememegle-deploy-group # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
+    region: ap-northeast-2
+    wait-until-deployed: true
+    on:
+      repo: Team8-Project/back
+      branch: travis-deploy
+notifications:
+  email: # CI 실행 완료시 메일로 알람
+    recipients:
+      - zabeee52@gmail.com
+  slack: # CI 실행 완료시 슬랙으로 알람
+    secure: CyG6jMKpetQaLDzJrw2Pk+IYbjzEebrS7tJd+rdgqMZExrMpC09oAWBJt7F3ZZRdOvVfvjvuF8FFzdGVQaEc+xpMERAOSvKYAIiPrAU7UkQJo0qy2EjIXWZqCUxzVESW8oI+Q2XNHCxvk47dbHC0dQB60FkpaQS/aZxjuRCH21bephEpJaY8bauW/szdeeY8ZH2Ay66mXtg5hhBbCoQlLCm0B7gLc/Xt7XmawAL8F37fDoeGVzmYp20Hy34FNXa4Bpd0lMu6XwzXoseQhqY9aE4QDYMuSeD/uHkOBj3krb0b8uPYVMbu6bgEkj6NLBXruwJNg/DIMECIaKDpSSdem6Rn503Eylo3QmID8NDOvfzGejsrTfQQ6616SDTQduaDIXAfTlBoQ7jnPC5ICvswsxY/93Bpf/a1RL3d6NX6k2W932rOUL98HD+/DdM1F+YQ+AsKAZoWBO9iZa11uhabyjjD2GNaHNhNYr9W52VfkO5dWLYYXS+hVPJuaMKLnUKvGss6hZxvP3O5C0kMS03mbtxJJGiuITmBOsjfG2T07TSKl+zVLT7HrvVxhGe6R0SyXoW6oAU5G51BIlhXPgm3dT+2LJkFb3uMa8JSelBAx/L+F1M8I0Oxso0UHFpbzMD9vZBerzGswADo6IQ4fYR22pWc5jE69bJsTSDZyiptoe0=

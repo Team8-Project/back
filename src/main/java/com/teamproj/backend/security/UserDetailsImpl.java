@@ -1,31 +1,37 @@
 package com.teamproj.backend.security;
 
-import com.teamproj.backend.model.User;
+import com.teamproj.backend.security.jwt.JwtTokenUtils;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
+@Builder
+@AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
+    private String username;
+    private String password;
 
-    private final User user;
-
-    public UserDetailsImpl(User user) {
-        this.user = user;
+    public static UserDetailsImpl initUserDetails(HashMap<String, String> userInfo){
+        return UserDetailsImpl.builder()
+                .username(userInfo.get(JwtTokenUtils.CLAIM_USER_NAME))
+                .password(userInfo.get(JwtTokenUtils.CLAIM_USER_PASSWORD))
+                .build();
     }
-
-    public User getUser() { return user; }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return this.password;
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return this.username;
     }
 
     @Override

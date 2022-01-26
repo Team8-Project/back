@@ -2,6 +2,7 @@ package com.teamproj.backend.security;
 
 
 import com.teamproj.backend.Repository.UserRepository;
+import com.teamproj.backend.exception.ExceptionMessages;
 import com.teamproj.backend.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
         System.out.println("loadUserByUsername.username : " + user.get().getUsername());
 
-        return new UserDetailsImpl(user.get());
+        return UserDetailsImpl
+                .builder()
+                .username(user.get().getUsername())
+                .password(user.get().getPassword())
+                .build();
     }
 }

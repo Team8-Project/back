@@ -5,12 +5,14 @@ import com.teamproj.backend.security.filter.JwtAuthFilter;
 import com.teamproj.backend.security.jwt.HeaderTokenExtractor;
 import com.teamproj.backend.security.provider.FormLoginAuthProvider;
 import com.teamproj.backend.security.provider.JWTAuthProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,6 +24,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity // 스프링 Security 지원을 가능하게 함
+@RequiredArgsConstructor
 @EnableGlobalMethodSecurity(securedEnabled = true) // @Secured 어노테이션 활성화
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -30,15 +33,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final JWTAuthProvider jwtAuthProvider;
     private final HeaderTokenExtractor headerTokenExtractor;
 
-    public WebSecurityConfig(
-            JWTAuthProvider jwtAuthProvider,
-            HeaderTokenExtractor headerTokenExtractor
-//            JwtTokenProvider jwtTokenProvider
-    ) {
-        this.jwtAuthProvider = jwtAuthProvider;
-        this.headerTokenExtractor = headerTokenExtractor;
-//        this.jwtTokenProvider = jwtTokenProvider;
-    }
     //JWT부분 종료
 
     @Bean
@@ -53,13 +47,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationProvider(jwtAuthProvider);
     }
 
-//    @Override
-//    public void configure(WebSecurity web) {
-//    // h2-console 사용에 대한 허용 (CSRF, FrameOptions 무시)
-//        web
-//                .ignoring()
-//                .antMatchers("/h2-console/**");
-//    }
+    @Override
+    public void configure(WebSecurity web) {
+        // h2-console 사용에 대한 허용 (CSRF, FrameOptions 무시)
+        web
+                .ignoring()
+                .antMatchers("/h2-console/**");
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -114,12 +108,51 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private JwtAuthFilter jwtFilter() throws Exception {
         List<String> skipPathList = new ArrayList<>();
 
+        skipPathList.add("GET,/health");
+        skipPathList.add("GET,/actuator/health");
+        skipPathList.add("GET,/profile");
+        skipPathList.add("GET,/h2-console");
+
+        // 메인 페이지 API 허용
+        skipPathList.add("GET,/api/main");
+
         // 회원 관리 API 허용
-        skipPathList.add("GET,/api/user"); // 로그인
-        skipPathList.add("POST,/api/user"); // 회원가입
+        skipPathList.add("POST,/api/user"); // 로그인
         skipPathList.add("GET,/api/user/**"); // 소셜로그인
+        skipPathList.add("POST,/api/signup"); // 회원가입
+        skipPathList.add("GET,/api/signup/**"); // 중복체크
 
         skipPathList.add("GET,/");
+
+        // 사전 목록 API 허용
+        skipPathList.add("GET,/api/dict*");
+        skipPathList.add("GET,/api/dict/*");
+        skipPathList.add("GET,/api/dict/*/history");
+        skipPathList.add("GET,/api/dict/history/*");
+        skipPathList.add("GET,/api/searchInfo/dict");
+        skipPathList.add("GET,/api/count/dict");
+        skipPathList.add("GET,/api/bestDict/dict");
+        skipPathList.add("GET,/api/dict/search*");
+        // 통계 API 허용
+        skipPathList.add("GET,/api/stat/dict");
+        // 사전 요청 API 허용
+        skipPathList.add("GET,/api/dict/curious");
+        // 사전 질문 API 허용
+        skipPathList.add("GET,/api/dict/question");
+        skipPathList.add("GET,/api/dict/question/*");
+
+        // 게시판 목록 API 허용
+        skipPathList.add("GET,/api/board/*"); // 게시글 상세보기, 검색
+        skipPathList.add("GET,/api/board/list/*"); // 게시글 조회
+        skipPathList.add("GET,/api/board/*/best"); // 명예의 밈짤
+        skipPathList.add("GET,/api/board/count/*"); // 게시글 총 개수 출력
+        skipPathList.add("GET,/api/board/hashTag/*"); // 해시태그 검색
+
+        // 퀴즈 API 허용
+        skipPathList.add("GET,/api/quiz/**");
+        // 통계 API 허용
+        skipPathList.add("GET,/api/stat/visitor"); // 방문자 정보
+        skipPathList.add("GET,/api/stat/quiz/*"); // 퀴즈 푼 사람 정보
 
         // Swagger 허용
         skipPathList.add("GET,/swagger-ui.html");
@@ -148,4 +181,3 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 }
-

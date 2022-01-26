@@ -3,6 +3,9 @@ package com.teamproj.backend.security.jwt;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.teamproj.backend.security.UserDetailsImpl;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 import java.util.Date;
 
@@ -20,14 +23,16 @@ public final class JwtTokenUtils {
 
     public static final String CLAIM_EXPIRED_DATE = "EXPIRED_DATE";
     public static final String CLAIM_USER_NAME = "USER_NAME";
-    public static final String JWT_SECRET = "jwt_secret_!@#$%";
+    public static final String CLAIM_USER_PASSWORD = "USER_PASSWORD";
+    public static final String JWT_SECRET = "teamproj8!@$!^%$@#";
 
     public static String generateJwtToken(UserDetailsImpl userDetails) {
         String token = null;
         try {
             token = JWT.create()
-                    .withIssuer("sparta")
+                    .withIssuer("team8")
                     .withClaim(CLAIM_USER_NAME, userDetails.getUsername())
+                    .withClaim(CLAIM_USER_PASSWORD, userDetails.getPassword())
                      // 토큰 만료 일시 = 현재 시간 + 토큰 유효기간)
                     .withClaim(CLAIM_EXPIRED_DATE, new Date(System.currentTimeMillis() + JWT_TOKEN_VALID_MILLI_SEC))
                     .sign(generateAlgorithm());

@@ -9,6 +9,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id "com.ewerk.gradle.plugins.querydsl" version "1.0.10" // queryDSL (1)
     id 'java'
+    id 'jacoco'
 }
 
 group = 'com.teamproj'
@@ -51,10 +52,50 @@ dependencies {
     //querydsl 추가
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
     implementation "com.querydsl:querydsl-apt:${queryDslVersion}"
+    implementation "com.querydsl:querydsl-core:${queryDslVersion}"
+
+    // 테스트 코드를 위한 Lombok 라이브러리
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    // 스프링 부트 테스트를 위한 라이브러리
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.5.6'
+
+    // 스프링 시큐리티 테스트를 위한 라이브러리
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // Amazon S3
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.0.1.RELEASE'
+
+    // Health Check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // OAuth2 Google
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // S3 Mock for Test
+    implementation 'io.findify:s3mock_2.13:0.2.6'
+
+    // Youtube Data Api v3
+    // https://mvnrepository.com/artifact/com.google.apis/google-api-services-youtube
+    implementation 'com.google.apis:google-api-services-youtube:v3-rev222-1.25.0'
+
+    // Sentry
+    implementation 'io.sentry:sentry-spring-boot-starter:5.5.3'
+    implementation 'io.sentry:sentry-logback:5.5.3'
+}
+
+jar{
+    enabled = false
 }
 
 test {
+//    exclude '**/*'
     useJUnitPlatform()
+    finalizedBy 'jacocoTestReport' // 추가
 }
 
 def querydslDir = "$buildDir/generated/querydsl" // queryDSL (3)
@@ -80,4 +121,60 @@ configurations { // queryDSL (6)
 }
 
 
+jacoco {
+    toolVersion = '0.8.6'
+}
 
+jacocoTestReport {
+    reports {
+        html.enabled true
+        csv.enabled true
+        xml.enabled false
+    }
+
+    // Q class(QueryDSL 클래스) 보고 항목에서 제외
+    def Qdomains = []
+    for(qPattern in "**/QA" .. "**/QZ"){
+        Qdomains.add(qPattern+"*")
+    }
+
+    afterEvaluate {
+
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it,
+                    exclude: [] + Qdomains)
+        }))
+    }
+
+    finalizedBy 'jacocoTestCoverageVerification' // 추가
+}
+
+jacocoTestCoverageVerification {
+    // QueryDSL 클래스 테스트 커버리지 대상에서 제외
+    def Qdomains = []
+
+    for (qPattern in '*.QA'..'*.QZ') { // qPattern = '*.QA', '*.QB', ... '*.QZ'
+        Qdomains.add(qPattern + '*')
+    }
+
+    violationRules {
+        rule {
+            enabled = true
+            element = 'CLASS'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+
+            excludes = [] + Qdomains // 제외할 Qdomains 패턴 추가
+        }
+    }
+}
