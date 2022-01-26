@@ -33,4 +33,9 @@ public class Quiz {
 
     @Column
     private String quizImage;
+
+    public void addChoice(QuizBank quizBank){
+        quizBank.setQuiz(this);
+        choiceList.add(quizBank);
+    }
 }

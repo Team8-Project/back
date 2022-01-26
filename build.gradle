@@ -131,10 +131,26 @@ jacocoTestReport {
         csv.enabled true
         xml.enabled false
     }
+
+    // Q class(QueryDSL 클래스) 보고 항목에서 제외
+    def Qdomains = []
+    for(qPattern in "**/QA" .. "**/QZ"){
+        Qdomains.add(qPattern+"*")
+    }
+
+    afterEvaluate {
+
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it,
+                    exclude: [] + Qdomains)
+        }))
+    }
+
     finalizedBy 'jacocoTestCoverageVerification' // 추가
 }
 
 jacocoTestCoverageVerification {
+    // QueryDSL 클래스 테스트 커버리지 대상에서 제외
     def Qdomains = []
 
     for (qPattern in '*.QA'..'*.QZ') { // qPattern = '*.QA', '*.QB', ... '*.QZ'
