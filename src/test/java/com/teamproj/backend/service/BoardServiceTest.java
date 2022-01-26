@@ -15,6 +15,7 @@ import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
+
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
@@ -87,15 +88,15 @@ class BoardServiceTest {
         boardContent = "내용";
 
         user = User.builder()
-                .username("유저네임")
-                .nickname("닉네임")
+                .username("테스트유저")
+                .nickname("테스트닉네임")
                 .password("Q1234567")
                 .build();
 
         userRepository.save(user);
         userDetails = UserDetailsImpl.builder()
-                .username("유저네임")
-                .password("q1w2E#")
+                .username("테스트유저")
+                .password("Q1234567")
                 .build();
     }
 
@@ -120,18 +121,18 @@ class BoardServiceTest {
             }
         }
 
-//        @Test
-//        @DisplayName("실패")
-//        void getBoard_fail() {
-//
-//            // when
-//            Exception exception = assertThrows(NullPointerException.class, () -> {
-//                boardService.getBoard("없는 카테고리", 1, 1, "token");
-//            });
-//
-//            // then
-//            assertEquals("유효한 카테고리가 아닙니다.", exception.getMessage());
-//        }
+        @Test
+        @DisplayName("실패")
+        void getBoard_fail() {
+
+            // when
+            Exception exception = assertThrows(NullPointerException.class, () -> {
+                boardService.getBoard("없는 카테고리", 1, 1, "token");
+            });
+
+            // then
+            assertEquals("유효한 카테고리가 아닙니다.", exception.getMessage());
+        }
     }
     //endregion
 
@@ -258,16 +259,18 @@ class BoardServiceTest {
             BoardCategory boardCategory = new BoardCategory("카테고리");
             boardCategoryRepository.save(boardCategory);
 
+
             Board board = Board.builder()
                     .user(user)
                     .content("내용")
                     .title("제목")
                     .boardCategory(boardCategory)
                     .thumbNail("썸네일URL")
-                    .enabled(true)
                     .build();
 
-            board = boardRepository.save(board);
+
+            boardRepository.save(board);
+
 
             String token = "BEARER " + JwtTokenUtils.generateJwtToken(userDetails);
 
@@ -276,6 +279,8 @@ class BoardServiceTest {
 
             // then
             assertEquals(board.getBoardId(), boardDetailResponseDto.getBoardId());
+            assertEquals(board.getTitle(), boardDetailResponseDto.getTitle());
+            assertEquals(board.getContent(), boardDetailResponseDto.getContent());
             assertEquals(board.getUser().getNickname(), boardDetailResponseDto.getWriter());
         }
 

@@ -91,21 +91,21 @@ class DictQuestionServiceTest {
         dictQuestionContent = "내용";
 
         user = User.builder()
-                .username("유저네임")
-                .nickname("닉네임")
+                .username("테스트유저")
+                .nickname("테스트닉네임")
                 .password("Q1234567")
                 .build();
 
         userRepository.save(user);
         userDetails = UserDetailsImpl.builder()
-                .username("유저네임")
-                .password("q1w2E#")
+                .username("테스트유저")
+                .password("Q1234567#")
                 .build();
     }
 
     //region 질문 전체조회
     @Nested
-    @DisplayName("게시글 전체조회")
+    @DisplayName("질문 전체조회")
     class getDictQuestion {
 
         @Test
@@ -146,7 +146,8 @@ class DictQuestionServiceTest {
             );
 
             // when
-            List<DictQuestionResponseDto> dictQuestionResponseDtoList = dictQuestionService.getQuestion(0, 1, "token");
+            List<DictQuestionResponseDto> dictQuestionResponseDtoList = dictQuestionService.getQuestion(
+                                                                                            0, 1, null);
         }
     }
 
@@ -548,16 +549,23 @@ class DictQuestionServiceTest {
         @DisplayName("성공")
         void questionSearch_success() {
             // given
-            String query = "제목";
+            DictQuestion dictQuestion = DictQuestion.builder()
+                    .questionName("테스트질문")
+                    .content("테스트질문")
+                    .user(user)
+                    .enabled(true)
+                    .thumbNail("테스트질문")
+                    .build();
+            dictQuestionRepository.save(dictQuestion);
+
 
             // when
             List<DictQuestionSearchResponseDto> dictQuestionSearchResponseDtoList = dictQuestionService.questionSearch(
-                    user, query, 0, 5
+                    user, "테스", 0, 5
             );
 
-
             // then
-            assertNotEquals(dictQuestionSearchResponseDtoList.size(), 0);
+                assertNotEquals(dictQuestionSearchResponseDtoList.size(), 0);
         }
 
         @Nested

@@ -89,70 +89,70 @@ public class DictQuestionService {
         return jwtAuthenticateProcessor.getUser(userDetails);
     }
 
-    // 대량의 데이터를 처리할 때 나눠 호출하는게 더 빨라서 질문 조회에 한해서는 한방쿼리 제외.....
-    private List<Tuple> getQuestionProc(User user, boolean enabled, int page, int size) {
-        QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
-        QDictQuestionComment qDictQuestionComment = QDictQuestionComment.dictQuestionComment;
-        QDictCuriousToo qDictCuriousToo = QDictCuriousToo.dictCuriousToo;
-        QQuestionSelect qQuestionSelect = QQuestionSelect.questionSelect;
-
-        /*
-            튜블 인덱스 열람
-            ***** dictQuestion *****
-            0 : 질문번호 - Long questionId
-            1 : 제목 - String questionName
-            2 : 이미지 - String thumbNail
-            3 : 내용 - String content
-            8 : 작성일 - LocalDateTime createdAt
-            9 : 조회수 - Integer views
-            ***** user *****
-            4 : 작성자번호 - Long userId
-            5 : 작성자 계정명 - String username
-            6 : 작성자 프로필사진 - String userProfileImage
-            7 : 작성자 닉네임 - String userNickname
-            ***** dictCuriousToo *****
-            10 : 나도궁금해요 개수 - Integer dictCuriousTooCount
-            12 : 나도궁금해요 여부 - Long isDictCuriousToo // 0일 경우 false, 0 이상일 경우 true
-            ***** comment *****
-            11 : 댓글 개수 - Long commentSize
-            ***** questionSelect *****
-            13 : 채택된 댓글 - Long selectedCommentId
-         */
-        int offset = page * size;
-        return queryFactory
-                .select(qDictQuestion.questionId,
-                        qDictQuestion.questionName,
-                        qDictQuestion.thumbNail,
-                        qDictQuestion.content,
-                        qDictQuestion.user.id,
-                        qDictQuestion.user.username,
-                        qDictQuestion.user.profileImage,
-                        qDictQuestion.user.nickname,
-                        qDictQuestion.createdAt,
-                        qDictQuestion.views,
-                        qDictQuestion.dictCuriousTooList.size(),
-                        queryFactory
-                                .select(qDictQuestionComment.count())
-                                .from(qDictQuestionComment)
-                                .where(qDictQuestionComment.dictQuestion.eq(qDictQuestion),
-                                        qDictQuestionComment.enabled.eq(true)),
-                        queryFactory
-                                .select(qDictCuriousToo.count())
-                                .from(qDictCuriousToo)
-                                .where(qDictCuriousToo.dictQuestion.eq(qDictQuestion),
-                                        eqUser(user)),
-                        queryFactory
-                                .select(qQuestionSelect.questionComment.questionCommentId)
-                                .from(qQuestionSelect)
-                                .where(qQuestionSelect.dictQuestion.eq(qDictQuestion))
-                )
-                .from(qDictQuestion)
-                .where(qDictQuestion.enabled.eq(enabled))
-                .orderBy(qDictQuestion.questionId.desc())
-                .offset(offset)
-                .limit(size)
-                .fetch();
-    }
+//    // 대량의 데이터를 처리할 때 나눠 호출하는게 더 빨라서 질문 조회에 한해서는 한방쿼리 제외.....
+//    private List<Tuple> getQuestionProc(User user, boolean enabled, int page, int size) {
+//        QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
+//        QDictQuestionComment qDictQuestionComment = QDictQuestionComment.dictQuestionComment;
+//        QDictCuriousToo qDictCuriousToo = QDictCuriousToo.dictCuriousToo;
+//        QQuestionSelect qQuestionSelect = QQuestionSelect.questionSelect;
+//
+//        /*
+//            튜블 인덱스 열람
+//            ***** dictQuestion *****
+//            0 : 질문번호 - Long questionId
+//            1 : 제목 - String questionName
+//            2 : 이미지 - String thumbNail
+//            3 : 내용 - String content
+//            8 : 작성일 - LocalDateTime createdAt
+//            9 : 조회수 - Integer views
+//            ***** user *****
+//            4 : 작성자번호 - Long userId
+//            5 : 작성자 계정명 - String username
+//            6 : 작성자 프로필사진 - String userProfileImage
+//            7 : 작성자 닉네임 - String userNickname
+//            ***** dictCuriousToo *****
+//            10 : 나도궁금해요 개수 - Integer dictCuriousTooCount
+//            12 : 나도궁금해요 여부 - Long isDictCuriousToo // 0일 경우 false, 0 이상일 경우 true
+//            ***** comment *****
+//            11 : 댓글 개수 - Long commentSize
+//            ***** questionSelect *****
+//            13 : 채택된 댓글 - Long selectedCommentId
+//         */
+//        int offset = page * size;
+//        return queryFactory
+//                .select(qDictQuestion.questionId,
+//                        qDictQuestion.questionName,
+//                        qDictQuestion.thumbNail,
+//                        qDictQuestion.content,
+//                        qDictQuestion.user.id,
+//                        qDictQuestion.user.username,
+//                        qDictQuestion.user.profileImage,
+//                        qDictQuestion.user.nickname,
+//                        qDictQuestion.createdAt,
+//                        qDictQuestion.views,
+//                        qDictQuestion.dictCuriousTooList.size(),
+//                        queryFactory
+//                                .select(qDictQuestionComment.count())
+//                                .from(qDictQuestionComment)
+//                                .where(qDictQuestionComment.dictQuestion.eq(qDictQuestion),
+//                                        qDictQuestionComment.enabled.eq(true)),
+//                        queryFactory
+//                                .select(qDictCuriousToo.count())
+//                                .from(qDictCuriousToo)
+//                                .where(qDictCuriousToo.dictQuestion.eq(qDictQuestion),
+//                                        eqUser(user)),
+//                        queryFactory
+//                                .select(qQuestionSelect.questionComment.questionCommentId)
+//                                .from(qQuestionSelect)
+//                                .where(qQuestionSelect.dictQuestion.eq(qDictQuestion))
+//                )
+//                .from(qDictQuestion)
+//                .where(qDictQuestion.enabled.eq(enabled))
+//                .orderBy(qDictQuestion.questionId.desc())
+//                .offset(offset)
+//                .limit(size)
+//                .fetch();
+//    }
 
     private List<DictQuestion> getQuestionProc(boolean enabled, int page, int size) {
         QDictQuestion qDictQuestion = QDictQuestion.dictQuestion;
@@ -167,11 +167,11 @@ public class DictQuestionService {
                 .fetch();
     }
 
-    private BooleanExpression eqUser(User user) {
-        return user == null ?
-                QDictCuriousToo.dictCuriousToo.curiousTooId.eq(0L) :
-                QDictCuriousToo.dictCuriousToo.user.eq(user);
-    }
+//    private BooleanExpression eqUser(User user) {
+//        return user == null ?
+//                QDictCuriousToo.dictCuriousToo.curiousTooId.eq(0L) :
+//                QDictCuriousToo.dictCuriousToo.user.eq(user);
+//    }
 
 //    private List<DictQuestionResponseDto> getDictQuestionResponseDtoList(List<Tuple> tupleList) {
 //        // DB 에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
@@ -232,7 +232,7 @@ public class DictQuestionService {
         // 채택 여부 맵
         HashMap<Long, Long> completeMap = getIsComplete(questionIdList);
 
-        Long userId = user.getId();
+        Long userId = user == null ? null : user.getId();
         // DB 에서 받아온 게시글 List 데이터를 담을 Response Dto 생성
         List<DictQuestionResponseDto> dictQuestionResponseDtoList = new ArrayList<>();
         for (DictQuestion d : questionList) {
@@ -264,7 +264,7 @@ public class DictQuestionService {
                     .views(d.getViews())
                     .curiousTooCnt(curiousTooCnt)
                     .commentCnt(commentCnt)
-                    .isCuriousToo(curiousTooMap.get(questionId + ":" + userId) != null)
+                    .isCuriousToo(user != null && curiousTooMap.get(questionId + ":" + userId) != null)
                     .isComplete(completeMap.get(questionId) != null)
                     .build()
             );
