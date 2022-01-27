@@ -4,11 +4,8 @@ import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.dto.dict.mymeme.DictMyMemeResponseDto;
 import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
-import com.teamproj.backend.dto.dictHistory.DictHistoryDetailResponseDto;
 import com.teamproj.backend.dto.dictHistory.DictHistoryResponseDto;
-import com.teamproj.backend.dto.dictHistory.DictRevertResponseDto;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.service.StatService;
 import com.teamproj.backend.service.dict.DictHistoryService;
 import com.teamproj.backend.service.dict.DictService;
 import com.teamproj.backend.util.StatisticsUtils;
@@ -27,9 +24,10 @@ public class DictController {
 
     /**
      * 사전 목록 조회
+     *
      * @param token Authorization header token
-     * @param page page : 0부터 시작함.
-     * @param size size
+     * @param page  page : 0부터 시작함.
+     * @param size  size
      * @return DictResponseDto List
      */
     @GetMapping("/api/dict")
@@ -44,7 +42,7 @@ public class DictController {
     }
 
     @GetMapping("/api/myMeme/dict")
-    public ResponseDto<List<DictMyMemeResponseDto>> getMyMeme(@AuthenticationPrincipal UserDetailsImpl userDetails){
+    public ResponseDto<List<DictMyMemeResponseDto>> getMyMeme(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseDto.<List<DictMyMemeResponseDto>>builder()
                 .status(HttpStatus.OK.toString())
                 .message("success")
@@ -53,7 +51,7 @@ public class DictController {
     }
 
     @PostMapping("/api/check/dict")
-    public ResponseDto<DictNameCheckResponseDto> checkDictName(@RequestBody DictNameCheckRequestDto dictNameCheckRequestDto){
+    public ResponseDto<DictNameCheckResponseDto> checkDictName(@RequestBody DictNameCheckRequestDto dictNameCheckRequestDto) {
         return ResponseDto.<DictNameCheckResponseDto>builder()
                 .status(HttpStatus.OK.toString())
                 .message("사전 이름 중복체크")
@@ -166,6 +164,16 @@ public class DictController {
                 .status(HttpStatus.OK.toString())
                 .message("검색어 : " + q)
                 .data(dictService.getSearchResult(token, q, page, size))
+                .build();
+    }
+
+    @GetMapping("/api/dict/{dictId}/health")
+    public ResponseDto<Boolean> getDictHealthCheck(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                  @PathVariable Long dictId) {
+        return ResponseDto.<Boolean>builder()
+                .status(HttpStatus.OK.toString())
+                .message("success")
+                .data(dictService.getDictHealthCheck(dictId, userDetails))
                 .build();
     }
 }
