@@ -2,8 +2,8 @@ package com.teamproj.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamproj.backend.dto.user.signUp.SignUpRequestDto;
+import com.teamproj.backend.dto.user.userInfo.UserNicknameModifyRequestDto;
 import com.teamproj.backend.security.MockSpringSecurityFilter;
-import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.WebSecurityConfig;
 import com.teamproj.backend.service.GoogleUserService;
 import com.teamproj.backend.service.KakaoUserService;
@@ -23,10 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.nio.charset.StandardCharsets;
-import java.security.Principal;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -70,7 +66,6 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     private static final String accessToken = "cLDCR4xs1TYyrJAIzQ9bzvXuzML37QiimPVuEwo9dVoAAAF7dvoLNw";
-
 
     @BeforeEach
     public void setup() {
@@ -131,18 +126,51 @@ class UserControllerTest {
         verify(googleUserService, atLeastOnce()).googleLogin(accessToken);
     }
 
-//    @Test
-//    @DisplayName("사용자 정보 요청 기능 수행")
-//    public void userInfo() throws Exception {
-//        UserDetailsImpl userDetails = UserDetailsImpl.builder()
-//                        .username("유저네임")
-//                        .password("패스워드")
-//                        .build();
-//
-//        mvc.perform(post("/api/userInfo")
-//                        .principal((Principal) userDetails))
-//                .andExpect(status().isOk())
-//                .andDo(print());
-//    }
+    @Test
+    @DisplayName("사용자 정보 요청 기능 수행")
+    public void userInfo() throws Exception {
+        mvc.perform(get("/api/userInfo")
+                        .header("Authorization", "auth"))
+                .andExpect(status().isOk())
+                .andDo(print());
+        verify(userService, atLeastOnce()).getUserInfo(null);
+    }
 
+    @Test
+    @DisplayName("유저네임 중복 체크")
+    public void usernameValidCheck() throws Exception {
+        mvc.perform(get("/api/signup/username")
+                        .param("username","유저네임"))
+                .andExpect(status().isOk())
+                .andDo(print());
+        verify(userService, atLeastOnce()).usernameValidCheck("유저네임");
+    }
+
+    @Test
+    @DisplayName("닉네임 중복 체크")
+    public void nicknameValidCheck() throws Exception {
+        mvc.perform(get("/api/signup/nickname")
+                        .param("nickname","닉네임"))
+                .andExpect(status().isOk())
+                .andDo(print());
+        verify(userService, atLeastOnce()).nicknameValidCheck("닉네임");
+    }
+
+    @Test
+    @DisplayName("닉네임 변경 요청")
+    public void nicknameModify() throws Exception {
+        UserNicknameModifyRequestDto userNicknameModifyRequestDto = UserNicknameModifyRequestDto.builder()
+                .nickname("닉네임변경")
+                .build();
+
+        String content = objectMapper.writeValueAsString(userNicknameModifyRequestDto);
+
+        mvc.perform(post("/api/user/nickname")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "auth"))
+                .andExpect(status().isOk())
+                .andDo(print());
+    }
 }
