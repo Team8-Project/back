@@ -93,7 +93,7 @@ jar{
 }
 
 test {
-//    exclude '**/*'
+    exclude '**/*'
     useJUnitPlatform()
     finalizedBy 'jacocoTestReport' // 추가
 }

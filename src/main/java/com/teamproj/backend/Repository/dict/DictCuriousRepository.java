@@ -1,5 +1,5 @@
-package com.teamproj.backend.Repository.dict;
-
+//package com.teamproj.backend.Repository.dict;
+//
 //import com.teamproj.backend.model.User;
 //import com.teamproj.backend.model.dict.DictCurious;
 //import org.springframework.data.jpa.repository.JpaRepository;
