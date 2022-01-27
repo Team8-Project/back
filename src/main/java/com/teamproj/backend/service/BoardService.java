@@ -38,7 +38,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,7 +59,6 @@ public class BoardService {
     private final BoardTodayLikeRepository boardTodayLikeRepository;
     private final ViewersRepository viewersRepository;
 
-    private final CommentService commentService;
     private final RedisService redisService;
     private final StatService statService;
 
@@ -460,73 +458,73 @@ public class BoardService {
     }
     //endregion
 
-    //region 게시글 검색
-    public List<BoardSearchResponseDto> boardSearch(String q) {
-        // 1. 검색어 입력값이 empty 혹은 null 이면 Exception 발생
-        if (q == null || q.isEmpty()) {
-            throw new NullPointerException(SEARCH_IS_EMPTY);
-        }
+//    //region 게시글 검색
+//    public List<BoardSearchResponseDto> boardSearch(String q) {
+//        // 1. 검색어 입력값이 empty 혹은 null 이면 Exception 발생
+//        if (q == null || q.isEmpty()) {
+//            throw new NullPointerException(SEARCH_IS_EMPTY);
+//        }
+//
+//        // 2. 제목에 검색어가 포함되어 있는 게시글 리스트 조회
+//        int page = 0;
+//        int size = 1000;
+//        String category = "FREEBOARD";
+//        List<Board> boardList = getSaveSearchResult(q, category, page * size, size);
+//
+//        // 3. 검색 결과가 있으면 해당 게시글들 Response
+//        List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
+//        for (Board board : boardList) {
+//            boardSearchResponseDtoList.add(
+//                    BoardSearchResponseDto.builder()
+//                            .boardId(board.getBoardId())
+//                            .thumbNail(board.getThumbNail())
+//                            .title(board.getTitle())
+//                            .username(board.getUser().getUsername())
+//                            .profileImageUrl(board.getUser().getProfileImage())
+//                            .writer(board.getUser().getNickname())
+//                            .content(board.getContent())
+//                            .createdAt(board.getCreatedAt())
+//                            .views(board.getViews())
+//                            .likeCnt(board.getLikes().size())
+////                            .commentCnt(commentService.getCommentList(board).size())
+//                            .build()
+//            );
+//        }
+//
+//        return boardSearchResponseDtoList;
+//    }
 
-        // 2. 제목에 검색어가 포함되어 있는 게시글 리스트 조회
-        int page = 0;
-        int size = 1000;
-        String category = "FREEBOARD";
-        List<Board> boardList = getSaveSearchResult(q, category, page * size, size);
-
-        // 3. 검색 결과가 있으면 해당 게시글들 Response
-        List<BoardSearchResponseDto> boardSearchResponseDtoList = new ArrayList<>();
-        for (Board board : boardList) {
-            boardSearchResponseDtoList.add(
-                    BoardSearchResponseDto.builder()
-                            .boardId(board.getBoardId())
-                            .thumbNail(board.getThumbNail())
-                            .title(board.getTitle())
-                            .username(board.getUser().getUsername())
-                            .profileImageUrl(board.getUser().getProfileImage())
-                            .writer(board.getUser().getNickname())
-                            .content(board.getContent())
-                            .createdAt(board.getCreatedAt())
-                            .views(board.getViews())
-                            .likeCnt(board.getLikes().size())
-                            .commentCnt(commentService.getCommentList(board).size())
-                            .build()
-            );
-        }
-
-        return boardSearchResponseDtoList;
-    }
-
-    private List<Board> getSaveSearchResult(String q, String category, int page, int size) {
-        if (q.length() < 2) {
-            throw new IllegalArgumentException(SEARCH_MIN_SIZE_IS_TWO);
-        }
-
-        // 전문검색 쿼리 뒤의 글자도 검색 되도록.
-        String newQ = q + "*";
-        Optional<List<Board>> result = boardRepository.findAllByTitleAndContentByFullText(newQ, category, true, page, size);
-
-        // 검색결과가 존재하지 않을 시 빈 리스트 return.
-        return result.orElseGet(ArrayList::new);
-    }
+//    private List<Board> getSaveSearchResult(String q, String category, int page, int size) {
+//        if (q.length() < 2) {
+//            throw new IllegalArgumentException(SEARCH_MIN_SIZE_IS_TWO);
+//        }
+//
+//        // 전문검색 쿼리 뒤의 글자도 검색 되도록.
+//        String newQ = q + "*";
+//        Optional<List<Board>> result = boardRepository.findAllByTitleAndContentByFullText(newQ, category, true, page, size);
+//
+//        // 검색결과가 존재하지 않을 시 빈 리스트 return.
+//        return result.orElseGet(ArrayList::new);
+//    }
     //endregion
 
     // region 인기 게시글
-    public List<MainTodayBoardResponseDto> getTodayBoard(int count) {
-        // 1. 인기 게시글, 명예의 전당 어제 좋아요 데이터 산출 도구 데이터
-        List<BoardYesterdayLikeCountRankDto> boardYesterdayLikeCountRankDtoList = getTodayBoardElement(count, "FREEBOARD");
-        // 2. 인기 게시글, 명예의 전당 어제 좋아요 데이터 산출 도구 데이터 Dto 에 담아 Response
-        // BoardYesterdayLikeCountRankDto To MainTodayBoardResponseDto
-        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = new ArrayList<>();
-        for (BoardYesterdayLikeCountRankDto dto : boardYesterdayLikeCountRankDtoList) {
-            mainTodayBoardResponseDtoList.add(MainTodayBoardResponseDto.builder()
-                    .boardId(dto.getBoardId())
-                    .thumbNail(dto.getThumbNail())
-                    .title(dto.getTitle())
-                    .writer(dto.getNickname())
-                    .build());
-        }
-        return mainTodayBoardResponseDtoList;
-    }
+//    public List<MainTodayBoardResponseDto> getTodayBoard(int count) {
+//        // 1. 인기 게시글, 명예의 전당 어제 좋아요 데이터 산출 도구 데이터
+//        List<BoardYesterdayLikeCountRankDto> boardYesterdayLikeCountRankDtoList = getTodayBoardElement(count, "FREEBOARD");
+//        // 2. 인기 게시글, 명예의 전당 어제 좋아요 데이터 산출 도구 데이터 Dto 에 담아 Response
+//        // BoardYesterdayLikeCountRankDto To MainTodayBoardResponseDto
+//        List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList = new ArrayList<>();
+//        for (BoardYesterdayLikeCountRankDto dto : boardYesterdayLikeCountRankDtoList) {
+//            mainTodayBoardResponseDtoList.add(MainTodayBoardResponseDto.builder()
+//                    .boardId(dto.getBoardId())
+//                    .thumbNail(dto.getThumbNail())
+//                    .title(dto.getTitle())
+//                    .writer(dto.getNickname())
+//                    .build());
+//        }
+//        return mainTodayBoardResponseDtoList;
+//    }
     // endregion
 
     // region 명예의 전당

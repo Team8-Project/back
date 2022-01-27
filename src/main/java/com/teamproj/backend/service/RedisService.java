@@ -29,6 +29,7 @@ public class RedisService {
     private final RedisTemplate<String, BoardMemeBestResponseDto> redisMemeBestResponseDtoTemplate;
     private final RedisTemplate<String, StatDictResponseDto> redisStatDictResponseDtoTemplate;
     private final RedisTemplate<String, AlarmResponseDto> redisAlarmResponseDtoTemplate;
+    private final RedisTemplate<String, Boolean> redisBooleanTemplate;
 
     public void setAlarm(String key, List<AlarmResponseDto> object){
         redisTemplate.delete(key);
@@ -166,6 +167,17 @@ public class RedisService {
         redisTemplate.delete(key);
         ListOperations<String, BoardMemeBestResponseDto> list = redisMemeBestResponseDtoTemplate.opsForList();
         list.leftPushAll(key, boardMemeBestResponseDtoList);
+    }
+
+    public String getDictHealth(String key) {
+        ValueOperations<String, String> redis = redisStringTemplate.opsForValue();
+        return redis.get(key);
+    }
+
+    public void setDictHealth(String key, String str) {
+        ValueOperations<String, String> redis = redisStringTemplate.opsForValue();
+        redis.set(key, str);
+        redisStringTemplate.expire(key, 15, TimeUnit.SECONDS);
     }
     //endregion
 }

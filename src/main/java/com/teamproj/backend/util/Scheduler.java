@@ -39,16 +39,18 @@ public class Scheduler {
     @Scheduled(cron = "0 0 0 * * *")
     public void dayRegularSchedule() {
         System.out.println("자정 정기 스케줄 실시 .....");
-        // 오늘의밈, 인기게시글, 명예의전당 데이터 교체
+        // 오늘의밈, 명예의전당 데이터 교체
         System.out.println("메인 페이지 데이터 교체 .....");
+        // 메인페이지 오늘의 밈
         redisService.setTodayList(TODAY_LIST_KEY, dictService.getTodayMeme(20));
+        // 메인페이지 명예의 밈글
         redisService.setTodayMemeImageList(TODAY_MEME_IMAGE_LIST_KEY, boardService.getTodayImage(5));
-        redisService.setTodayBoardList(TODAY_BOARD_LIST_KEY, boardService.getTodayBoard(5));
         boardTodayLikeRepository.deleteAll();
 
         System.out.println("조회수 및 방문자 정보 초기화 .....");
         statService.statVisitorToNumericData(statVisitorRepository.count(), "VISITOR");
         boardViewersRepository.deleteAll();
+        // 사전페이지 오늘의 밈카드
         redisService.setBestDict(BEST_DICT_KEY, dictService.getSafeBestDict());
         dictViewersRepository.deleteAll();
         viewersRepository.deleteAll();

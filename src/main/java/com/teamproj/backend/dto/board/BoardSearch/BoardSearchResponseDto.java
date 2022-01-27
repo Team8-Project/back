@@ -1,12 +1,10 @@
 package com.teamproj.backend.dto.board.BoardSearch;
 
-import com.teamproj.backend.dto.comment.CommentResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Builder

@@ -1,9 +1,9 @@
-//package com.teamproj.backend.kakaoLoginTest;
+//package com.teamproj.backend.service.user;
 //
-//import com.teamproj.backend.security.MockSpringSecurityFilter;
 //import com.teamproj.backend.controller.UserController;
+//import com.teamproj.backend.security.MockSpringSecurityFilter;
 //import com.teamproj.backend.security.WebSecurityConfig;
-//import com.teamproj.backend.service.KakaoUserService;
+//import com.teamproj.backend.service.NaverUserService;
 //import com.teamproj.backend.service.UserService;
 //import org.junit.jupiter.api.BeforeEach;
 //import org.junit.jupiter.api.DisplayName;
@@ -26,7 +26,6 @@
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 //import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 //
-//
 //@WebMvcTest(
 //        controllers = UserController.class,
 //        excludeFilters = {
@@ -37,12 +36,11 @@
 //        }
 //)
 //@MockBean(JpaMetamodelMappingContext.class)
-//class KakaoLoginTest {
-//
+//public class NaverUserServiceTest {
 //    private MockMvc mvc;
 //
 //    @MockBean
-//    private KakaoUserService kakaoUserService;
+//    private NaverUserService naverUserService;
 //
 //    @MockBean
 //    private UserService userService;
@@ -64,12 +62,13 @@
 //
 //
 //    @Test
-//    @DisplayName("kakao소셜 로그인")
-//    public void kakaoLogin() throws Exception {
-//        mvc.perform(get("/api/user/kakao/callback")
-//                        .param("code", "code"))
+//    @DisplayName("naver소셜 로그인")
+//    public void naverLogin() throws Exception {
+//        mvc.perform(get("/api/user/naver/callback")
+//                        .param("code", "code",
+//                                "state", "state"))
 //                .andExpect(status().isOk())
 //                .andDo(MockMvcResultHandlers.print());
-//        verify(kakaoUserService, atLeastOnce()).kakaoLogin("code");
+//        verify(naverUserService, atLeastOnce()).naverLogin("code", "state");
 //    }
 //}

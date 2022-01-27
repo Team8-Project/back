@@ -1,7 +1,6 @@
 package com.teamproj.backend.model.board;
 
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
-import com.teamproj.backend.model.Comment;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.util.Timestamped;
 import lombok.AllArgsConstructor;
@@ -49,9 +48,6 @@ public class Board extends Timestamped {
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     private final List<BoardImage> boardImageList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
-    private final List<Comment> commentList = new ArrayList<>();
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     private final List<BoardLike> Likes = new ArrayList<>();

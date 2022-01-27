@@ -15,6 +15,4 @@ public class AlarmResponseDto {
     private String alarmType;
     private boolean checked;
     private Long navId;
-    private String username;
-    private String nickname;
 }

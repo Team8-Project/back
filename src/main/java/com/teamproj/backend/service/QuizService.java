@@ -8,7 +8,9 @@ import com.teamproj.backend.model.quiz.QQuizBank;
 import com.teamproj.backend.model.quiz.Quiz;
 import com.teamproj.backend.model.quiz.QuizBank;
 import com.teamproj.backend.util.MySqlJpaTemplates;
+import com.teamproj.backend.util.StatisticsUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -27,11 +29,10 @@ public class QuizService {
     private final RedisService redisService;
 
     // 문제 목록 불러오기
-    public List<QuizResponseDto> getQuizList(int count, String category) {
+    public List<QuizResponseDto> getQuizList(int count, String category, String clientIp) {
         List<QuizResponseDto> quizResponseDtoList = getSafeQuizResponseDtoList(RANDOM_QUIZ_KEY, count, category);
 
-        // 통계 구문. 쓰레드로 동작... 하게 할 예정;;
-        statService.statQuizStarter(category);
+        statService.statQuizStarter(category, clientIp);
 
         return quizResponseDtoList;
     }
@@ -68,18 +69,24 @@ public class QuizService {
     // Get SafeEntity
     // QuizResponseDtoList
     private List<QuizResponseDto> getSafeQuizResponseDtoList(String key, int count, String category) {
-        List<QuizResponseDto> quizResponseDtoList = redisService.getRandomQuiz(key + category);
-
-        if (quizResponseDtoList == null) {
-            // QueryDSL 적용 구문
-            List<Quiz> quizList = randomQuizPick(category);
-            // DtoList 로 반환하는 과정에서 문제 속의 선택지 순서도 섞임
-            redisService.setRandomQuiz(key + category, quizListToQuizResponseDtoList(quizList));
+        List<QuizResponseDto> quizResponseDtoList;
+        try {
             quizResponseDtoList = redisService.getRandomQuiz(key + category);
 
             if (quizResponseDtoList == null) {
-                throw new NullPointerException(NOT_EXIST_CATEGORY);
+                // QueryDSL 적용 구문
+                List<Quiz> quizList = randomQuizPick(category);
+                // DtoList 로 반환하는 과정에서 문제 속의 선택지 순서도 섞임
+                redisService.setRandomQuiz(key + category, quizListToQuizResponseDtoList(quizList));
+                quizResponseDtoList = redisService.getRandomQuiz(key + category);
+
+                if (quizResponseDtoList == null) {
+                    throw new NullPointerException(NOT_EXIST_CATEGORY);
+                }
             }
+        }catch(RedisConnectionFailureException e){
+            List<Quiz> quizList = randomQuizPick(category);
+            quizResponseDtoList = quizListToQuizResponseDtoList(quizList);
         }
 
         Collections.shuffle(quizResponseDtoList);

@@ -10,4 +10,5 @@ public class RedisKey {
     public static final String BEST_MEME_JJAL_KEY = "BEST_MEME_JJAL_KEY";
     public static final String STAT_DICT_KEY = "STAT_DICT";
     public static final String USER_ALARM_KEY = "USER_ALARM";
+    public static final String DICT_HEALTH_CHECK_KEY = "DICT_HEALTH_CHECK";
 }

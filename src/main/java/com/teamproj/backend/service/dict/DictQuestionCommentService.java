@@ -232,25 +232,25 @@ public class DictQuestionCommentService {
         return commentResponseDtoList;
     }
 
-    private HashMap<String, Boolean> getLikeMap(List<Long> commentIdList, User user) {
-        QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
-        List<Tuple> likeTuple = queryFactory
-                .select(qQuestionCommentLike.comment.questionCommentId, qQuestionCommentLike.user.id)
-                .from(qQuestionCommentLike)
-                .where(eqUser(user),
-                        qQuestionCommentLike.comment.questionCommentId.in(commentIdList))
-                .fetch();
-
-        return MemegleServiceStaticMethods.getLikeMap(likeTuple);
-    }
-
-    // qQuestionCommentLike 와 user 를 비교하기 위한 BooleanExpression.
-    private BooleanExpression eqUser(User user) {
-        QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
-        if (user == null) {
-            return null;
-        }
-        return qQuestionCommentLike.user.eq(user);
-    }
+//    private HashMap<String, Boolean> getLikeMap(List<Long> commentIdList, User user) {
+//        QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
+//        List<Tuple> likeTuple = queryFactory
+//                .select(qQuestionCommentLike.comment.questionCommentId, qQuestionCommentLike.user.id)
+//                .from(qQuestionCommentLike)
+//                .where(eqUser(user),
+//                        qQuestionCommentLike.comment.questionCommentId.in(commentIdList))
+//                .fetch();
+//
+//        return MemegleServiceStaticMethods.getLikeMap(likeTuple);
+//    }
+//
+//    // qQuestionCommentLike 와 user 를 비교하기 위한 BooleanExpression.
+//    private BooleanExpression eqUser(User user) {
+//        QQuestionCommentLike qQuestionCommentLike = QQuestionCommentLike.questionCommentLike;
+//        if (user == null) {
+//            return null;
+//        }
+//        return qQuestionCommentLike.user.eq(user);
+//    }
     // endregion
 }

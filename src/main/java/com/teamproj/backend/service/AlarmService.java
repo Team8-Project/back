@@ -11,6 +11,7 @@ import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.util.JwtAuthenticateProcessor;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -74,18 +75,24 @@ public class AlarmService {
     public List<AlarmResponseDto> receiveAlarm(User user) {
         String redisKey = USER_ALARM_KEY + ":" + user.getId();
         List<AlarmResponseDto> alarmList;
+        List<Alarm> list;
 
-        if (user.isAlarmCheck()) {
-            alarmList = redisService.getAlarm(redisKey);
-            if (alarmList != null) {
-                return alarmList;
+        try{
+            if (user.isAlarmCheck()) {
+                alarmList = redisService.getAlarm(redisKey);
+                if (alarmList != null) {
+                    return alarmList;
+                }
             }
-        }
 
-        List<Alarm> list = getSafeAlarmListByUser(user);
-        alarmList = getAlarmListToResponseDto(list);
-        if (alarmList.size() > 0) {
-            redisService.setAlarm(redisKey, alarmList);
+            list = getSafeAlarmListByUser(user);
+            alarmList = getAlarmListToResponseDtoForRedis(list);
+            if (alarmList.size() > 0) {
+                redisService.setAlarm(redisKey, alarmList);
+            }
+        }catch(RedisConnectionFailureException e){
+            list = getSafeAlarmListByUser(user);
+            alarmList = getAlarmListToResponseDto(list);
         }
 
         user.setAlarmCheck(true);
@@ -93,6 +100,21 @@ public class AlarmService {
         // return to Dto List
         // To do : 우선 List<AlarmResponseDto>에 담아서 리턴 했습니다. 차 후에 수정 필요
         return alarmList;
+    }
+
+    private List<AlarmResponseDto> getAlarmListToResponseDtoForRedis(List<Alarm> alarmList) {
+        List<AlarmResponseDto> alarmResponseDtoList = new ArrayList<>();
+
+        for (Alarm alarm : alarmList) {
+            alarmResponseDtoList.add(AlarmResponseDto.builder()
+                    .alarmId(alarm.getAlarmId())
+                    .alarmType(alarm.getAlarmTypeEnum().name())
+                    .checked(false)
+                    .navId(alarm.getNavId())
+                    .build()
+            );
+        }
+        return alarmResponseDtoList;
     }
 
     // 알림 정보들(AlarmList) Dto에 담아서 리턴
@@ -105,8 +127,6 @@ public class AlarmService {
                     .alarmType(alarm.getAlarmTypeEnum().name())
                     .checked(alarm.isChecked())
                     .navId(alarm.getNavId())
-                    .username(alarm.getUser().getUsername())
-                    .nickname(alarm.getUser().getNickname())
                     .build()
             );
         }
@@ -140,20 +160,20 @@ public class AlarmService {
     }
 
     // region 알림 읽음으로 처리
-    @Transactional
-    public String readCheckAlarm(Long alarmId, UserDetailsImpl userDetails) {
-        // 알람 아이디로 알람 정보 가져오기
-        Alarm alarm = getSafeAlarmById(alarmId);
-        User user = jwtAuthenticateProcessor.getUser(userDetails);
-        // 자신의 알람이 아닐 경우 튕겨냄.
-        if (!user.getId().equals(alarm.getUser().getId())) {
-            throw new IllegalArgumentException(NOT_YOUR_ALARM);
-        }
-        // 알람 읽음 처리
-        alarm.setChecked(true);
-        // 읽음 처리 완료 메시지 Response
-        return "읽음 처리 완료";
-    }
+//    @Transactional
+//    public String readCheckAlarm(Long alarmId, UserDetailsImpl userDetails) {
+//        // 알람 아이디로 알람 정보 가져오기
+//        Alarm alarm = getSafeAlarmById(alarmId);
+//        User user = jwtAuthenticateProcessor.getUser(userDetails);
+//        // 자신의 알람이 아닐 경우 튕겨냄.
+//        if (!user.getId().equals(alarm.getUser().getId())) {
+//            throw new IllegalArgumentException(NOT_YOUR_ALARM);
+//        }
+//        // 알람 읽음 처리
+//        alarm.setChecked(true);
+//        // 읽음 처리 완료 메시지 Response
+//        return "읽음 처리 완료";
+//    }
     // endregion
 
     // region 모든 알림 읽음으로 처리
