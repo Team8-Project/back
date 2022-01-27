@@ -225,7 +225,8 @@ public class YoutubeService {
                     .setApplicationName("youtube-cmdline-search-sample").build();
 
             // Get query term from user.
-            String queryTerm = getInputQuery(query);
+//            String queryTerm = getInputQuery(query);
+            String queryTerm = query;
 
             YouTube.Search.List search = youtube.search().list("id,snippet");
             /*
@@ -266,16 +267,16 @@ public class YoutubeService {
     /*
      * Returns a query term (String) from user via the terminal.
      */
-    private static String getInputQuery(String query) {
-        System.out.println("Input search query is : " + query);
-
-        if (query.length() < 1) {
-            // If nothing is entered, defaults to "YouTube Developers Live."
-            // @instead : throw IllegalArgumentException
-            throw new IllegalArgumentException("값을 입력하세요.");
-        }
-        return query;
-    }
+//    private static String getInputQuery(String query) {
+//        System.out.println("Input search query is : " + query);
+//
+//        if (query.length() < 1) {
+//            // If nothing is entered, defaults to "YouTube Developers Live."
+//            // @instead : throw IllegalArgumentException
+//            throw new IllegalArgumentException("값을 입력하세요.");
+//        }
+//        return query;
+//    }
 
     /**
      * Prints out all SearchResults in the Iterator. Each printed line includes title, id, and
@@ -284,31 +285,31 @@ public class YoutubeService {
      * @param iteratorSearchResults Iterator of SearchResults to print
      * @param query                 Search query (String)
      */
-    private static void prettyPrint(Iterator<SearchResult> iteratorSearchResults, String query) {
-
-        System.out.println("\n=============================================================");
-        System.out.println(
-                "   First " + NUMBER_OF_VIDEOS_RETURNED + " videos for search on \"" + query + "\".");
-        System.out.println("=============================================================\n");
-
-        if (!iteratorSearchResults.hasNext()) {
-            System.out.println(" There aren't any results for your query.");
-        }
-
-        while (iteratorSearchResults.hasNext()) {
-
-            SearchResult singleVideo = iteratorSearchResults.next();
-            ResourceId rId = singleVideo.getId();
-
-            // Double checks the kind is video.
-            if (rId.getKind().equals("youtube#video")) {
-                Thumbnail thumbnail = (Thumbnail) singleVideo.getSnippet().getThumbnails().get("default");
-
-                System.out.println(" Video Id" + rId.getVideoId());
-                System.out.println(" Title: " + singleVideo.getSnippet().getTitle());
-                System.out.println(" Thumbnail: " + thumbnail.getUrl());
-                System.out.println("\n-------------------------------------------------------------\n");
-            }
-        }
-    }
+//    private static void prettyPrint(Iterator<SearchResult> iteratorSearchResults, String query) {
+//
+//        System.out.println("\n=============================================================");
+//        System.out.println(
+//                "   First " + NUMBER_OF_VIDEOS_RETURNED + " videos for search on \"" + query + "\".");
+//        System.out.println("=============================================================\n");
+//
+//        if (!iteratorSearchResults.hasNext()) {
+//            System.out.println(" There aren't any results for your query.");
+//        }
+//
+//        while (iteratorSearchResults.hasNext()) {
+//
+//            SearchResult singleVideo = iteratorSearchResults.next();
+//            ResourceId rId = singleVideo.getId();
+//
+//            // Double checks the kind is video.
+//            if (rId.getKind().equals("youtube#video")) {
+//                Thumbnail thumbnail = (Thumbnail) singleVideo.getSnippet().getThumbnails().get("default");
+//
+//                System.out.println(" Video Id" + rId.getVideoId());
+//                System.out.println(" Title: " + singleVideo.getSnippet().getTitle());
+//                System.out.println(" Thumbnail: " + thumbnail.getUrl());
+//                System.out.println("\n-------------------------------------------------------------\n");
+//            }
+//        }
+//    }
 }
