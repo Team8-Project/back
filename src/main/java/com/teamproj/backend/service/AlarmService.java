@@ -86,7 +86,7 @@ public class AlarmService {
             }
 
             list = getSafeAlarmListByUser(user);
-            alarmList = getAlarmListToResponseDto(list);
+            alarmList = getAlarmListToResponseDtoForRedis(list);
             if (alarmList.size() > 0) {
                 redisService.setAlarm(redisKey, alarmList);
             }
@@ -100,6 +100,21 @@ public class AlarmService {
         // return to Dto List
         // To do : 우선 List<AlarmResponseDto>에 담아서 리턴 했습니다. 차 후에 수정 필요
         return alarmList;
+    }
+
+    private List<AlarmResponseDto> getAlarmListToResponseDtoForRedis(List<Alarm> alarmList) {
+        List<AlarmResponseDto> alarmResponseDtoList = new ArrayList<>();
+
+        for (Alarm alarm : alarmList) {
+            alarmResponseDtoList.add(AlarmResponseDto.builder()
+                    .alarmId(alarm.getAlarmId())
+                    .alarmType(alarm.getAlarmTypeEnum().name())
+                    .checked(false)
+                    .navId(alarm.getNavId())
+                    .build()
+            );
+        }
+        return alarmResponseDtoList;
     }
 
     // 알림 정보들(AlarmList) Dto에 담아서 리턴

@@ -3,22 +3,25 @@ package com.teamproj.backend.service;
 
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.board.BoardCategoryRepository;
+import com.teamproj.backend.Repository.board.BoardLikeRepository;
 import com.teamproj.backend.Repository.board.BoardRepository;
+import com.teamproj.backend.Repository.board.BoardTodayLikeRepository;
 import com.teamproj.backend.config.S3MockConfig;
 import com.teamproj.backend.dto.board.BoardDelete.BoardDeleteResponseDto;
 import com.teamproj.backend.dto.board.BoardDetail.BoardDetailResponseDto;
 import com.teamproj.backend.dto.board.BoardLike.BoardLikeResponseDto;
 import com.teamproj.backend.dto.board.BoardResponseDto;
-import com.teamproj.backend.dto.board.BoardSearch.BoardSearchResponseDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateRequestDto;
 import com.teamproj.backend.dto.board.BoardUpdate.BoardUpdateResponseDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadRequestDto;
 import com.teamproj.backend.dto.board.BoardUpload.BoardUploadResponseDto;
+import com.teamproj.backend.dto.main.MainMemeImageResponseDto;
 import com.teamproj.backend.exception.ExceptionMessages;
-
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.board.Board;
 import com.teamproj.backend.model.board.BoardCategory;
+import com.teamproj.backend.model.board.BoardLike;
+import com.teamproj.backend.model.board.BoardTodayLike;
 import com.teamproj.backend.security.UserDetailsImpl;
 import com.teamproj.backend.security.jwt.JwtTokenUtils;
 import io.findify.s3mock.S3Mock;
@@ -37,6 +40,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,6 +64,12 @@ class BoardServiceTest {
 
     @Autowired
     private BoardCategoryRepository boardCategoryRepository;
+
+    @Autowired
+    private BoardLikeRepository boardLikeRepository;
+
+    @Autowired
+    private BoardTodayLikeRepository boardTodayLikeRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -90,6 +100,7 @@ class BoardServiceTest {
         user = User.builder()
                 .username("테스트유저")
                 .nickname("테스트닉네임")
+                .profileImage("프로필이미지")
                 .password("Q1234567")
                 .build();
 
@@ -109,29 +120,16 @@ class BoardServiceTest {
         @DisplayName("성공")
         void getBoard_success() {
             // given
-            BoardCategory boardCategory = new BoardCategory("카테고리");
+            BoardCategory boardCategory = new BoardCategory("IMAGEBOARD");
             boardCategoryRepository.save(boardCategory);
 
             // when
-            List<BoardResponseDto> boardResponseDtoList = boardService.getBoard("카테고리", 1, 1, "token");
+            List<BoardResponseDto> boardResponseDtoList = boardService.getBoard("IMAGEBOARD", 0, 1, "token");
 
             // then
             for(BoardResponseDto boardResponseDto : boardResponseDtoList) {
-                assertNull(boardResponseDto);
+                assertNotNull(boardResponseDto);
             }
-        }
-
-        @Test
-        @DisplayName("실패")
-        void getBoard_fail() {
-
-            // when
-            Exception exception = assertThrows(NullPointerException.class, () -> {
-                boardService.getBoard("없는 카테고리", 1, 1, "token");
-            });
-
-            // then
-            assertEquals("유효한 카테고리가 아닙니다.", exception.getMessage());
         }
     }
     //endregion
@@ -265,9 +263,9 @@ class BoardServiceTest {
                     .content("내용")
                     .title("제목")
                     .boardCategory(boardCategory)
+                    .enabled(true)
                     .thumbNail("썸네일URL")
                     .build();
-
 
             boardRepository.save(board);
 
@@ -278,9 +276,17 @@ class BoardServiceTest {
             BoardDetailResponseDto boardDetailResponseDto = boardService.getBoardDetail(board.getBoardId(), token);
 
             // then
+            assertNull(boardDetailResponseDto.getTitle());
+            assertNull(boardDetailResponseDto.getContent());
+            assertNotNull(boardDetailResponseDto.getCreatedAt());
+            assertNotNull(boardDetailResponseDto.getCommentCnt());
             assertEquals(board.getBoardId(), boardDetailResponseDto.getBoardId());
-            assertEquals(board.getTitle(), boardDetailResponseDto.getTitle());
-            assertEquals(board.getContent(), boardDetailResponseDto.getContent());
+            assertEquals(board.getUser().getUsername(), boardDetailResponseDto.getUsername());
+            assertEquals(board.getUser().getProfileImage(), boardDetailResponseDto.getProfileImageUrl());
+            assertEquals(board.getViews(), boardDetailResponseDto.getViews());
+            assertEquals(board.getBoardLikeList().size(), boardDetailResponseDto.getLikeCnt());
+            assertEquals(false, boardDetailResponseDto.getIsLike());
+            assertEquals(board.getThumbNail(), boardDetailResponseDto.getThumbNail());
             assertEquals(board.getUser().getNickname(), boardDetailResponseDto.getWriter());
         }
 
@@ -307,39 +313,80 @@ class BoardServiceTest {
     @DisplayName("게시글 업데이트(수정)")
     class updateBoard {
 
-        @Test
+
+        @Nested
         @DisplayName("성공")
-        void updateBoard_success() throws IOException {
-            // given
-            BoardCategory boardCategory = new BoardCategory("카테고리");
-            Board board = Board.builder()
-                    .title(boardTitle)
-                    .content(boardContent)
-                    .boardCategory(boardCategory)
-                    .user(user)
-                    .thumbNail("썸네일URL")
-                    .build();
+        class updateBoard_success {
 
-            boardCategoryRepository.save(boardCategory);
-            userRepository.save(user);
-            boardRepository.save(board);
+            @Test
+            @DisplayName("이미지 있음")
+            void updateBoard_success1() {
+                // given
+                BoardCategory boardCategory = new BoardCategory("카테고리");
+                Board board = Board.builder()
+                        .title(boardTitle)
+                        .content(boardContent)
+                        .boardCategory(boardCategory)
+                        .user(user)
+                        .thumbNail("썸네일URL")
+                        .build();
 
-            BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
-                    .title(board.getTitle())
-                    .content(board.getContent())
-                    .build();
+                boardCategoryRepository.save(boardCategory);
+                userRepository.save(user);
+                boardRepository.save(board);
 
-            MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                    "testJunit", "originalName", null, "image".getBytes()
-            );
+                BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
+                        .title(board.getTitle())
+                        .content(board.getContent())
+                        .build();
 
-            // when
-            BoardUpdateResponseDto result = boardService.updateBoard(
-                    board.getBoardId(), userDetails, boardUpdateRequestDto, mockMultipartFile
-            );
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "testJunit", "originalName", null, "image".getBytes()
+                );
 
-            // then
-            assertEquals("게시글 수정 완료", result.getResult());
+                // when
+                BoardUpdateResponseDto result = boardService.updateBoard(
+                        board.getBoardId(), userDetails, boardUpdateRequestDto, mockMultipartFile
+                );
+
+                // then
+                assertEquals("게시글 수정 완료", result.getResult());
+            }
+
+            @Test
+            @DisplayName("이미지 Empty")
+            void updateBoard_success2() {
+                // given
+                BoardCategory boardCategory = new BoardCategory("카테고리");
+                Board board = Board.builder()
+                        .title(boardTitle)
+                        .content(boardContent)
+                        .boardCategory(boardCategory)
+                        .user(user)
+                        .thumbNail("썸네일URL")
+                        .build();
+
+                boardCategoryRepository.save(boardCategory);
+                userRepository.save(user);
+                boardRepository.save(board);
+
+                BoardUpdateRequestDto boardUpdateRequestDto = BoardUpdateRequestDto.builder()
+                        .title(board.getTitle())
+                        .content(board.getContent())
+                        .build();
+
+                MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                        "image", "", null, "".getBytes()
+                );
+
+                // when
+                BoardUpdateResponseDto result = boardService.updateBoard(
+                        board.getBoardId(), userDetails, boardUpdateRequestDto, mockMultipartFile
+                );
+
+                // then
+                assertEquals("게시글 수정 완료", result.getResult());
+            }
         }
 
 
@@ -519,30 +566,74 @@ class BoardServiceTest {
     @DisplayName("게시글 좋아요")
     class boardLike {
 
-        @Test
+        @Nested
         @DisplayName("성공")
-        void boardLike_success() {
-            // given
-            BoardCategory boardCategory = new BoardCategory("카테고리");
+        class boardLike_success {
 
-            Board board = Board.builder()
-                    .title(boardTitle)
-                    .content(boardContent)
-                    .thumbNail("썸네일URL")
-                    .boardCategory(boardCategory)
-                    .user(user)
-                    .build();
+            @Test
+            @DisplayName("성공 케이스1")
+            void boardLike_success1() {
+                // given
+                BoardCategory boardCategory = new BoardCategory("카테고리");
+
+                Board board = Board.builder()
+                        .title(boardTitle)
+                        .content(boardContent)
+                        .thumbNail("썸네일URL")
+                        .boardCategory(boardCategory)
+                        .user(user)
+                        .build();
 
 
-            boardCategoryRepository.save(boardCategory);
-            userRepository.save(user);
-            boardRepository.save(board);
+                boardCategoryRepository.save(boardCategory);
+                userRepository.save(user);
+                boardRepository.save(board);
 
-            // when
-            BoardLikeResponseDto result = boardService.boardLike(userDetails, board.getBoardId());
+                // when
+                BoardLikeResponseDto result = boardService.boardLike(userDetails, board.getBoardId());
 
-            // then
-            assertEquals(true, result.getResult());
+                // then
+                assertEquals(true, result.getResult());
+            }
+
+
+            @Test
+            @DisplayName("성공 케이스2")
+            void boardLike_success2() {
+                // given
+                BoardCategory boardCategory = new BoardCategory("IMAGEBOARD");
+
+                Board board = Board.builder()
+                        .title(boardTitle)
+                        .content(boardContent)
+                        .thumbNail("썸네일URL")
+                        .boardCategory(boardCategory)
+                        .user(user)
+                        .build();
+
+                BoardLike boardLike = BoardLike.builder()
+                                .user(user)
+                                .board(board)
+                                .build();
+
+                BoardTodayLike boardTodayLike = BoardTodayLike.builder()
+                                .board(board)
+                                .boardCategory(boardCategory)
+                                .likeCount(1L)
+                                .build();
+
+                boardCategoryRepository.save(boardCategory);
+                userRepository.save(user);
+                boardRepository.save(board);
+                boardLikeRepository.save(boardLike);
+                boardTodayLikeRepository.save(boardTodayLike);
+
+                // when
+                BoardLikeResponseDto result = boardService.boardLike(userDetails, board.getBoardId());
+
+                // then
+                assertEquals(false, result.getResult());
+            }
         }
 
         @Test
@@ -560,61 +651,34 @@ class BoardServiceTest {
     }
     //endregion
 
-    //region 게시글 검색
-    @Nested
-    @DisplayName("게시글 검색")
-    class boardSearch {
+    //region 명예의 전당
+    @Test
+    @DisplayName("성공")
+    void getTodayImage_success() {
+        // when
+        List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = boardService.getTodayImage(5);
 
-        @Test
-        @DisplayName("게시글 검색 / 성공")
-        void boardSearch_success() {
-            // given
-            String query = "제목";
-
-            // when
-            List<BoardSearchResponseDto> boardSearchResponseDtoList = boardService.boardSearch(query);
-
-            // then
-            assertEquals(0, boardSearchResponseDtoList.size());
-        }
-
-
-        @Nested
-        @DisplayName("게시글 검색 / 실패")
-        class boardSearch_fail {
-
-
-            @Test
-            @DisplayName("실패 / 검색어.isEmpty()")
-            void boardSearch_fail() {
-                // given
-                String searchWord = "";
-
-                // when
-                Exception exception = assertThrows(NullPointerException.class, () -> {
-                    boardService.boardSearch(searchWord);
-                });
-
-                // then
-                assertEquals(ExceptionMessages.SEARCH_IS_EMPTY, exception.getMessage());
-            }
-
-
-            @Test
-            @DisplayName("실패2 / 검색어 == null")
-            void boardSearch_fail2() {
-                // given
-                String searchWord = null;
-
-                // when
-                Exception exception = assertThrows(NullPointerException.class, () -> {
-                    boardService.boardSearch(searchWord);
-                });
-
-                // then
-                assertEquals(ExceptionMessages.SEARCH_IS_EMPTY, exception.getMessage());
-            }
-        }
+        //then
+        assertNotEquals(0, mainMemeImageResponseDtoList.size());
     }
+    //endregion
+
+    //region 카테고리별 게시글 총 개수
+    @Test
+    @DisplayName("카테고리별 게시글 총 개수 / 성공")
+    void getTotalBoardCount_success() {
+        // given
+        BoardCategory boardCategory = BoardCategory.builder()
+                .categoryName("IMAGEBOARD")
+                .build();
+        Long boardCount = boardRepository.countByBoardCategoryAndEnabled(boardCategory, true);
+
+        // when
+        Long result = boardService.getTotalBoardCount("IMAGEBOARD");
+
+        // then
+        assertEquals(boardCount, result);
+    }
+
     //endregion
 }

@@ -1,31 +1,22 @@
 package com.teamproj.backend.service.dict;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamproj.backend.Repository.UserRepository;
 import com.teamproj.backend.Repository.dict.DictRepository;
-import com.teamproj.backend.dto.LoginRequestDto;
-import com.teamproj.backend.dto.ResponseDto;
 import com.teamproj.backend.dto.dict.*;
 import com.teamproj.backend.dto.dict.mymeme.DictMyMemeResponseDto;
 import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
-import com.teamproj.backend.dto.user.login.LoginResponseDto;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.Dict;
 import com.teamproj.backend.security.UserDetailsImpl;
-import com.teamproj.backend.util.JwtAuthenticateProcessor;
+import com.teamproj.backend.security.jwt.JwtTokenUtils;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
@@ -38,87 +29,49 @@ import static org.junit.jupiter.api.Assertions.*;
 @Rollback
 public class DictServiceTest {
     @Autowired
-    private TestRestTemplate restTemplate;
-    private HttpHeaders headers;
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    @Autowired
     private UserRepository userRepository;
     @Autowired
     private DictService dictService;
     @Autowired
     private DictRepository dictRepository;
 
-    @Autowired
-    private JwtAuthenticateProcessor jwtAuthenticateProcessor;
-
     // BeforeEach Data
     Dict dict;
     Long dictId;
-    String title;
-    String content;
-    String summary;
     String viewerIp;
 
     UserDetailsImpl userDetails;
     User user;
-    String username;
-    String nickname;
-    String password;
     String token;
 
     @BeforeEach
-    void setup() throws JsonProcessingException {
-        headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+    void setup() {
         // 사용자 초기데이터 주입
-        username = "test";
-        nickname = "test";
-        password = "a1234567";
+        user = User.builder()
+                .username("testuser12345")
+                .nickname("1135tester")
+                .password("a1234567")
+                .build();
 
-//        signUp(username, nickname, password);
-        token = logIn(username, password);
+        user = userRepository.save(user);
+        userDetails = UserDetailsImpl.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .build();
 
-        userDetails = jwtAuthenticateProcessor.forceLogin(token);
-        user = jwtAuthenticateProcessor.getUser(userDetails);
+        token = JwtTokenUtils.generateJwtToken(userDetails);
 
         // 사전 초기데이터 주입
-        title = UUID.randomUUID().toString();
-        content = UUID.randomUUID().toString();
-        summary = UUID.randomUUID().toString().substring(0, 10);
         dict = dictRepository.save(Dict.builder()
                 .firstAuthor(user)
                 .recentModifier(user)
-                .dictName(title)
-                .summary(summary)
-                .content(content)
+                .dictName(UUID.randomUUID().toString())
+                .summary(UUID.randomUUID().toString().substring(0, 10))
+                .content(UUID.randomUUID().toString())
                 .build());
         dictId = dict.getDictId();
 
         viewerIp = "127.0.0.1";
-    }
-
-    String logIn(String username, String password) throws JsonProcessingException {
-        LoginRequestDto dto = LoginRequestDto.builder()
-                .username(username)
-                .password(password)
-                .build();
-
-        String apiUrl = "/api/user";
-        HttpMethod method = HttpMethod.POST;
-
-        String requestBody = mapper.writeValueAsString(dto);
-        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<ResponseDto<LoginResponseDto>> response = restTemplate.exchange(
-                apiUrl,
-                method,
-                request,
-                new ParameterizedTypeReference<ResponseDto<LoginResponseDto>>() {
-                });
-
-        HttpHeaders responseHeader = response.getHeaders();
-        return Objects.requireNonNull(responseHeader.get("Authorization")).get(0);
     }
 
     @Nested
@@ -165,9 +118,9 @@ public class DictServiceTest {
             void postDict_fail_already_dictName() {
                 // given
                 DictPostRequestDto dto = DictPostRequestDto.builder()
-                        .title(title)
-                        .summary(summary)
-                        .content(content)
+                        .title(dict.getDictName())
+                        .summary("test")
+                        .content("test")
                         .build();
 
                 // when
@@ -186,7 +139,7 @@ public class DictServiceTest {
                 DictPostRequestDto dto = DictPostRequestDto.builder()
                         .title("재즈")
                         .summary(UUID.randomUUID().toString())
-                        .content(content)
+                        .content("test")
                         .build();
 
                 // when
@@ -470,6 +423,7 @@ public class DictServiceTest {
         @DisplayName("성공")
         void success() {
             // given
+            dictService.likeDict(userDetails, dict.getDictId());
 
             // when
             List<DictMyMemeResponseDto> result = dictService.getMyMeme(userDetails);
@@ -598,7 +552,7 @@ public class DictServiceTest {
 
         @Nested
         @DisplayName("새 중복 확인")
-        class New{
+        class New {
             @Test
             @DisplayName("중복되지 않는 사전 이름(사용가능)")
             void not_exist() {

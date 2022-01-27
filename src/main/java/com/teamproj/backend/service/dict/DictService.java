@@ -36,8 +36,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
-import static com.teamproj.backend.util.RedisKey.BEST_DICT_KEY;
-import static com.teamproj.backend.util.RedisKey.DICT_RECOMMEND_SEARCH_KEY;
+import static com.teamproj.backend.util.RedisKey.*;
 
 @Service
 @RequiredArgsConstructor
@@ -275,6 +274,27 @@ public class DictService {
         return DictPutResponseDto.builder()
                 .result("수정 성공")
                 .build();
+    }
+
+    /**
+     * 사전 수정 가능 여부 확인 및 갱신
+     * @param dictId        @PathVariable 사전 ID
+     * @param userDetails   @AuthenticationPrincipal 사용자 정보
+     * @return Boolean
+     */
+    public Boolean getDictHealthCheck(Long dictId, UserDetailsImpl userDetails) {
+        String key = DICT_HEALTH_CHECK_KEY + ":" + dictId;
+        String result = redisService.getDictHealth(key);
+        String username = userDetails.getUsername();
+
+        // 키가 없으면 자신의 아이디로 등록, 키가 있을 경우 내 아이디와 일치하면 갱신
+        if(result == null || username.equals(result)){
+            redisService.setDictHealth(key, username);
+            return true;
+        }
+
+        // 키가 이미 존재하면서 나의 키가 아니면 수정 불가.
+        return false;
     }
 
     /**
@@ -822,5 +842,7 @@ public class DictService {
                 .relatedYoutube(dictRelatedYoutubeDtoList)
                 .build();
     }
+
+
     // endregion
 }
