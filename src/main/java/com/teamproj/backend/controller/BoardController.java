@@ -96,15 +96,15 @@ public class BoardController {
                 .build();
     }
 
-    @GetMapping("/api/board/search")
-    public ResponseDto<List<BoardSearchResponseDto>> boardSearch(@RequestParam String q) {
-
-        return ResponseDto.<List<BoardSearchResponseDto>>builder()
-                .status(HttpStatus.OK.toString())
-                .message("게시글 검색 요청")
-                .data(boardService.boardSearch(q))
-                .build();
-    }
+//    @GetMapping("/api/board/search")
+//    public ResponseDto<List<BoardSearchResponseDto>> boardSearch(@RequestParam String q) {
+//
+//        return ResponseDto.<List<BoardSearchResponseDto>>builder()
+//                .status(HttpStatus.OK.toString())
+//                .message("게시글 검색 요청")
+//                .data(boardService.boardSearch(q))
+//                .build();
+//    }
 
     @GetMapping("/api/board/{categoryName}/best")
     public ResponseDto<List<BoardMemeBestResponseDto>> getBestMeme(@RequestHeader(value="Authorization", required = false) String token,
