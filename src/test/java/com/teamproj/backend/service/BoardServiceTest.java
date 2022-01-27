@@ -40,6 +40,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -275,7 +276,16 @@ class BoardServiceTest {
             BoardDetailResponseDto boardDetailResponseDto = boardService.getBoardDetail(board.getBoardId(), token);
 
             // then
+            assertNull(boardDetailResponseDto.getTitle());
+            assertNull(boardDetailResponseDto.getContent());
+            assertNotNull(boardDetailResponseDto.getCreatedAt());
+            assertNotNull(boardDetailResponseDto.getCommentCnt());
             assertEquals(board.getBoardId(), boardDetailResponseDto.getBoardId());
+            assertEquals(board.getUser().getUsername(), boardDetailResponseDto.getUsername());
+            assertEquals(board.getUser().getProfileImage(), boardDetailResponseDto.getProfileImageUrl());
+            assertEquals(board.getViews(), boardDetailResponseDto.getViews());
+            assertEquals(board.getBoardLikeList().size(), boardDetailResponseDto.getLikeCnt());
+            assertEquals(false, boardDetailResponseDto.getIsLike());
             assertEquals(board.getThumbNail(), boardDetailResponseDto.getThumbNail());
             assertEquals(board.getUser().getNickname(), boardDetailResponseDto.getWriter());
         }
