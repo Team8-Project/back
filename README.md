@@ -57,7 +57,7 @@
 
 <details>
     <summary>
-        1. QueryDSL의 랜덤 목록 불러오기 NumberExpression.random().asc() 기능이 MySQL에서는 작동하지 않는 문제
+        QueryDSL의 랜덤 목록 불러오기 NumberExpression.random().asc() 기능이 MySQL에서는 작동하지 않는 문제
     </summary>
     <div markcown="1">
         - 엄밀히 따지면 문제는 아니다. 그냥 MySQL이 해당 랜덤 기능을 지원하지 않을 뿐이다.
@@ -107,7 +107,7 @@ private List<Quiz> randomQuizPick(int count) {
 
 <details>
     <summary>
-        2. QueryDSL 사용시 Handler dispatch failed; nested exception is java.lang.NoSuchFieldError: TREATED_PATH 에러 발생
+        QueryDSL 사용시 Handler dispatch failed; nested exception is java.lang.NoSuchFieldError: TREATED_PATH 에러 발생
     </summary>
     <div markcown="1">
         - QueryDSL에 대한 버전을 명확하게 명세하지 않아 발생한 문제였다.
