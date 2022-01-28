@@ -20,7 +20,7 @@
 - Back-End    
 
   
-<code><a href="https://github.com/Zabee52">김용빈</a></code>(팀장)  
+<code><a href="https://github.com/Zabee52">김용빈(팀장)</a></code>  
   
 <code><a href="https://github.com/yarogono">임전혁</a></code>
   
@@ -36,8 +36,9 @@
 </br>
 
 ## 아키텍처
-
-
+  
+<img src="https://user-images.githubusercontent.com/70641418/151464415-2484a5bf-28da-4cea-bdbd-fc3118ca266c.JPG">
+ 
 </br>
 
 ## DB설계
