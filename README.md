@@ -134,3 +134,36 @@ dependencies {
         
   </div>
 </details>
+
+	    
+<details>
+    <summary>
+        퀴즈 문제 조회시 문제가 중복으로 등장하는 에러 발생
+    </summary>
+    <div markcown="1">
+        초보적인 문제였다. join을 수행하면 레코드의 중복이 발생하는데, 이를 간과하여 그대로 출력되는 문제였다.
+
+distinct() 조건을 주어 해결하였다.
+
+```java
+private List<Quiz> randomQuizPick(String category) {
+    // count 개수 만큼의 레코드를 랜덤하게 받아오는 구문
+    // MySqlJpaTemplates.DEFAULT : NumberExpression.random().asc()를 MySQL 에서 사용 가능하도록 튜닝한 템플릿.
+    JPAQuery<Quiz> query = new JPAQuery<>(entityManager, MySqlJpaTemplates.DEFAULT);
+    QQuiz qQuiz = new QQuiz("quiz");
+    QQuizBank qQuizBank = QQuizBank.quizBank;
+
+    return query.from(qQuiz).distinct()
+            .leftJoin(qQuiz.choiceList, qQuizBank)
+            .fetchJoin()
+            .where(qQuiz.category.eq(category))
+            .orderBy(NumberExpression.random().asc())
+            .fetch();
+}
+```
+	     
+        
+  </div>
+</details>
+	    
+	    
