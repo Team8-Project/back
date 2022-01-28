@@ -17,10 +17,21 @@
 
 ## 👥 팀원
 
-- Back-End
+- Back-End    
 
-
+  
+<code><a href="https://github.com/Zabee52">김용빈</a></code>(팀장)  
+  
+<code><a href="https://github.com/yarogono">임전혁</a></code>
+  
+  
 - Front-End
+
+<code><a href="https://github.com/undriedspring">이한샘</a></code>  
+  
+<code><a href="https://github.com/zubetcha">정주혜</a></code>
+  
+<code><a href="https://github.com/zhiyeonyi">이지연</a></code>
 
 </br>
 
@@ -33,3 +44,6 @@
 
 <img src="https://user-images.githubusercontent.com/70641418/151432549-bf519850-4146-471f-8cee-5e51bb932c88.png">
 
+  
+  
+## ✒Trouble Shooting
