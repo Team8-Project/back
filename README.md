@@ -11,6 +11,7 @@
 
 <a href="https://memegle.xyz/">프로젝트  사이트로 이동</a>
 
+<a href="https://enormous-duck-a5d.notion.site/8-5510f20898534129bd1b728b92d92870">프로젝트 노션으로 이동</a>
 
 </br>
 
