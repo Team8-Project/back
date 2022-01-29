@@ -109,7 +109,7 @@ public class AlarmService {
             alarmResponseDtoList.add(AlarmResponseDto.builder()
                     .alarmId(alarm.getAlarmId())
                     .alarmType(alarm.getAlarmTypeEnum().name())
-                    .checked(false)
+                    .checked(true)
                     .navId(alarm.getNavId())
                     .build()
             );
