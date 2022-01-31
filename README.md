@@ -176,5 +176,5 @@
 </details>
 
 [기타 트러블슈팅](https://www.notion.so/BE-669d3c8366a1406b85d538a33966a9ea)  
-[기타 성능 향상 전략](https://www.notion.so/BE-4e9f7960af9a436784d21f55382564e2)
+[기타 성능 향상 전략](https://www.notion.so/BE-4e9f7960af9a436784d21f55382564e2)  
 [성능 향상 전략 요약본(pdf)](https://drive.google.com/file/d/130hJu6DtMyVALjyZb-hkZrDIAg2RfhLF/view?usp=sharing)
