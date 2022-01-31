@@ -41,6 +41,14 @@
 
 </br>
 
+## 스택
+
+<img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white">  <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=Spring Boot&logoColor=white">  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white">  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=Redis&logoColor=white"> </br>
+<img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge">
+<img src="https://img.shields.io/badge/QueryDSL-3874D8?style=for-the-badge">
+<img src="https://img.shields.io/badge/Youtube Data API v3-FF0000?style=for-the-badge&logo=YouTube&logoColor=white">
+
+
 ## 아키텍처
   
 <img src="https://user-images.githubusercontent.com/70641418/151467454-da82b310-6249-4480-9204-8a4ace733ba6.JPG">
