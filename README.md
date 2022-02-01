@@ -61,6 +61,13 @@
 
 </br>  
   
+## 📃 API 명세표
+
+![API 명세표](https://user-images.githubusercontent.com/93498724/151951725-8be35b1b-0119-467f-ac4d-3d873bd4dc1c.png)
+[자세한 내용 보기(notion)](https://enormous-duck-a5d.notion.site/API-3adc279233e74ee2a3a03bff613726c9)
+
+</br>
+
 ## ✒Trouble Shooting / Challenge
 
 <details markdown="1">
