@@ -16,7 +16,11 @@
 </br>
 
 ## 🎥 프로젝트 소개 영상
-[<img src="http://img.youtube.com/vi/0FW30mV3Jgs/maxresdefault.jpg" width="480">](https://www.youtube.com/watch?v=0FW30mV3Jgs)
+<div align="center">
+	<a href="https://www.youtube.com/watch?v=0FW30mV3Jgs">
+		<img src="http://img.youtube.com/vi/0FW30mV3Jgs/maxresdefault.jpg" width="480">
+	</a>
+</div>
 
 ## 📆 프로젝트 기간
 2021.12.18. (토) ~ 2022.01.28. (금)
@@ -24,7 +28,6 @@
 </br>
 
 ## 👥 팀원
-
 |Back-End|Front-End|
 |:------:|:---:|
 |<code><a href="https://github.com/Zabee52">김용빈(팀장)</a></code>|<code><a href="https://github.com/undriedspring">이한샘</a></code>|
@@ -34,11 +37,16 @@
 </br>
 
 ## 📚 스택
-
-<img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white">  <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=Spring Boot&logoColor=white">  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white">  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=Redis&logoColor=white"> </br>
-<img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge">
-<img src="https://img.shields.io/badge/QueryDSL-3874D8?style=for-the-badge">
-<img src="https://img.shields.io/badge/Youtube Data API v3-FF0000?style=for-the-badge&logo=YouTube&logoColor=white">
+<div align="center">
+	<img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white">
+	<img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=Spring Boot&logoColor=white">
+	<img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white">
+	<img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=Redis&logoColor=white">
+	</br>
+	<img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge">
+	<img src="https://img.shields.io/badge/QueryDSL-3874D8?style=for-the-badge">
+	<img src="https://img.shields.io/badge/Youtube Data API v3-FF0000?style=for-the-badge&logo=YouTube&logoColor=white">
+</div>
 
 
 ## 🛠 아키텍처
@@ -50,13 +58,13 @@
 
 ## 📋 DB설계
 
-<img src="https://user-images.githubusercontent.com/70641418/151432549-bf519850-4146-471f-8cee-5e51bb932c88.png">
+![ERD](https://user-images.githubusercontent.com/93498724/151955124-0cebeb09-509e-49fb-8fa3-13408a8d13a6.png)
 
 </br>  
   
 ## 📃 API 명세표
 
-![API 명세표](https://user-images.githubusercontent.com/93498724/151951725-8be35b1b-0119-467f-ac4d-3d873bd4dc1c.png)
+![API 명세표](https://user-images.githubusercontent.com/93498724/151955444-d507b9d4-862c-4443-af44-10a1caedcefd.png)
 [자세한 내용 보기(notion)](https://enormous-duck-a5d.notion.site/API-3adc279233e74ee2a3a03bff613726c9)
 
 </br>
