@@ -296,7 +296,7 @@ HashMap의 get 시간복잡도가 O(1)인 점을 이용하여 HashMap 안에 전
 
 내가 채택한 알고리즘은 레벤슈타인 거리 알고리즘(Levenshtein distance algorithm) 이었다. 이 알고리즘은 문장의 유사도를 0~1 사이의 실수로 표시해주는 알고리즘이다. 이 알고리즘을 선택한 이유는 구현 방식이 단순해서였다. 시간상의 이유로 코드는 복붙으로 사용하겠지만, 그 로직은 이해해야 하지 않겠는가. 그래서 가져다 쓸 수 있는 것 중 이해가 가장 쉽다고 생각되는 것을 선택했다.
 
-```
+```java
 private double similarity(String s1, String s2) {
         String longer = s1, shorter = s2;
 
