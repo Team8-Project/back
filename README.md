@@ -56,7 +56,7 @@
 </br>
 </br>
 
-## 📋 DB설계
+## 📋 DB 설계
 
 ![ERD](https://user-images.githubusercontent.com/93498724/151955124-0cebeb09-509e-49fb-8fa3-13408a8d13a6.png)
 
