@@ -9,7 +9,7 @@
 새롭게 생겨나는 신조어를 사전 형식으로 검색 할 수 있는 사이트입니다.
 </br>
 
-<a href="https://memegle.xyz/">프로젝트  사이트로 이동</a>
+<a href="https://memegle.xyz/">밈글밈글 사이트로 이동</a>
 
 <a href="https://enormous-duck-a5d.notion.site/8-5510f20898534129bd1b728b92d92870">프로젝트 노션으로 이동</a>
 
