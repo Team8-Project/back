@@ -15,6 +15,9 @@
 
 </br>
 
+## 🎥 프로젝트 소개 영상
+[<img src="http://img.youtube.com/vi/0FW30mV3Jgs/maxresdefault.jpg" width="480">](https://www.youtube.com/watch?v=0FW30mV3Jgs)
+
 ## 📆 프로젝트 기간
 2021.12.18. (토) ~ 2022.01.28. (금)
 
@@ -22,21 +25,11 @@
 
 ## 👥 팀원
 
-- Back-End    
-
-<code><a href="https://github.com/Zabee52">김용빈(팀장)</a></code>  
-  
-<code><a href="https://github.com/yarogono">임전혁</a></code>
-  
-</br>
-    
-- Front-End
-
-<code><a href="https://github.com/undriedspring">이한샘</a></code>  
-  
-<code><a href="https://github.com/zubetcha">정주혜</a></code>
-  
-<code><a href="https://github.com/zhiyeonyi">이지연</a></code>
+|Back-End|Front-End|
+|:------:|:---:|
+|<code><a href="https://github.com/Zabee52">김용빈(팀장)</a></code>|<code><a href="https://github.com/undriedspring">이한샘</a></code>|
+|<code><a href="https://github.com/yarogono">임전혁</a></code>|<code><a href="https://github.com/zubetcha">정주혜</a></code>|
+||<code><a href="https://github.com/zhiyeonyi">이지연</a></code>|
 
 </br>
 
