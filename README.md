@@ -28,11 +28,24 @@
 </br>
 
 ## 👥 팀원
-|Back-End|Front-End|
-|:------:|:---:|
-|<code><a href="https://github.com/Zabee52">김용빈(팀장)</a></code>|<code><a href="https://github.com/undriedspring">이한샘</a></code>|
-|<code><a href="https://github.com/yarogono">임전혁</a></code>|<code><a href="https://github.com/zubetcha">정주혜</a></code>|
-||<code><a href="https://github.com/zhiyeonyi">이지연</a></code>|
+<table align="center">
+	<tr>
+		<th>Back-End</th>
+		<th>Front-End</th>
+	</tr>
+	<tr align="center">
+		<td><code><a href="https://github.com/Zabee52">김용빈(팀장)</a></code></td>
+		<td><code><a href="https://github.com/undriedspring">이한샘</a></code></td>
+	</tr>
+	<tr align="center">
+		<td><code><a href="https://github.com/yarogono">임전혁</a></code></td>
+		<td><code><a href="https://github.com/zubetcha">정주혜</a></code></td>
+	</tr>
+	<tr align="center">
+		<td></td>
+		<td><code><a href="https://github.com/zhiyeonyi">이지연</a></code></td>
+	</tr>
+</table>
 
 </br>
 
