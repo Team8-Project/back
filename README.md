@@ -50,16 +50,67 @@
 </br>
 
 ## 📚 스택
-<div align="center">
-	<img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white">
-	<img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=Spring Boot&logoColor=white">
-	<img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white">
-	<img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=Redis&logoColor=white">
-	</br>
-	<img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge">
-	<img src="https://img.shields.io/badge/QueryDSL-3874D8?style=for-the-badge">
-	<img src="https://img.shields.io/badge/Youtube Data API v3-FF0000?style=for-the-badge&logo=YouTube&logoColor=white">
-</div>
+<table align="center">
+	<tr>
+		<th>분류</th>
+		<th>기술</th>
+	</tr>
+	<tr align="center">
+		<td>IDE</td>
+		<td><img src="https://img.shields.io/badge/IntelliJ IDEA-000000?style=for-the-badge&logo=IntelliJ IDEA&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>Language</td>
+		<td><img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>Framework</td>
+		<td><img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=Spring Boot&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>Build Tool</td>
+		<td><img src="https://img.shields.io/badge/gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>DB</td>
+		<td><img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>In-Memory DB</td>
+		<td><img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=Redis&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>Server</td>
+		<td><img src="https://img.shields.io/badge/EC2-FF9900?style=for-the-badge&logo=AmazonAWS&logoColor=white">
+		    <img src="https://img.shields.io/badge/Amazon S3-569A31?style=for-the-badge&logo=Amazon S3&logoColor=white">
+		</td>
+	</tr>
+	<tr align="center">
+		<td>CI/CD</td>
+		<td><img src="https://img.shields.io/badge/Travis CI-3EAAAF?style=for-the-badge&logo=Travis CI&logoColor=white">
+		    <img src="https://img.shields.io/badge/CodeDeploy-6BD80B?style=for-the-badge&logoColor=white">
+		</td>
+	</tr>
+	<tr align="center">
+		<td>Test</td>
+		<td><img src="https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=JUnit5&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>Load Test</td>
+		<td><img src="https://img.shields.io/badge/Apache JMeter-D22128?style=for-the-badge&logo=Apache JMeter&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>VCS</td>
+		<td><img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"></td>
+	</tr>
+	<tr align="center">
+		<td>Other</td>
+		<td><img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge"><br>
+		    <img src="https://img.shields.io/badge/QueryDSL-3874D8?style=for-the-badge"><br>
+		    <img src="https://img.shields.io/badge/Youtube Data API v3-FF0000?style=for-the-badge&logo=YouTube&logoColor=white">
+		</td>
+	</tr>
+</table>
 
 
 ## 🛠 아키텍처
