@@ -56,10 +56,6 @@
 		<th>기술</th>
 	</tr>
 	<tr align="center">
-		<td>IDE</td>
-		<td><img src="https://img.shields.io/badge/IntelliJ IDEA-000000?style=for-the-badge&logo=IntelliJ IDEA&logoColor=white"></td>
-	</tr>
-	<tr align="center">
 		<td>Language</td>
 		<td><img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white"></td>
 	</tr>
@@ -90,18 +86,6 @@
 		<td><img src="https://img.shields.io/badge/Travis CI-3EAAAF?style=for-the-badge&logo=Travis CI&logoColor=white">
 		    <img src="https://img.shields.io/badge/CodeDeploy-6BD80B?style=for-the-badge&logoColor=white">
 		</td>
-	</tr>
-	<tr align="center">
-		<td>Test</td>
-		<td><img src="https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=JUnit5&logoColor=white"></td>
-	</tr>
-	<tr align="center">
-		<td>Load Test</td>
-		<td><img src="https://img.shields.io/badge/Apache JMeter-D22128?style=for-the-badge&logo=Apache JMeter&logoColor=white"></td>
-	</tr>
-	<tr align="center">
-		<td>VCS</td>
-		<td><img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"></td>
 	</tr>
 	<tr align="center">
 		<td>Other</td>
