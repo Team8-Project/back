@@ -1,6 +1,7 @@
 package com.teamproj.backend.service.dict;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
@@ -15,6 +16,7 @@ import com.teamproj.backend.dto.dict.question.search.DictQuestionSearchResponseD
 import com.teamproj.backend.dto.dict.search.DictSearchResponseDto;
 import com.teamproj.backend.dto.main.MainTodayMemeResponseDto;
 import com.teamproj.backend.dto.youtube.DictRelatedYoutubeDto;
+import com.teamproj.backend.model.QUser;
 import com.teamproj.backend.model.User;
 import com.teamproj.backend.model.dict.*;
 import com.teamproj.backend.model.viewers.QViewers;
@@ -36,7 +38,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.teamproj.backend.exception.ExceptionMessages.*;
-import static com.teamproj.backend.util.RedisKey.*;
+import static com.teamproj.backend.util.RedisKey.BEST_DICT_KEY;
+import static com.teamproj.backend.util.RedisKey.DICT_HEALTH_CHECK_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -68,9 +71,10 @@ public class DictService {
         // 2. 받아온 회원 정보로 User 정보 받아오기 - 좋아요 했는지 여부 판단하기 위해 (select from user 시행 지점)
         User user = getSafeUserByUserDetails(userDetails);
         // 3. 사전 목록 가져오기 - 현재 페이지네이션이 잘못 되어있는데 프론트엔드 분들이 교정해서 쓰고 계셔서 수정 하지 않음.
-        List<Tuple> dictTupleList = getSafeDictTupleList(page, size, user);
+//        List<Tuple> dictTupleList = getSafeDictTupleList(page, size, user);
         // 4. 사전 목록을 알맞은 반환 양식으로 변환하여 return.
-        return dictListToDictResponseDtoList(dictTupleList);
+//        return dictListToDictResponseDtoList(dictTupleList);
+        return getSafeDictResponseDtoList(page, size, user);
     }
 
     /**
@@ -278,8 +282,9 @@ public class DictService {
 
     /**
      * 사전 수정 가능 여부 확인 및 갱신
-     * @param dictId        @PathVariable 사전 ID
-     * @param userDetails   @AuthenticationPrincipal 사용자 정보
+     *
+     * @param dictId      @PathVariable 사전 ID
+     * @param userDetails @AuthenticationPrincipal 사용자 정보
      * @return Boolean
      */
     public Boolean getDictHealthCheck(Long dictId, UserDetailsImpl userDetails) {
@@ -288,7 +293,7 @@ public class DictService {
         String username = userDetails.getUsername();
 
         // 키가 없으면 자신의 아이디로 등록, 키가 있을 경우 내 아이디와 일치하면 갱신
-        if(result == null || username.equals(result)){
+        if (result == null || username.equals(result)) {
             redisService.setDictHealth(key, username);
             return true;
         }
@@ -503,6 +508,36 @@ public class DictService {
                                         qDictLike.dict.eq(qDict))
                 )
                 .from(qDict)
+                .orderBy(qDict.createdAt.desc())
+                .offset(page)
+                .limit(size)
+                .fetch();
+    }
+
+    // DictResponseDtoList
+    private List<DictResponseDto> getSafeDictResponseDtoList(int page, int size, User user) {
+        QDict qDict = QDict.dict;
+        QDictLike qDictLike = QDictLike.dictLike;
+
+        // 원래 정석은 offset 은 page * size 로 줘야함..... 실수했는데 프론트분들이 이대로 작업하셔서 수정하지 않고 사용하기로 함
+        return queryFactory
+                .select(Projections.constructor(
+                                DictResponseDto.class,
+                                qDict.dictId.as("dictId"),
+                                qDict.dictName.as("title"),
+                                qDict.summary.as("summary"),
+                                qDict.firstAuthor.nickname.as("firstWriter"),
+                                qDict.createdAt.as("createdAt"),
+                                qDict.dictLikeList.size().as("likeCount"),
+                                queryFactory
+                                        .select(qDictLike.count().as("isLike"))
+                                        .from(qDictLike)
+                                        .where(eqUser(user),
+                                                qDictLike.dict.eq(qDict))
+                        )
+                )
+                .from(qDict)
+                .leftJoin(qDict.firstAuthor, QUser.user)
                 .orderBy(qDict.createdAt.desc())
                 .offset(page)
                 .limit(size)

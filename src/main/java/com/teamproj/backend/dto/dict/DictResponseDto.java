@@ -19,4 +19,13 @@ public class DictResponseDto {
     private LocalDateTime createdAt;
     private boolean isLike;
     private int likeCount;
+
+    public DictResponseDto(Long dictId, String title, String summary, String firstWriter, LocalDateTime createdAt, int likeCount) {
+        this.dictId = dictId;
+        this.title = title;
+        this.summary = summary;
+        this.firstWriter = firstWriter;
+        this.createdAt = createdAt;
+        this.likeCount = likeCount;
+    }
 }
