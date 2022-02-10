@@ -75,10 +75,8 @@ public class DictQuestionService {
         // 2. 받아온 회원 정보로 User 정보 받아오기
         User user = getSafeUserByUserDetails(userDetails);
         // 3. 카테고리와 enabled(삭제 안된) 데이터를 페이지네이션 조건에 맞게 리스트형식으로 가져오기
-//        List<Tuple> tupleList = getQuestionProc(user, true, page, size);
         List<DictQuestion> tupleList = getQuestionProc(true, page, size);
         // 4. 리스트를 알맞은 DTO 형식으로 변환하여 return.
-//        return getDictQuestionResponseDtoList(tupleList);
         return getDictQuestionResponseDtoList(user, tupleList);
     }
 
@@ -239,19 +237,10 @@ public class DictQuestionService {
             Long questionId = d.getQuestionId();
 
             Long curiousTooCntLong = curiousTooCountMap.get(questionId);
-            int curiousTooCnt;
-            if(curiousTooCntLong == null){
-                curiousTooCnt = 0;
-            }else{
-                curiousTooCnt = curiousTooCntLong.intValue();
-            }
+            int curiousTooCnt = curiousTooCntLong == null ? 0 : curiousTooCntLong.intValue();
             Long commentCntLong = commentCountMap.get(questionId);
-            int commentCnt;
-            if(commentCntLong == null){
-                commentCnt = 0;
-            }else{
-                commentCnt = commentCntLong.intValue();
-            }
+            int commentCnt = commentCntLong == null ? 0 : commentCntLong.intValue();
+
             dictQuestionResponseDtoList.add(DictQuestionResponseDto.builder()
                     .questionId(questionId)
                     .title(d.getQuestionName())
