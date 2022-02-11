@@ -71,10 +71,10 @@ public class DictService {
         // 2. 받아온 회원 정보로 User 정보 받아오기 - 좋아요 했는지 여부 판단하기 위해 (select from user 시행 지점)
         User user = getSafeUserByUserDetails(userDetails);
         // 3. 사전 목록 가져오기 - 현재 페이지네이션이 잘못 되어있는데 프론트엔드 분들이 교정해서 쓰고 계셔서 수정 하지 않음.
-//        List<Tuple> dictTupleList = getSafeDictTupleList(page, size, user);
+        List<Tuple> dictTupleList = getSafeDictTupleList(page, size, user);
         // 4. 사전 목록을 알맞은 반환 양식으로 변환하여 return.
-//        return dictListToDictResponseDtoList(dictTupleList);
-        return getSafeDictResponseDtoList(page, size, user);
+        return dictListToDictResponseDtoList(dictTupleList);
+//        return getSafeDictResponseDtoList(page, size, user);
     }
 
     /**
