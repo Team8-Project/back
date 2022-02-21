@@ -97,26 +97,14 @@ public class DictService {
      * @return true : 사용 가능 / false : 사용 불가
      */
     public DictNameCheckResponseDto checkDictName(DictNameCheckRequestDto dictName) {
-        return DictNameCheckResponseDto.builder()
-                .result(!dictRepository.existsByDictName(dictName.getDictName()))
-                .build();
-    }
-
-    /**
-     * 사전 이름 중복검사 new : 사용 불가시 기존의 표현은 뭔지 나오도록.
-     *
-     * @param dictName @RequestBody 정보값(사전 이름)
-     * @return Dict to DictNameCheckResponseDto
-     */
-    public DictNameCheckResponseDtoNeo neoCheckDictName(DictNameCheckRequestDto dictName) {
         Dict dict = dictRepository.findByDictName(dictName.getDictName());
         if (dict == null) {
-            return DictNameCheckResponseDtoNeo.builder()
+            return DictNameCheckResponseDto.builder()
                     .result(true)
                     .build();
         }
 
-        return DictNameCheckResponseDtoNeo.builder()
+        return DictNameCheckResponseDto.builder()
                 .dictId(dict.getDictId())
                 .dictName(dict.getDictName())
                 .meaning(dict.getContent())

@@ -12,5 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DictNameCheckResponseDto {
+    private Long dictId;
+    private String dictName;
+    private String meaning;
     private boolean result;
 }
