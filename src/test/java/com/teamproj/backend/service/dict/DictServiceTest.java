@@ -549,39 +549,5 @@ public class DictServiceTest {
                 assertFalse(result.isResult());
             }
         }
-
-        @Nested
-        @DisplayName("새 중복 확인")
-        class New {
-            @Test
-            @DisplayName("중복되지 않는 사전 이름(사용가능)")
-            void not_exist() {
-                // given
-                DictNameCheckRequestDto request = DictNameCheckRequestDto.builder()
-                        .dictName(UUID.randomUUID().toString())
-                        .build();
-
-                // when
-                DictNameCheckResponseDtoNeo result = dictService.neoCheckDictName(request);
-
-                // then
-                assertTrue(result.isResult());
-            }
-
-            @Test
-            @DisplayName("중복되는 사전 이름(사용불가)")
-            void exist() {
-                // given
-                DictNameCheckRequestDto request = DictNameCheckRequestDto.builder()
-                        .dictName("오놀아놈")
-                        .build();
-
-                // when
-                DictNameCheckResponseDtoNeo result = dictService.neoCheckDictName(request);
-
-                // then
-                assertFalse(result.isResult());
-            }
-        }
     }
 }

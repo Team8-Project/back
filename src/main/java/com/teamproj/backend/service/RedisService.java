@@ -29,7 +29,6 @@ public class RedisService {
     private final RedisTemplate<String, BoardMemeBestResponseDto> redisMemeBestResponseDtoTemplate;
     private final RedisTemplate<String, StatDictResponseDto> redisStatDictResponseDtoTemplate;
     private final RedisTemplate<String, AlarmResponseDto> redisAlarmResponseDtoTemplate;
-    private final RedisTemplate<String, Boolean> redisBooleanTemplate;
 
     public void setAlarm(String key, List<AlarmResponseDto> object){
         redisTemplate.delete(key);
@@ -115,22 +114,6 @@ public class RedisService {
         redisTemplate.delete(key);
         ListOperations<String, MainMemeImageResponseDto> list = redisMainMemeImageResponseDtoTemplate.opsForList();
         list.leftPushAll(key, mainMemeImageResponseDtoList);
-    }
-
-    public List<MainTodayBoardResponseDto> getTodayBoardList(String key) {
-        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
-
-        if (list.size(key) > 0) {
-            return list.range(key, 0, list.size(key) - 1);
-        }
-
-        return null;
-    }
-
-    public void setTodayBoardList(String key, List<MainTodayBoardResponseDto> mainTodayBoardResponseDtoList) {
-        redisTemplate.delete(key);
-        ListOperations<String, MainTodayBoardResponseDto> list = redisMainTodayBoardResponseDtoTemplate.opsForList();
-        list.leftPushAll(key, mainTodayBoardResponseDtoList);
     }
 
     public void setRandomQuiz(String key, List<QuizResponseDto> quizResponseDtoList) {

@@ -34,6 +34,7 @@ import com.teamproj.backend.util.S3Uploader;
 import com.teamproj.backend.util.StatisticsUtils;
 import com.teamproj.backend.util.ValidChecker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -710,6 +711,20 @@ public class BoardService {
         if (!jwtAuthenticateProcessor.getUser(userDetails).getId().equals(board.getUser().getId())) {
             throw new IllegalArgumentException(NOT_MY_BOARD);
         }
+    }
+
+    public List<MainMemeImageResponseDto> getRecentImage(int count) {
+        List<Board> boardList = boardRepository.findAll(PageRequest.of(0, count)).toList();
+        // BoardYesterdayLikeCountRankDto To MainMemeImageResponseDto
+        List<MainMemeImageResponseDto> mainMemeImageResponseDtoList = new ArrayList<>();
+        for (Board board : boardList) {
+            mainMemeImageResponseDtoList.add(MainMemeImageResponseDto.builder()
+                    .boardId(board.getBoardId())
+                    .imageUrl(board.getThumbNail())
+                    .build());
+        }
+
+        return mainMemeImageResponseDtoList;
     }
     //endregion
 }
